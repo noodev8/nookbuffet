@@ -213,10 +213,10 @@ class BuffetCard extends StatelessWidget {
           vertical: AppConfig.spacingXSmall,
         ),
         decoration: BoxDecoration(
-          color: AppConfig.primaryLightColor.withOpacity(0.1),
+          color: AppConfig.primaryLightColor.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(AppConfig.borderRadiusSmall),
           border: Border.all(
-            color: AppConfig.primaryLightColor.withOpacity(0.3),
+            color: AppConfig.primaryLightColor.withValues(alpha: 0.3),
           ),
         ),
         child: Text(

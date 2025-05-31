@@ -89,41 +89,69 @@ class CustomButton extends StatelessWidget {
   Widget _buildButtonByType(Widget child) {
     switch (type) {
       case ButtonType.primary:
-        return ElevatedButton(
-          onPressed: isLoading ? null : onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppConfig.primaryColor,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: AppConfig.textLightColor,
-            elevation: AppConfig.elevationLow,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppConfig.borderRadiusMedium),
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppConfig.spacingLarge,
-              vertical: AppConfig.spacingMedium,
-            ),
+        return Container(
+          decoration: BoxDecoration(
+            gradient: isLoading ? null : AppConfig.primaryGradient,
+            color: isLoading ? AppConfig.textLightColor : null,
+            borderRadius: BorderRadius.circular(AppConfig.borderRadiusMedium),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          child: child,
+          child: ElevatedButton(
+            onPressed: isLoading ? null : onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              shadowColor: Colors.transparent,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppConfig.borderRadiusMedium),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConfig.spacingLarge,
+                vertical: AppConfig.spacingMedium,
+              ),
+            ),
+            child: child,
+          ),
         );
 
       case ButtonType.secondary:
-        return ElevatedButton(
-          onPressed: isLoading ? null : onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppConfig.secondaryColor,
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: AppConfig.textLightColor,
-            elevation: AppConfig.elevationLow,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppConfig.borderRadiusMedium),
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppConfig.spacingLarge,
-              vertical: AppConfig.spacingMedium,
-            ),
+        return Container(
+          decoration: BoxDecoration(
+            gradient: isLoading ? null : AppConfig.secondaryGradient,
+            color: isLoading ? AppConfig.textLightColor : null,
+            borderRadius: BorderRadius.circular(AppConfig.borderRadiusMedium),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          child: child,
+          child: ElevatedButton(
+            onPressed: isLoading ? null : onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.black87, // Changed to dark text for better visibility
+              shadowColor: Colors.transparent,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppConfig.borderRadiusMedium),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppConfig.spacingLarge,
+                vertical: AppConfig.spacingMedium,
+              ),
+            ),
+            child: child,
+          ),
         );
 
       case ButtonType.outline:
@@ -203,12 +231,26 @@ class CustomFloatingActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: onPressed,
-      backgroundColor: AppConfig.primaryColor,
-      foregroundColor: Colors.white,
-      tooltip: tooltip,
-      child: Icon(icon),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: AppConfig.primaryGradient,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: FloatingActionButton(
+        onPressed: onPressed,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        tooltip: tooltip,
+        child: Icon(icon),
+      ),
     );
   }
 }
