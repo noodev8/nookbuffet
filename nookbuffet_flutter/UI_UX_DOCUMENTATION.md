@@ -1,7 +1,7 @@
-# The Nook Buffet Flutter App - UI/UX Documentation
+# Nook Buffet Flutter App - UI/UX Documentation
 
 ## Overview
-This Flutter mobile application provides a seamless buffet ordering experience for The Nook Buffet customers. The app focuses on intuitive navigation, clean design, and frictionless user experience.
+This Flutter mobile application provides a seamless buffet ordering experience for Nook Buffet customers. The app focuses on intuitive navigation, clean design, and frictionless user experience.
 
 ## Design Philosophy
 - **Bold simplicity** with intuitive navigation creating frictionless experiences
@@ -38,10 +38,10 @@ lib/
 
 ### 1. Splash Screen (`splash_screen.dart`)
 - **Purpose**: Brand introduction and app initialization
-- **Features**:
+- **Features**: 
   - Animated logo display
   - Smooth transition to welcome screen
-  - 5-second duration with fade animations
+  - 3-second duration with fade animations
 
 ### 2. Welcome Screen (`welcome_screen.dart`)
 - **Purpose**: Main browsing interface for buffet options
@@ -130,19 +130,13 @@ lib/
 - JSON serialization for future API integration
 
 ## Color Scheme
-- **Primary**: Charcoal Black (#212121) with elegant gradients
-- **Secondary**: Medium Gray (#757575) with subtle gradients
-- **Background**: Off-white (#FAFAFA) with gradient overlays
-- **Surface**: Pure White (#FFFFFF) with card gradients
+- **Primary**: Deep Green (#2E7D32)
+- **Secondary**: Warm Orange (#FF8F00)
+- **Background**: Off-white (#FAFAFA)
+- **Surface**: Pure White (#FFFFFF)
 - **Text Primary**: Dark Gray (#212121)
-- **Success**: Dark Green (#2E7D32)
+- **Success**: Green (#388E3C)
 - **Error**: Red (#D32F2F)
-
-### Gradient System
-- **Primary Gradient**: Three-stop gradient from light gray to charcoal to black
-- **Secondary Gradient**: Three-stop light gray gradient optimized for dark text visibility
-- **Card Gradient**: Subtle white to light gray gradient for depth
-- **Background Gradient**: Soft off-white gradient for visual interest
 
 ## Typography
 - **Font Family**: Roboto

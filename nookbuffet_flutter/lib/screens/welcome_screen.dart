@@ -72,26 +72,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppConfig.backgroundColor,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        child: Container(
-          decoration: const BoxDecoration(
-            gradient: AppConfig.primaryGradient,
+      appBar: AppBar(
+        title: const Text(AppConfig.businessName),
+        backgroundColor: AppConfig.primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: _showLoginOptions,
+            tooltip: 'Login / Register',
           ),
-          child: AppBar(
-            title: const Text(AppConfig.businessName),
-            backgroundColor: Colors.transparent,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.person_outline),
-                onPressed: _showLoginOptions,
-                tooltip: 'Login / Register',
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
       body: SafeArea(
         child: Column(
@@ -116,18 +108,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        gradient: AppConfig.primaryGradient,
+        color: AppConfig.primaryColor,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(AppConfig.borderRadiusLarge),
           bottomRight: Radius.circular(AppConfig.borderRadiusLarge),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppConfig.spacingLarge),
@@ -147,7 +132,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             Text(
               'Browse our delicious buffet options and book your perfect meal',
               style: AppConfig.bodyMedium.copyWith(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: Colors.white.withOpacity(0.9),
               ),
             ),
             
@@ -166,7 +151,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   child: Text(
                     AppConfig.businessAddress,
                     style: AppConfig.bodySmall.copyWith(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: Colors.white.withOpacity(0.8),
                     ),
                   ),
                 ),
@@ -186,7 +171,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 Text(
                   AppConfig.businessPhone,
                   style: AppConfig.bodySmall.copyWith(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
               ],
@@ -228,7 +213,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         color: AppConfig.surfaceColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),

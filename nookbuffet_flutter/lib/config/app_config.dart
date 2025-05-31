@@ -12,73 +12,32 @@ class AppConfig {
   static const String appVersion = '1.0.0';
   
   // Business Information
-  static const String businessName = 'The Nook Buffet';
+  static const String businessName = 'Nook Buffet';
   static const String businessEmail = 'NOOKBUFFET@GMAIL.COM';
   static const String businessPhone = '07551428162';
   static const String businessAddress = '42 High Street, Welshpool, SY21 7JQ';
   
-  // Color Palette - Classic black and white theme for elegant restaurant aesthetic
-  static const Color primaryColor = Color(0xFF212121);        // Charcoal black
-  static const Color primaryLightColor = Color(0xFF484848);   // Medium gray
-  static const Color primaryDarkColor = Color(0xFF000000);    // Pure black
-
-  static const Color secondaryColor = Color(0xFF757575);      // Medium gray
-  static const Color secondaryLightColor = Color(0xFF9E9E9E); // Light gray
-  static const Color secondaryDarkColor = Color(0xFF424242);  // Dark gray
-
+  // Color Palette - Following aesthetic guidelines for bold simplicity
+  static const Color primaryColor = Color(0xFF2E7D32);        // Deep green
+  static const Color primaryLightColor = Color(0xFF4CAF50);   // Light green
+  static const Color primaryDarkColor = Color(0xFF1B5E20);    // Dark green
+  
+  static const Color secondaryColor = Color(0xFFFF8F00);      // Warm orange
+  static const Color secondaryLightColor = Color(0xFFFFB74D); // Light orange
+  static const Color secondaryDarkColor = Color(0xFFE65100);  // Dark orange
+  
   static const Color backgroundColor = Color(0xFFFAFAFA);     // Off-white
   static const Color surfaceColor = Color(0xFFFFFFFF);       // Pure white
   static const Color cardColor = Color(0xFFFFFFFF);          // Card background
-
+  
   static const Color textPrimaryColor = Color(0xFF212121);   // Dark gray
   static const Color textSecondaryColor = Color(0xFF757575); // Medium gray
   static const Color textLightColor = Color(0xFFBDBDBD);     // Light gray
-
+  
   static const Color errorColor = Color(0xFFD32F2F);         // Red
-  static const Color successColor = Color(0xFF2E7D32);       // Dark green (kept for success states)
-  static const Color warningColor = Color(0xFFFF8F00);       // Orange (kept for warnings)
-
-  // Gradient Definitions - Elegant gradients for polished appearance
-  static const LinearGradient primaryGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      primaryLightColor,
-      primaryColor,
-      primaryDarkColor,
-    ],
-    stops: [0.0, 0.5, 1.0],
-  );
-
-  static const LinearGradient secondaryGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFFE0E0E0), // Light gray for better contrast with dark text
-      Color(0xFFBDBDBD), // Medium light gray
-      secondaryLightColor, // Light gray
-    ],
-    stops: [0.0, 0.5, 1.0],
-  );
-
-  static const LinearGradient cardGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      surfaceColor,
-      Color(0xFFF5F5F5),
-    ],
-  );
-
-  static const LinearGradient backgroundGradient = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [
-      backgroundColor,
-      Color(0xFFF0F0F0),
-    ],
-  );
-
+  static const Color successColor = Color(0xFF388E3C);       // Green
+  static const Color warningColor = Color(0xFFF57C00);       // Orange
+  
   // Typography - Weight variance and proportional scaling
   static const String fontFamily = 'Roboto';
   
@@ -172,6 +131,7 @@ class AppConfig {
         seedColor: primaryColor,
         brightness: Brightness.light,
         surface: surfaceColor,
+        background: backgroundColor,
       ),
       fontFamily: fontFamily,
       appBarTheme: const AppBarTheme(
