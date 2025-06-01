@@ -119,7 +119,7 @@ class AppConfig {
   static const Duration animationSlow = Duration(milliseconds: 500);
   
   // Asset Paths
-  static const String logoPath = 'assets/images/nookbuffet_logo.jpg';
+  static const String logoPath = 'assets/images/nookbuffet_logo.png';
   static const String barImagePath = 'assets/images/nookbuffet_bar.png';
   static const String buffetImagePath = 'assets/images/buffet-example-1.jpg';
   
