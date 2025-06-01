@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 
 class AppConfig {
   // App Information
-  static const String appName = 'Nook Buffet';
+  static const String appName = 'The Nook';
   static const String appVersion = '1.0.0';
   
   // Business Information
