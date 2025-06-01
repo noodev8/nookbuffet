@@ -75,7 +75,7 @@ class BuffetOption {
           'Assortment of Cakes',
         ],
         dietaryOptions: ['Vegetarian options available'],
-        imagePath: 'assets/images/buffet-example-1.jpg',
+        imagePath: 'assets/nookbuffet_logo.png',
         isPopular: false,
       ),
       
@@ -108,7 +108,7 @@ class BuffetOption {
           'Coleslaw',
         ],
         dietaryOptions: ['Vegetarian options available', 'Fresh vegetables'],
-        imagePath: 'assets/images/buffet-example-1.jpg',
+        imagePath: 'assets/nookbuffet_logo.png',
         isPopular: true,
       ),
       
@@ -153,7 +153,7 @@ class BuffetOption {
           'Mediterranean options',
           'Vegan-friendly items'
         ],
-        imagePath: 'assets/images/buffet-example-1.jpg',
+        imagePath: 'assets/nookbuffet_logo.png',
         isPopular: false,
       ),
     ];
