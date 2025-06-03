@@ -60,6 +60,18 @@ class AppConfig {
     colors: [primaryWhite, Color(0xFFFAFAFA)],
   );
 
+  // Dashboard/Welcome Screen Gradient: Elegant black-to-grey full background
+  static const LinearGradient dashboardGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      primaryBlack,      // Black at top
+      softBlack,         // Soft black in middle
+      charcoalGray,      // Charcoal grey at bottom
+    ],
+    stops: [0.0, 0.4, 1.0],
+  );
+
   // Spacing Constants
   static const double spacingXS = 4.0;
   static const double spacingS = 8.0;
