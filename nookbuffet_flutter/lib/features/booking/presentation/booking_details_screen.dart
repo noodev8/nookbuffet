@@ -1,12 +1,11 @@
 /*
 Booking Details Screen for Nook Buffet Flutter Application
-Allows users to specify booking details including date, time, and special requirements
-Features form validation and smooth user experience
+Elegant black gradient design with time slots and improved guest selection
+Direct navigation from buffet details with streamlined user experience
 */
 
 import 'package:flutter/material.dart';
 import '../../../config/app_config.dart';
-import '../../../core/widgets/gradient_container.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/models/buffet_option.dart';
 import '../../../core/models/booking.dart';
@@ -26,17 +25,23 @@ class BookingDetailsScreen extends StatefulWidget {
 
 class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _guestsController = TextEditingController(text: '10');
   final _specialRequirementsController = TextEditingController();
-  
+
   DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  String? _selectedTimeSlot;
+  int _guestCount = 10;
   DietaryPreference _dietaryPreference = DietaryPreference.none;
   bool _isLoading = false;
 
+  // Time slots from 9am to 4pm in 30-minute intervals
+  final List<String> _timeSlots = [
+    '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
+    '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM',
+    '3:00 PM', '3:30 PM', '4:00 PM'
+  ];
+
   @override
   void dispose() {
-    _guestsController.dispose();
     _specialRequirementsController.dispose();
     super.dispose();
   }
@@ -44,15 +49,19 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GradientContainer.light(
+      // Elegant black gradient background
+      body: Container(
         width: double.infinity,
         height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: AppConfig.dashboardGradient,
+        ),
         child: SafeArea(
           child: Column(
             children: [
               // Custom app bar
               _buildAppBar(context),
-              
+
               // Scrollable form content
               Expanded(
                 child: SingleChildScrollView(
@@ -60,10 +69,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     children: [
                       // Buffet summary
                       _buildBuffetSummary(),
-                      
+
                       // Booking form
                       _buildBookingForm(),
-                      
+
                       // Bottom spacing
                       const SizedBox(height: 100),
                     ],
@@ -74,7 +83,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           ),
         ),
       ),
-      
+
       // Floating action button for confirmation
       floatingActionButton: _buildConfirmButton(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -82,8 +91,19 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Widget _buildAppBar(BuildContext context) {
-    return GradientContainer.primary(
+    return Container(
       padding: const EdgeInsets.all(AppConfig.spacingM),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppConfig.primaryBlack.withValues(alpha: 0.9),
+            AppConfig.primaryBlack.withValues(alpha: 0.7),
+            Colors.transparent,
+          ],
+        ),
+      ),
       child: Row(
         children: [
           // Back button
@@ -94,19 +114,27 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               color: AppConfig.primaryWhite,
             ),
           ),
-          
+
           // Title
           Expanded(
             child: Text(
-              'Booking Details',
+              'Choose Your Options',
               style: AppConfig.headingMedium.copyWith(
                 color: AppConfig.primaryWhite,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w400,
+                fontSize: 20,
+                shadows: [
+                  Shadow(
+                    color: AppConfig.primaryBlack.withValues(alpha: 0.8),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               textAlign: TextAlign.center,
             ),
           ),
-          
+
           // Placeholder for symmetry
           const SizedBox(width: 48),
         ],
@@ -117,45 +145,41 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   Widget _buildBuffetSummary() {
     return Container(
       margin: const EdgeInsets.all(AppConfig.spacingM),
-      child: GradientContainer.card(
-        padding: const EdgeInsets.all(AppConfig.spacingM),
-        child: Row(
-          children: [
-            // Buffet info
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.buffet.name,
-                    style: AppConfig.headingSmall.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: AppConfig.spacingXS),
-                  Text(
-                    widget.buffet.formattedPrice,
-                    style: AppConfig.bodyMedium.copyWith(
-                      color: AppConfig.mediumGray,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Edit button
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(
-                'Change',
-                style: AppConfig.bodyMedium.copyWith(
-                  color: AppConfig.primaryBlack,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+      padding: const EdgeInsets.all(AppConfig.spacingM),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConfig.primaryWhite.withValues(alpha: 0.15),
+            AppConfig.primaryWhite.withValues(alpha: 0.08),
           ],
         ),
+        borderRadius: BorderRadius.circular(AppConfig.radiusL),
+        border: Border.all(
+          color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.buffet.name,
+            style: AppConfig.headingSmall.copyWith(
+              color: AppConfig.primaryWhite,
+              fontWeight: FontWeight.w500,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: AppConfig.spacingXS),
+          Text(
+            widget.buffet.formattedPrice,
+            style: AppConfig.bodyMedium.copyWith(
+              color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -192,46 +216,114 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Widget _buildDateTimeSection() {
-    return GradientContainer.card(
+    return Container(
       padding: const EdgeInsets.all(AppConfig.spacingM),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConfig.primaryWhite.withValues(alpha: 0.1),
+            AppConfig.primaryWhite.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppConfig.radiusL),
+        border: Border.all(
+          color: AppConfig.primaryWhite.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'When do you need the buffet?',
             style: AppConfig.bodyMedium.copyWith(
+              color: AppConfig.primaryWhite,
               fontWeight: FontWeight.w600,
             ),
           ),
-          
+
           const SizedBox(height: AppConfig.spacingM),
-          
+
           // Date picker
           ListTile(
-            leading: const Icon(Icons.calendar_today),
+            leading: Icon(
+              Icons.calendar_today,
+              color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+            ),
             title: Text(
               _selectedDate != null
                   ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
                   : 'Select Date',
+              style: TextStyle(
+                color: AppConfig.primaryWhite,
+              ),
             ),
-            subtitle: const Text('Choose your preferred date'),
+            subtitle: Text(
+              'Choose your preferred date',
+              style: TextStyle(
+                color: AppConfig.primaryWhite.withValues(alpha: 0.7),
+              ),
+            ),
             onTap: _selectDate,
             contentPadding: EdgeInsets.zero,
           ),
-          
-          const Divider(),
-          
-          // Time picker
-          ListTile(
-            leading: const Icon(Icons.access_time),
-            title: Text(
-              _selectedTime != null
-                  ? _selectedTime!.format(context)
-                  : 'Select Time',
+
+          const SizedBox(height: AppConfig.spacingM),
+
+          // Time slots section
+          Text(
+            'Available Time Slots',
+            style: AppConfig.bodyMedium.copyWith(
+              color: AppConfig.primaryWhite,
+              fontWeight: FontWeight.w600,
             ),
-            subtitle: const Text('Choose your preferred time'),
-            onTap: _selectTime,
-            contentPadding: EdgeInsets.zero,
+          ),
+
+          const SizedBox(height: AppConfig.spacingS),
+
+          // Time slot grid
+          Wrap(
+            spacing: AppConfig.spacingS,
+            runSpacing: AppConfig.spacingS,
+            children: _timeSlots.map((timeSlot) {
+              final isSelected = _selectedTimeSlot == timeSlot;
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedTimeSlot = timeSlot;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppConfig.spacingM,
+                    vertical: AppConfig.spacingS,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppConfig.primaryWhite.withValues(alpha: 0.9)
+                        : AppConfig.primaryWhite.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppConfig.radiusM),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppConfig.primaryWhite
+                          : AppConfig.primaryWhite.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    timeSlot,
+                    style: AppConfig.bodySmall.copyWith(
+                      color: isSelected
+                          ? AppConfig.primaryBlack
+                          : AppConfig.primaryWhite,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -239,38 +331,134 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Widget _buildGuestsSection() {
-    return GradientContainer.card(
-      padding: const EdgeInsets.all(AppConfig.spacingM),
+    return Container(
+      padding: const EdgeInsets.all(AppConfig.spacingL),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConfig.primaryWhite.withValues(alpha: 0.15),
+            AppConfig.primaryWhite.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppConfig.radiusL),
+        border: Border.all(
+          color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+          width: 2, // Thicker border for prominence
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Number of Guests',
-            style: AppConfig.bodyMedium.copyWith(
+            style: AppConfig.headingMedium.copyWith(
+              color: AppConfig.primaryWhite,
               fontWeight: FontWeight.w600,
+              fontSize: 20,
             ),
           ),
-          
-          const SizedBox(height: AppConfig.spacingM),
-          
-          TextFormField(
-            controller: _guestsController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Number of guests',
-              hintText: 'Enter number of people',
-              prefixIcon: Icon(Icons.people),
+
+          const SizedBox(height: AppConfig.spacingL),
+
+          // Prominent guest count selector
+          Container(
+            padding: const EdgeInsets.all(AppConfig.spacingM),
+            decoration: BoxDecoration(
+              color: AppConfig.primaryWhite.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppConfig.radiusL),
+              border: Border.all(
+                color: AppConfig.primaryWhite.withValues(alpha: 0.3),
+                width: 1,
+              ),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter number of guests';
-              }
-              final number = int.tryParse(value);
-              if (number == null || number < 1) {
-                return 'Please enter a valid number';
-              }
-              return null;
-            },
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Decrease button
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppConfig.radiusM),
+                  ),
+                  child: IconButton(
+                    onPressed: _guestCount > 1 ? () {
+                      setState(() {
+                        _guestCount--;
+                      });
+                    } : null,
+                    icon: Icon(
+                      Icons.remove,
+                      color: _guestCount > 1
+                          ? AppConfig.primaryWhite
+                          : AppConfig.primaryWhite.withValues(alpha: 0.5),
+                      size: 24,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: AppConfig.spacingL),
+
+                // Guest count display
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppConfig.spacingL,
+                    vertical: AppConfig.spacingM,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppConfig.primaryWhite.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(AppConfig.radiusM),
+                  ),
+                  child: Text(
+                    '$_guestCount',
+                    style: AppConfig.headingLarge.copyWith(
+                      color: AppConfig.primaryBlack,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 32,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: AppConfig.spacingL),
+
+                // Increase button
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(AppConfig.radiusM),
+                  ),
+                  child: IconButton(
+                    onPressed: _guestCount < 100 ? () {
+                      setState(() {
+                        _guestCount++;
+                      });
+                    } : null,
+                    icon: Icon(
+                      Icons.add,
+                      color: _guestCount < 100
+                          ? AppConfig.primaryWhite
+                          : AppConfig.primaryWhite.withValues(alpha: 0.5),
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppConfig.spacingM),
+
+          // Guest count info
+          Center(
+            child: Text(
+              _guestCount == 1 ? '1 Guest' : '$_guestCount Guests',
+              style: AppConfig.bodyLarge.copyWith(
+                color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),
@@ -278,23 +466,44 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Widget _buildDietarySection() {
-    return GradientContainer.card(
+    return Container(
       padding: const EdgeInsets.all(AppConfig.spacingM),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConfig.primaryWhite.withValues(alpha: 0.1),
+            AppConfig.primaryWhite.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppConfig.radiusL),
+        border: Border.all(
+          color: AppConfig.primaryWhite.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Dietary Preferences',
             style: AppConfig.bodyMedium.copyWith(
+              color: AppConfig.primaryWhite,
               fontWeight: FontWeight.w600,
             ),
           ),
-          
+
           const SizedBox(height: AppConfig.spacingM),
-          
+
           ...DietaryPreference.values.map((preference) {
             return RadioListTile<DietaryPreference>(
-              title: Text(_getDietaryPreferenceText(preference)),
+              title: Text(
+                _getDietaryPreferenceText(preference),
+                style: TextStyle(
+                  color: AppConfig.primaryWhite,
+                ),
+              ),
               value: preference,
               groupValue: _dietaryPreference,
               onChanged: (value) {
@@ -303,6 +512,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 });
               },
               contentPadding: EdgeInsets.zero,
+              activeColor: AppConfig.primaryWhite,
             );
           }),
         ],
@@ -311,27 +521,64 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Widget _buildSpecialRequirementsSection() {
-    return GradientContainer.card(
+    return Container(
       padding: const EdgeInsets.all(AppConfig.spacingM),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConfig.primaryWhite.withValues(alpha: 0.1),
+            AppConfig.primaryWhite.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppConfig.radiusL),
+        border: Border.all(
+          color: AppConfig.primaryWhite.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Special Requirements',
             style: AppConfig.bodyMedium.copyWith(
+              color: AppConfig.primaryWhite,
               fontWeight: FontWeight.w600,
             ),
           ),
-          
+
           const SizedBox(height: AppConfig.spacingM),
-          
+
           TextFormField(
             controller: _specialRequirementsController,
             maxLines: 3,
-            decoration: const InputDecoration(
+            style: TextStyle(
+              color: AppConfig.primaryWhite,
+            ),
+            decoration: InputDecoration(
               labelText: 'Any special requests or allergies?',
               hintText: 'e.g., No nuts, extra vegetarian options, etc.',
               alignLabelWithHint: true,
+              labelStyle: TextStyle(
+                color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+              ),
+              hintStyle: TextStyle(
+                color: AppConfig.primaryWhite.withValues(alpha: 0.6),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: AppConfig.primaryWhite.withValues(alpha: 0.3),
+                ),
+                borderRadius: BorderRadius.circular(AppConfig.radiusM),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: AppConfig.primaryWhite,
+                ),
+                borderRadius: BorderRadius.circular(AppConfig.radiusM),
+              ),
             ),
           ),
         ],
@@ -384,59 +631,49 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     }
   }
 
-  void _selectTime() async {
-    final time = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 12, minute: 0),
-    );
-    
-    if (time != null) {
-      setState(() {
-        _selectedTime = time;
-      });
-    }
-  }
-
   void _handleBooking() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     if (_selectedDate == null) {
       _showErrorDialog('Please select a date for your booking.');
       return;
     }
-    
-    if (_selectedTime == null) {
-      _showErrorDialog('Please select a time for your booking.');
+
+    if (_selectedTimeSlot == null) {
+      _showErrorDialog('Please select a time slot for your booking.');
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
     });
-    
+
     // Simulate API call
     await Future.delayed(const Duration(seconds: 2));
-    
+
     if (mounted) {
       setState(() {
         _isLoading = false;
       });
-      
+
+      // Convert time slot string to TimeOfDay for booking
+      final timeOfDay = _parseTimeSlot(_selectedTimeSlot!);
+
       // Create booking object
       final booking = Booking(
         id: 'booking_${DateTime.now().millisecondsSinceEpoch}',
         buffetOption: widget.buffet,
         bookingDate: _selectedDate!,
-        bookingTime: _selectedTime!,
-        numberOfGuests: int.parse(_guestsController.text),
+        bookingTime: timeOfDay,
+        numberOfGuests: _guestCount,
         dietaryPreference: _dietaryPreference,
         specialRequirements: _specialRequirementsController.text.isNotEmpty
             ? _specialRequirementsController.text
             : null,
         createdAt: DateTime.now(),
-        totalPrice: widget.buffet.pricePerHead * int.parse(_guestsController.text),
+        totalPrice: widget.buffet.pricePerHead * _guestCount,
       );
-      
+
       // Navigate to confirmation
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -444,6 +681,25 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         ),
       );
     }
+  }
+
+  TimeOfDay _parseTimeSlot(String timeSlot) {
+    // Parse time slot string (e.g., "2:30 PM") to TimeOfDay
+    final parts = timeSlot.split(' ');
+    final timePart = parts[0];
+    final period = parts[1];
+
+    final timeParts = timePart.split(':');
+    int hour = int.parse(timeParts[0]);
+    final minute = int.parse(timeParts[1]);
+
+    if (period == 'PM' && hour != 12) {
+      hour += 12;
+    } else if (period == 'AM' && hour == 12) {
+      hour = 0;
+    }
+
+    return TimeOfDay(hour: hour, minute: minute);
   }
 
   void _showErrorDialog(String message) {

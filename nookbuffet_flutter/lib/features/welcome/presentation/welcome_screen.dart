@@ -7,7 +7,8 @@ Sophisticated black-to-grey gradient background
 
 import 'package:flutter/material.dart';
 import '../../../config/app_config.dart';
-import '../../buffet/presentation/buffet_selection_screen.dart';
+import '../../../core/models/buffet_option.dart';
+import '../../buffet/presentation/buffet_details_screen.dart';
 import '../../auth/presentation/login_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
@@ -34,11 +35,8 @@ class WelcomeScreen extends StatelessWidget {
                 // Welcome hero section with elegant styling
                 _buildElegantHeroSection(context),
 
-                // Informational buffet options
+                // Tappable buffet options
                 _buildInformationalBuffetSection(context),
-
-                // Prominent call-to-action
-                _buildProminentActionButton(context),
 
                 // Business information with dark theme
                 _buildDarkBusinessInfo(context),
@@ -189,11 +187,7 @@ class WelcomeScreen extends StatelessWidget {
   }
 
   Widget _buildInformationalBuffetSection(BuildContext context) {
-    final buffets = [
-      {'name': 'Classic Buffet', 'description': 'Traditional favorites with timeless appeal'},
-      {'name': 'Premium Buffet', 'description': 'Elevated dishes with premium ingredients'},
-      {'name': 'Deluxe Buffet', 'description': 'Our finest selection for special occasions'},
-    ];
+    final buffets = BuffetData.allBuffets;
 
     return Container(
       margin: const EdgeInsets.all(AppConfig.spacingL),
@@ -221,7 +215,7 @@ class WelcomeScreen extends StatelessWidget {
           const SizedBox(height: AppConfig.spacingS),
 
           Text(
-            'Choose from our carefully crafted buffet selections',
+            'Tap to explore and choose your perfect buffet',
             style: AppConfig.bodyMedium.copyWith(
               color: AppConfig.primaryWhite.withValues(alpha: 0.7),
               fontSize: 16,
@@ -230,56 +224,89 @@ class WelcomeScreen extends StatelessWidget {
 
           const SizedBox(height: AppConfig.spacingXL),
 
-          // Informational buffet cards
-          ...buffets.map((buffet) => Container(
-            margin: const EdgeInsets.only(bottom: AppConfig.spacingM),
-            padding: const EdgeInsets.all(AppConfig.spacingL),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppConfig.primaryWhite.withValues(alpha: 0.1),
-                  AppConfig.primaryWhite.withValues(alpha: 0.05),
+          // Tappable buffet cards
+          ...buffets.map((buffet) => GestureDetector(
+            onTap: () => _navigateToBuffetDetails(context, buffet),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: AppConfig.spacingM),
+              padding: const EdgeInsets.all(AppConfig.spacingL),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppConfig.primaryWhite.withValues(alpha: 0.15),
+                    AppConfig.primaryWhite.withValues(alpha: 0.08),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(AppConfig.radiusL),
+                border: Border.all(
+                  color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppConfig.primaryBlack.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(AppConfig.radiusL),
-              border: Border.all(
-                color: AppConfig.primaryWhite.withValues(alpha: 0.15),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        buffet['name']!,
-                        style: AppConfig.headingMedium.copyWith(
-                          color: AppConfig.primaryWhite,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 18,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              buffet.name,
+                              style: AppConfig.headingMedium.copyWith(
+                                color: AppConfig.primaryWhite,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(width: AppConfig.spacingS),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppConfig.spacingS,
+                                vertical: AppConfig.spacingXS,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(AppConfig.radiusS),
+                              ),
+                              child: Text(
+                                buffet.formattedPrice,
+                                style: AppConfig.bodySmall.copyWith(
+                                  color: AppConfig.primaryWhite,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: AppConfig.spacingXS),
-                      Text(
-                        buffet['description']!,
-                        style: AppConfig.bodyMedium.copyWith(
-                          color: AppConfig.primaryWhite.withValues(alpha: 0.8),
-                          fontSize: 14,
+                        const SizedBox(height: AppConfig.spacingXS),
+                        Text(
+                          buffet.description,
+                          style: AppConfig.bodyMedium.copyWith(
+                            color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+                            fontSize: 14,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Icon(
-                  Icons.restaurant_menu,
-                  color: AppConfig.primaryWhite.withValues(alpha: 0.6),
-                  size: 24,
-                ),
-              ],
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: AppConfig.primaryWhite.withValues(alpha: 0.6),
+                    size: 20,
+                  ),
+                ],
+              ),
             ),
           )),
         ],
@@ -287,94 +314,10 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProminentActionButton(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(AppConfig.spacingL),
-      child: Column(
-        children: [
-          // Prominent Browse Buffets button
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppConfig.primaryWhite,
-                  AppConfig.lightGray,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(AppConfig.radiusL),
-              boxShadow: [
-                BoxShadow(
-                  color: AppConfig.primaryBlack.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _navigateToBuffetSelection(context),
-                borderRadius: BorderRadius.circular(AppConfig.radiusL),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppConfig.spacingL),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.restaurant_menu,
-                        color: AppConfig.primaryBlack,
-                        size: 28,
-                      ),
-                      const SizedBox(width: AppConfig.spacingM),
-                      Text(
-                        'Browse Our Buffets',
-                        style: AppConfig.headingMedium.copyWith(
-                          color: AppConfig.primaryBlack,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: AppConfig.spacingM),
-
-          // Secondary contact button
-          TextButton(
-            onPressed: () => _showContactDialog(context),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppConfig.spacingL,
-                vertical: AppConfig.spacingM,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.phone,
-                  color: AppConfig.primaryWhite.withValues(alpha: 0.8),
-                  size: 20,
-                ),
-                const SizedBox(width: AppConfig.spacingS),
-                Text(
-                  'Contact Us',
-                  style: AppConfig.bodyMedium.copyWith(
-                    color: AppConfig.primaryWhite.withValues(alpha: 0.8),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+  void _navigateToBuffetDetails(BuildContext context, BuffetOption buffet) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BuffetDetailsScreen(buffet: buffet),
       ),
     );
   }
@@ -432,13 +375,7 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  void _navigateToBuffetSelection(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const BuffetSelectionScreen(),
-      ),
-    );
-  }
+
 
   void _navigateToLogin(BuildContext context) {
     Navigator.of(context).push(
@@ -448,31 +385,7 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  void _showContactDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Contact Information'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildContactItem(Icons.location_on, AppConfig.businessAddress),
-            const SizedBox(height: AppConfig.spacingM),
-            _buildContactItem(Icons.phone, AppConfig.businessPhone),
-            const SizedBox(height: AppConfig.spacingM),
-            _buildContactItem(Icons.email, AppConfig.businessEmail),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildContactItem(IconData icon, String text) {
     return Row(
