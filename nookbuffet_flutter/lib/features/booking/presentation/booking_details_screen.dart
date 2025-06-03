@@ -13,10 +13,12 @@ import 'order_confirmation_screen.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
   final BuffetOption buffet;
+  final int guestCount;
 
   const BookingDetailsScreen({
     super.key,
     required this.buffet,
+    required this.guestCount,
   });
 
   @override
@@ -29,7 +31,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
   DateTime? _selectedDate;
   String? _selectedTimeSlot;
-  int _guestCount = 10;
   DietaryPreference _dietaryPreference = DietaryPreference.none;
   bool _isLoading = false;
 
@@ -197,8 +198,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             
             const SizedBox(height: AppConfig.spacingM),
             
-            // Number of guests
-            _buildGuestsSection(),
+            // Guest count display (read-only)
+            _buildGuestCountDisplay(),
             
             const SizedBox(height: AppConfig.spacingM),
             
@@ -283,11 +284,19 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
           const SizedBox(height: AppConfig.spacingS),
 
-          // Time slot grid
-          Wrap(
-            spacing: AppConfig.spacingS,
-            runSpacing: AppConfig.spacingS,
-            children: _timeSlots.map((timeSlot) {
+          // Time slot grid - properly aligned
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 2.5,
+              crossAxisSpacing: AppConfig.spacingS,
+              mainAxisSpacing: AppConfig.spacingS,
+            ),
+            itemCount: _timeSlots.length,
+            itemBuilder: (context, index) {
+              final timeSlot = _timeSlots[index];
               final isSelected = _selectedTimeSlot == timeSlot;
               return GestureDetector(
                 onTap: () {
@@ -296,10 +305,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   });
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppConfig.spacingM,
-                    vertical: AppConfig.spacingS,
-                  ),
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppConfig.primaryWhite.withValues(alpha: 0.9)
@@ -312,151 +317,90 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       width: 1,
                     ),
                   ),
-                  child: Text(
-                    timeSlot,
-                    style: AppConfig.bodySmall.copyWith(
-                      color: isSelected
-                          ? AppConfig.primaryBlack
-                          : AppConfig.primaryWhite,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  child: Center(
+                    child: Text(
+                      timeSlot,
+                      style: AppConfig.bodySmall.copyWith(
+                        color: isSelected
+                            ? AppConfig.primaryBlack
+                            : AppConfig.primaryWhite,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontSize: 13,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
               );
-            }).toList(),
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildGuestsSection() {
+  Widget _buildGuestCountDisplay() {
     return Container(
-      padding: const EdgeInsets.all(AppConfig.spacingL),
+      padding: const EdgeInsets.all(AppConfig.spacingM),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppConfig.primaryWhite.withValues(alpha: 0.15),
-            AppConfig.primaryWhite.withValues(alpha: 0.08),
+            AppConfig.primaryWhite.withValues(alpha: 0.1),
+            AppConfig.primaryWhite.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(AppConfig.radiusL),
         border: Border.all(
-          color: AppConfig.primaryWhite.withValues(alpha: 0.2),
-          width: 2, // Thicker border for prominence
+          color: AppConfig.primaryWhite.withValues(alpha: 0.15),
+          width: 1,
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Text(
-            'Number of Guests',
-            style: AppConfig.headingMedium.copyWith(
-              color: AppConfig.primaryWhite,
-              fontWeight: FontWeight.w600,
-              fontSize: 20,
-            ),
+          Icon(
+            Icons.people,
+            color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+            size: 24,
           ),
-
-          const SizedBox(height: AppConfig.spacingL),
-
-          // Prominent guest count selector
-          Container(
-            padding: const EdgeInsets.all(AppConfig.spacingM),
-            decoration: BoxDecoration(
-              color: AppConfig.primaryWhite.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppConfig.radiusL),
-              border: Border.all(
-                color: AppConfig.primaryWhite.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+          const SizedBox(width: AppConfig.spacingM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Decrease button
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppConfig.primaryWhite.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppConfig.radiusM),
-                  ),
-                  child: IconButton(
-                    onPressed: _guestCount > 1 ? () {
-                      setState(() {
-                        _guestCount--;
-                      });
-                    } : null,
-                    icon: Icon(
-                      Icons.remove,
-                      color: _guestCount > 1
-                          ? AppConfig.primaryWhite
-                          : AppConfig.primaryWhite.withValues(alpha: 0.5),
-                      size: 24,
-                    ),
+                Text(
+                  'Number of Guests',
+                  style: AppConfig.bodyMedium.copyWith(
+                    color: AppConfig.primaryWhite,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-
-                const SizedBox(width: AppConfig.spacingL),
-
-                // Guest count display
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppConfig.spacingL,
-                    vertical: AppConfig.spacingM,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppConfig.primaryWhite.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(AppConfig.radiusM),
-                  ),
-                  child: Text(
-                    '$_guestCount',
-                    style: AppConfig.headingLarge.copyWith(
-                      color: AppConfig.primaryBlack,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 32,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(width: AppConfig.spacingL),
-
-                // Increase button
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppConfig.primaryWhite.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppConfig.radiusM),
-                  ),
-                  child: IconButton(
-                    onPressed: _guestCount < 100 ? () {
-                      setState(() {
-                        _guestCount++;
-                      });
-                    } : null,
-                    icon: Icon(
-                      Icons.add,
-                      color: _guestCount < 100
-                          ? AppConfig.primaryWhite
-                          : AppConfig.primaryWhite.withValues(alpha: 0.5),
-                      size: 24,
-                    ),
+                const SizedBox(height: AppConfig.spacingXS),
+                Text(
+                  widget.guestCount == 1 ? '1 Guest' : '${widget.guestCount} Guests',
+                  style: AppConfig.bodyMedium.copyWith(
+                    color: AppConfig.primaryWhite.withValues(alpha: 0.8),
                   ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: AppConfig.spacingM),
-
-          // Guest count info
-          Center(
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppConfig.spacingM,
+              vertical: AppConfig.spacingS,
+            ),
+            decoration: BoxDecoration(
+              color: AppConfig.primaryWhite.withValues(alpha: 0.9),
+              borderRadius: BorderRadius.circular(AppConfig.radiusM),
+            ),
             child: Text(
-              _guestCount == 1 ? '1 Guest' : '$_guestCount Guests',
+              '${widget.guestCount}',
               style: AppConfig.bodyLarge.copyWith(
-                color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+                color: AppConfig.primaryBlack,
+                fontWeight: FontWeight.bold,
                 fontSize: 18,
-                fontWeight: FontWeight.w500,
               ),
             ),
           ),
@@ -665,13 +609,13 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         buffetOption: widget.buffet,
         bookingDate: _selectedDate!,
         bookingTime: timeOfDay,
-        numberOfGuests: _guestCount,
+        numberOfGuests: widget.guestCount,
         dietaryPreference: _dietaryPreference,
         specialRequirements: _specialRequirementsController.text.isNotEmpty
             ? _specialRequirementsController.text
             : null,
         createdAt: DateTime.now(),
-        totalPrice: widget.buffet.pricePerHead * _guestCount,
+        totalPrice: widget.buffet.pricePerHead * widget.guestCount,
       );
 
       // Navigate to confirmation

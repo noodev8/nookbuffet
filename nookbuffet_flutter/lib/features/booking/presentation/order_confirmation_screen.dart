@@ -1,12 +1,11 @@
 /*
 Order Confirmation Screen for Nook Buffet Flutter Application
-Displays booking confirmation details and next steps
-Features success animation and clear information layout
+Elegant dark gradient design with booking confirmation details
+Features success animation and streamlined user experience
 */
 
 import 'package:flutter/material.dart';
 import '../../../config/app_config.dart';
-import '../../../core/widgets/gradient_container.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/models/booking.dart';
 import '../../welcome/presentation/welcome_screen.dart';
@@ -68,9 +67,13 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GradientContainer.light(
+      // Elegant dark gradient background
+      body: Container(
         width: double.infinity,
         height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: AppConfig.dashboardGradient,
+        ),
         child: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
@@ -78,27 +81,27 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
               child: Column(
                 children: [
                   const SizedBox(height: AppConfig.spacingXL),
-                  
+
                   // Success animation
                   _buildSuccessAnimation(),
-                  
+
                   const SizedBox(height: AppConfig.spacingXL),
-                  
+
                   // Confirmation message
                   _buildConfirmationMessage(),
-                  
+
                   const SizedBox(height: AppConfig.spacingL),
-                  
+
                   // Booking details
                   _buildBookingDetails(),
-                  
+
                   const SizedBox(height: AppConfig.spacingL),
-                  
+
                   // Next steps
                   _buildNextSteps(),
-                  
+
                   const SizedBox(height: AppConfig.spacingXL),
-                  
+
                   // Action buttons
                   _buildActionButtons(),
                 ],
@@ -156,17 +159,26 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
                 'Booking Confirmed!',
                 style: AppConfig.headingLarge.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: AppConfig.primaryBlack,
+                  color: AppConfig.primaryWhite,
+                  fontSize: 28,
+                  shadows: [
+                    Shadow(
+                      color: AppConfig.primaryBlack.withValues(alpha: 0.8),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: AppConfig.spacingS),
-              
+
               Text(
                 'Your buffet order has been successfully submitted',
                 style: AppConfig.bodyLarge.copyWith(
-                  color: AppConfig.mediumGray,
+                  color: AppConfig.primaryWhite.withValues(alpha: 0.9),
+                  fontSize: 16,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -178,43 +190,63 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   }
 
   Widget _buildBookingDetails() {
-    return GradientContainer.card(
+    return Container(
       padding: const EdgeInsets.all(AppConfig.spacingL),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConfig.primaryWhite.withValues(alpha: 0.15),
+            AppConfig.primaryWhite.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppConfig.radiusL),
+        border: Border.all(
+          color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Booking Details',
             style: AppConfig.headingSmall.copyWith(
+              color: AppConfig.primaryWhite,
               fontWeight: FontWeight.bold,
+              fontSize: 20,
             ),
           ),
-          
+
           const SizedBox(height: AppConfig.spacingM),
-          
+
           // Booking ID
           _buildDetailRow('Booking ID', widget.booking.id),
-          
+
           // Buffet selection
           _buildDetailRow('Buffet', widget.booking.buffetOption.name),
-          
+
           // Date and time
           _buildDetailRow('Date', widget.booking.formattedDate),
           _buildDetailRow('Time', widget.booking.formattedTime),
-          
+
           // Number of guests
           _buildDetailRow('Guests', '${widget.booking.numberOfGuests} people'),
-          
+
           // Dietary preference
           if (widget.booking.dietaryPreference != DietaryPreference.none)
             _buildDetailRow('Dietary', widget.booking.dietaryPreferenceText),
-          
+
           // Special requirements
           if (widget.booking.specialRequirements != null)
             _buildDetailRow('Special Requirements', widget.booking.specialRequirements!),
-          
-          const Divider(height: AppConfig.spacingL),
-          
+
+          Divider(
+            height: AppConfig.spacingL,
+            color: AppConfig.primaryWhite.withValues(alpha: 0.3),
+          ),
+
           // Total price
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -222,14 +254,26 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
               Text(
                 'Total Price',
                 style: AppConfig.bodyLarge.copyWith(
+                  color: AppConfig.primaryWhite,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              Text(
-                widget.booking.formattedTotalPrice,
-                style: AppConfig.bodyLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppConfig.primaryBlack,
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppConfig.spacingM,
+                  vertical: AppConfig.spacingS,
+                ),
+                decoration: BoxDecoration(
+                  color: AppConfig.primaryWhite.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(AppConfig.radiusM),
+                ),
+                child: Text(
+                  widget.booking.formattedTotalPrice,
+                  style: AppConfig.bodyLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppConfig.primaryBlack,
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ],
@@ -250,7 +294,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
             child: Text(
               label,
               style: AppConfig.bodyMedium.copyWith(
-                color: AppConfig.mediumGray,
+                color: AppConfig.primaryWhite.withValues(alpha: 0.7),
               ),
             ),
           ),
@@ -258,6 +302,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
             child: Text(
               value,
               style: AppConfig.bodyMedium.copyWith(
+                color: AppConfig.primaryWhite,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -268,8 +313,23 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
   }
 
   Widget _buildNextSteps() {
-    return GradientContainer.card(
+    return Container(
       padding: const EdgeInsets.all(AppConfig.spacingM),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConfig.primaryWhite.withValues(alpha: 0.1),
+            AppConfig.primaryWhite.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppConfig.radiusL),
+        border: Border.all(
+          color: AppConfig.primaryWhite.withValues(alpha: 0.15),
+          width: 1,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -277,57 +337,62 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
             children: [
               Icon(
                 Icons.info_outline,
-                color: AppConfig.mediumGray,
+                color: AppConfig.primaryWhite.withValues(alpha: 0.8),
                 size: 20,
               ),
               const SizedBox(width: AppConfig.spacingS),
               Text(
                 'What happens next?',
                 style: AppConfig.bodyMedium.copyWith(
+                  color: AppConfig.primaryWhite,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: AppConfig.spacingM),
-          
+
           _buildNextStepItem(
             '1.',
             'We\'ll review your booking and confirm availability',
           ),
-          
+
           _buildNextStepItem(
             '2.',
             'You\'ll receive a confirmation email with final details',
           ),
-          
+
           _buildNextStepItem(
             '3.',
             'We\'ll prepare your delicious buffet for the scheduled time',
           ),
-          
+
           const SizedBox(height: AppConfig.spacingM),
-          
+
           Container(
             padding: const EdgeInsets.all(AppConfig.spacingS),
             decoration: BoxDecoration(
-              color: AppConfig.lightGray.withOpacity(0.5),
+              color: AppConfig.primaryWhite.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(AppConfig.radiusS),
+              border: Border.all(
+                color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
                 Icon(
                   Icons.phone,
                   size: 16,
-                  color: AppConfig.mediumGray,
+                  color: AppConfig.primaryWhite.withValues(alpha: 0.8),
                 ),
                 const SizedBox(width: AppConfig.spacingS),
                 Expanded(
                   child: Text(
                     'Questions? Call us at ${AppConfig.businessPhone}',
                     style: AppConfig.bodySmall.copyWith(
-                      color: AppConfig.mediumGray,
+                      color: AppConfig.primaryWhite.withValues(alpha: 0.8),
                     ),
                   ),
                 ),
@@ -349,14 +414,14 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
             width: 24,
             height: 24,
             decoration: BoxDecoration(
-              color: AppConfig.primaryBlack,
+              color: AppConfig.primaryWhite.withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
               child: Text(
                 number,
                 style: AppConfig.bodySmall.copyWith(
-                  color: AppConfig.primaryWhite,
+                  color: AppConfig.primaryBlack,
                   fontWeight: FontWeight.bold,
                   fontSize: 10,
                 ),
@@ -368,6 +433,7 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen>
             child: Text(
               description,
               style: AppConfig.bodyMedium.copyWith(
+                color: AppConfig.primaryWhite.withValues(alpha: 0.9),
                 height: 1.4,
               ),
             ),

@@ -11,13 +11,21 @@ import '../../../core/models/buffet_option.dart';
 import '../../booking/presentation/booking_details_screen.dart';
 import '../widgets/buffet_item_list.dart';
 
-class BuffetDetailsScreen extends StatelessWidget {
+class BuffetDetailsScreen extends StatefulWidget {
   final BuffetOption buffet;
 
   const BuffetDetailsScreen({
     super.key,
     required this.buffet,
   });
+
+  @override
+  State<BuffetDetailsScreen> createState() => _BuffetDetailsScreenState();
+}
+
+class _BuffetDetailsScreenState extends State<BuffetDetailsScreen> {
+  int _guestCount = 10;
+  List<String> _removedItems = [];
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +106,7 @@ class BuffetDetailsScreen extends StatelessWidget {
           // Title
           Expanded(
             child: Text(
-              buffet.name,
+              widget.buffet.name,
               style: AppConfig.headingMedium.copyWith(
                 color: AppConfig.primaryWhite,
                 fontWeight: FontWeight.w400,
@@ -118,7 +126,7 @@ class BuffetDetailsScreen extends StatelessWidget {
           // Popular badge or placeholder
           SizedBox(
             width: 48,
-            child: buffet.isPopular
+            child: widget.buffet.isPopular
                 ? Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppConfig.spacingXS,
@@ -172,15 +180,29 @@ class BuffetDetailsScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: Text(
-                  buffet.name,
-                  style: AppConfig.headingLarge.copyWith(
-                    color: AppConfig.primaryWhite,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 24,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.buffet.name,
+                      style: AppConfig.headingLarge.copyWith(
+                        color: AppConfig.primaryWhite,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 24,
+                      ),
+                    ),
+                    const SizedBox(height: AppConfig.spacingXS),
+                    Text(
+                      '${widget.buffet.formattedPrice} per person',
+                      style: AppConfig.bodyMedium.copyWith(
+                        color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              // Total price display
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppConfig.spacingM,
@@ -190,12 +212,24 @@ class BuffetDetailsScreen extends StatelessWidget {
                   color: AppConfig.primaryWhite.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(AppConfig.radiusM),
                 ),
-                child: Text(
-                  buffet.formattedPrice,
-                  style: AppConfig.bodyLarge.copyWith(
-                    color: AppConfig.primaryBlack,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Column(
+                  children: [
+                    Text(
+                      'Total',
+                      style: AppConfig.bodySmall.copyWith(
+                        color: AppConfig.primaryBlack,
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      '\$${(widget.buffet.pricePerHead * _guestCount).toStringAsFixed(2)}',
+                      style: AppConfig.bodyLarge.copyWith(
+                        color: AppConfig.primaryBlack,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -205,13 +239,18 @@ class BuffetDetailsScreen extends StatelessWidget {
 
           // Description
           Text(
-            buffet.description,
+            widget.buffet.description,
             style: AppConfig.bodyLarge.copyWith(
               color: AppConfig.primaryWhite.withValues(alpha: 0.9),
               height: 1.5,
               fontSize: 16,
             ),
           ),
+
+          const SizedBox(height: AppConfig.spacingL),
+
+          // Guest count section
+          _buildGuestCountSection(),
 
           const SizedBox(height: AppConfig.spacingM),
 
@@ -222,21 +261,141 @@ class BuffetDetailsScreen extends StatelessWidget {
             children: [
               _buildStatChip(
                 icon: Icons.restaurant_menu,
-                label: '${buffet.totalItems} Items',
+                label: '${widget.buffet.totalItems} Items',
               ),
-              if (buffet.hasVegetarianOptions)
+              if (widget.buffet.hasVegetarianOptions)
                 _buildStatChip(
                   icon: Icons.eco,
                   label: 'Vegetarian Options',
                   color: Colors.green,
                 ),
-              if (buffet.hasVeganOptions)
+              if (widget.buffet.hasVeganOptions)
                 _buildStatChip(
                   icon: Icons.local_florist,
                   label: 'Vegan Options',
                   color: Colors.green,
                 ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGuestCountSection() {
+    return Container(
+      padding: const EdgeInsets.all(AppConfig.spacingL),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppConfig.primaryWhite.withValues(alpha: 0.15),
+            AppConfig.primaryWhite.withValues(alpha: 0.08),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppConfig.radiusL),
+        border: Border.all(
+          color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+          width: 2,
+        ),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Number of Guests',
+            style: AppConfig.headingMedium.copyWith(
+              color: AppConfig.primaryWhite,
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+            ),
+          ),
+
+          const SizedBox(height: AppConfig.spacingM),
+
+          // Guest count selector
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Decrease button
+              Container(
+                decoration: BoxDecoration(
+                  color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(AppConfig.radiusM),
+                ),
+                child: IconButton(
+                  onPressed: _guestCount > 1 ? () {
+                    setState(() {
+                      _guestCount--;
+                    });
+                  } : null,
+                  icon: Icon(
+                    Icons.remove,
+                    color: _guestCount > 1
+                        ? AppConfig.primaryWhite
+                        : AppConfig.primaryWhite.withValues(alpha: 0.5),
+                    size: 24,
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: AppConfig.spacingL),
+
+              // Guest count display
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppConfig.spacingL,
+                  vertical: AppConfig.spacingM,
+                ),
+                decoration: BoxDecoration(
+                  color: AppConfig.primaryWhite.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(AppConfig.radiusM),
+                ),
+                child: Text(
+                  '$_guestCount',
+                  style: AppConfig.headingLarge.copyWith(
+                    color: AppConfig.primaryBlack,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 28,
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: AppConfig.spacingL),
+
+              // Increase button
+              Container(
+                decoration: BoxDecoration(
+                  color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(AppConfig.radiusM),
+                ),
+                child: IconButton(
+                  onPressed: _guestCount < 100 ? () {
+                    setState(() {
+                      _guestCount++;
+                    });
+                  } : null,
+                  icon: Icon(
+                    Icons.add,
+                    color: _guestCount < 100
+                        ? AppConfig.primaryWhite
+                        : AppConfig.primaryWhite.withValues(alpha: 0.5),
+                    size: 24,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppConfig.spacingS),
+
+          // Guest count info
+          Text(
+            _guestCount == 1 ? '1 Guest' : '$_guestCount Guests',
+            style: AppConfig.bodyMedium.copyWith(
+              color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+              fontSize: 16,
+            ),
           ),
         ],
       ),
@@ -300,20 +459,20 @@ class BuffetDetailsScreen extends StatelessWidget {
           const SizedBox(height: AppConfig.spacingM),
 
           // Sandwiches section
-          if (buffet.sandwiches.isNotEmpty)
+          if (widget.buffet.sandwiches.isNotEmpty)
             BuffetItemList(
               title: 'Sandwiches',
-              items: buffet.sandwiches,
+              items: widget.buffet.sandwiches,
               icon: Icons.lunch_dining,
             ),
 
           const SizedBox(height: AppConfig.spacingM),
 
           // Sides section
-          if (buffet.sides.isNotEmpty)
+          if (widget.buffet.sides.isNotEmpty)
             BuffetItemList(
               title: 'Sides & Extras',
-              items: buffet.sides,
+              items: widget.buffet.sides,
               icon: Icons.restaurant,
             ),
         ],
@@ -417,7 +576,7 @@ class BuffetDetailsScreen extends StatelessWidget {
                 ),
               ),
               Text(
-                buffet.formattedPrice,
+                widget.buffet.formattedPrice,
                 style: AppConfig.bodyMedium.copyWith(
                   color: AppConfig.primaryWhite,
                   fontWeight: FontWeight.bold,
@@ -444,9 +603,9 @@ class BuffetDetailsScreen extends StatelessWidget {
       width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: AppConfig.spacingM),
       child: CustomButton.primary(
-        text: 'Choose Your Options',
+        text: 'Choose Slot',
         onPressed: () => _navigateToBooking(context),
-        icon: Icons.tune,
+        icon: Icons.schedule,
         padding: const EdgeInsets.symmetric(
           horizontal: AppConfig.spacingL,
           vertical: AppConfig.spacingM,
@@ -458,7 +617,10 @@ class BuffetDetailsScreen extends StatelessWidget {
   void _navigateToBooking(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => BookingDetailsScreen(buffet: buffet),
+        builder: (context) => BookingDetailsScreen(
+          buffet: widget.buffet,
+          guestCount: _guestCount,
+        ),
       ),
     );
   }
