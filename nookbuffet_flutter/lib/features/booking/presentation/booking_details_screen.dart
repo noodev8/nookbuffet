@@ -328,7 +328,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             ),
             title: Text(
               _selectedDate != null
-                  ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                  ? _formatSelectedDate(_selectedDate!)
                   : 'Select Date',
               style: TextStyle(
                 color: AppConfig.primaryWhite,
@@ -630,6 +630,26 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       case DietaryPreference.mixed:
         return 'Mixed (Vegetarian & Non-Vegetarian)';
     }
+  }
+
+  String _formatSelectedDate(DateTime date) {
+    // Get day of week
+    const dayNames = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+      'Friday', 'Saturday', 'Sunday'
+    ];
+
+    // Get month name
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    final dayName = dayNames[date.weekday - 1]; // weekday is 1-7, array is 0-6
+    final monthName = monthNames[date.month - 1]; // month is 1-12, array is 0-11
+
+    // Format: "Monday, 15 January 2024"
+    return '$dayName, ${date.day} $monthName ${date.year}';
   }
 
   void _selectDate() async {
