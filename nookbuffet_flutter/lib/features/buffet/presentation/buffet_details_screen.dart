@@ -24,7 +24,7 @@ class BuffetDetailsScreen extends StatefulWidget {
 }
 
 class _BuffetDetailsScreenState extends State<BuffetDetailsScreen> {
-  int _guestCount = 10;
+  int _guestCount = 5;
   List<String> _removedItems = [];
 
   @override
@@ -57,9 +57,6 @@ class _BuffetDetailsScreenState extends State<BuffetDetailsScreen> {
 
                       // Dietary information
                       _buildDietaryInfo(),
-
-                      // Pricing details
-                      _buildPricingDetails(),
 
                       // Bottom spacing for floating button
                       const SizedBox(height: 100),
@@ -222,7 +219,7 @@ class _BuffetDetailsScreenState extends State<BuffetDetailsScreen> {
                       ),
                     ),
                     Text(
-                      '\$${(widget.buffet.pricePerHead * _guestCount).toStringAsFixed(2)}',
+                      '£${(widget.buffet.pricePerHead * _guestCount).toStringAsFixed(2)}',
                       style: AppConfig.bodyLarge.copyWith(
                         color: AppConfig.primaryBlack,
                         fontWeight: FontWeight.bold,
@@ -534,69 +531,7 @@ class _BuffetDetailsScreenState extends State<BuffetDetailsScreen> {
     );
   }
 
-  Widget _buildPricingDetails() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppConfig.spacingM),
-      padding: const EdgeInsets.all(AppConfig.spacingM),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppConfig.primaryWhite.withValues(alpha: 0.1),
-            AppConfig.primaryWhite.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppConfig.radiusL),
-        border: Border.all(
-          color: AppConfig.primaryWhite.withValues(alpha: 0.15),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Pricing Details',
-            style: AppConfig.bodyMedium.copyWith(
-              color: AppConfig.primaryWhite,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
 
-          const SizedBox(height: AppConfig.spacingS),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Price per person:',
-                style: AppConfig.bodyMedium.copyWith(
-                  color: AppConfig.primaryWhite.withValues(alpha: 0.9),
-                ),
-              ),
-              Text(
-                widget.buffet.formattedPrice,
-                style: AppConfig.bodyMedium.copyWith(
-                  color: AppConfig.primaryWhite,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: AppConfig.spacingXS),
-
-          Text(
-            'Final price will be calculated based on number of guests',
-            style: AppConfig.bodySmall.copyWith(
-              color: AppConfig.primaryWhite.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildBookingButton(BuildContext context) {
     return Container(

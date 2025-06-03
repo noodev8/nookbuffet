@@ -9,7 +9,7 @@ import '../../../config/app_config.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/models/buffet_option.dart';
 import '../../../core/models/booking.dart';
-import 'order_confirmation_screen.dart';
+import '../../auth/presentation/login_screen.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
   final BuffetOption buffet;
@@ -32,7 +32,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   DateTime? _selectedDate;
   String? _selectedTimeSlot;
   DietaryPreference _dietaryPreference = DietaryPreference.none;
-  bool _isLoading = false;
 
   // Time slots from 9am to 4pm in 30-minute intervals
   final List<String> _timeSlots = [
@@ -144,6 +143,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Widget _buildBuffetSummary() {
+    final totalPrice = widget.buffet.pricePerHead * widget.guestCount;
+
     return Container(
       margin: const EdgeInsets.all(AppConfig.spacingM),
       padding: const EdgeInsets.all(AppConfig.spacingM),
@@ -165,19 +166,91 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.buffet.name,
-            style: AppConfig.headingSmall.copyWith(
-              color: AppConfig.primaryWhite,
-              fontWeight: FontWeight.w500,
-              fontSize: 18,
-            ),
+          // Buffet name and price per head
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.buffet.name,
+                      style: AppConfig.headingSmall.copyWith(
+                        color: AppConfig.primaryWhite,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: AppConfig.spacingXS),
+                    Text(
+                      widget.buffet.formattedPrice,
+                      style: AppConfig.bodyMedium.copyWith(
+                        color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: AppConfig.spacingXS),
-          Text(
-            widget.buffet.formattedPrice,
-            style: AppConfig.bodyMedium.copyWith(
-              color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+
+          const SizedBox(height: AppConfig.spacingM),
+
+          // Guest count and total cost
+          Container(
+            padding: const EdgeInsets.all(AppConfig.spacingM),
+            decoration: BoxDecoration(
+              color: AppConfig.primaryWhite.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(AppConfig.radiusM),
+              border: Border.all(
+                color: AppConfig.primaryWhite.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Guests',
+                      style: AppConfig.bodySmall.copyWith(
+                        color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      widget.guestCount == 1 ? '1 Guest' : '${widget.guestCount} Guests',
+                      style: AppConfig.bodyMedium.copyWith(
+                        color: AppConfig.primaryWhite,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'Total Cost',
+                      style: AppConfig.bodySmall.copyWith(
+                        color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                    Text(
+                      '£${totalPrice.toStringAsFixed(2)}',
+                      style: AppConfig.bodyLarge.copyWith(
+                        color: AppConfig.primaryWhite,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],
@@ -536,8 +609,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       margin: const EdgeInsets.symmetric(horizontal: AppConfig.spacingM),
       child: CustomButton.primary(
         text: 'Confirm Booking',
-        onPressed: _isLoading ? null : _handleBooking,
-        isLoading: _isLoading,
+        onPressed: _handleBooking,
         icon: Icons.check_circle,
         padding: const EdgeInsets.symmetric(
           horizontal: AppConfig.spacingL,
@@ -588,63 +660,46 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    // Show login requirement dialog
+    _showLoginRequiredDialog();
+  }
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-
-      // Convert time slot string to TimeOfDay for booking
-      final timeOfDay = _parseTimeSlot(_selectedTimeSlot!);
-
-      // Create booking object
-      final booking = Booking(
-        id: 'booking_${DateTime.now().millisecondsSinceEpoch}',
-        buffetOption: widget.buffet,
-        bookingDate: _selectedDate!,
-        bookingTime: timeOfDay,
-        numberOfGuests: widget.guestCount,
-        dietaryPreference: _dietaryPreference,
-        specialRequirements: _specialRequirementsController.text.isNotEmpty
-            ? _specialRequirementsController.text
-            : null,
-        createdAt: DateTime.now(),
-        totalPrice: widget.buffet.pricePerHead * widget.guestCount,
-      );
-
-      // Navigate to confirmation
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => OrderConfirmationScreen(booking: booking),
+  void _showLoginRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Login Required'),
+        content: const Text(
+          'To complete your booking, please login or create an account. This helps us confirm your identity and send you booking updates.',
         ),
-      );
-    }
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              _navigateToLogin();
+            },
+            child: const Text('Login'),
+          ),
+        ],
+      ),
+    );
   }
 
-  TimeOfDay _parseTimeSlot(String timeSlot) {
-    // Parse time slot string (e.g., "2:30 PM") to TimeOfDay
-    final parts = timeSlot.split(' ');
-    final timePart = parts[0];
-    final period = parts[1];
-
-    final timeParts = timePart.split(':');
-    int hour = int.parse(timeParts[0]);
-    final minute = int.parse(timeParts[1]);
-
-    if (period == 'PM' && hour != 12) {
-      hour += 12;
-    } else if (period == 'AM' && hour == 12) {
-      hour = 0;
-    }
-
-    return TimeOfDay(hour: hour, minute: minute);
+  void _navigateToLogin() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const LoginScreen(),
+      ),
+    );
   }
+
+
+
+
 
   void _showErrorDialog(String message) {
     showDialog(
