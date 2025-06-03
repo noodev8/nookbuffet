@@ -1,12 +1,14 @@
 /*
-Splash Screen for Nook Buffet Flutter Application
-Displays the app logo with gradient background for 5 seconds
-Provides smooth transition to the main welcome screen
+Animated Gradient Splash Screen for Nook Buffet Flutter Application
+Features elegant "The Nook" lettering with Black-to-Grey-to-Light Grey gradient background
+Dual animation system with fade-in and elastic scale effects
+Responsive typography with multiple shadow layers for depth
+Transparent status bar and smooth transitions
 */
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../config/app_config.dart';
-import '../../../core/widgets/gradient_container.dart';
 import '../../welcome/presentation/welcome_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -21,25 +23,39 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  late Animation<double> _titleFadeAnimation;
+  late Animation<double> _underlineFadeAnimation;
+  late Animation<double> _taglineFadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    
-    // Initialize animations for smooth logo appearance
+
+    // Set transparent status bar for full-screen effect
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+    );
+
+    // Initialize dual animation system for polished splash experience
     _animationController = AnimationController(
-      duration: AppConfig.animationSlow,
+      duration: AppConfig.splashAnimationDuration, // 1.2 seconds
       vsync: this,
     );
 
+    // Fade-in animation: 0 to 100% opacity over 1.2 seconds with smooth curve
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeIn, // Smoother fade-in effect
     ));
 
+    // Scale animation: 80% to 100% size with elastic bounce effect
     _scaleAnimation = Tween<double>(
       begin: 0.8,
       end: 1.0,
@@ -48,17 +64,46 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.elasticOut,
     ));
 
+    // Staggered fade animations for dramatic effect
+    _titleFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.0, 0.7, curve: Curves.easeInOut), // Title fades in first
+    ));
+
+    _underlineFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.4, 0.9, curve: Curves.easeInOut), // Underline follows
+    ));
+
+    _taglineFadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.6, 1.0, curve: Curves.easeInOut), // Tagline last
+    ));
+
     // Start animations and navigate after splash duration
     _startSplashSequence();
   }
 
   void _startSplashSequence() async {
-    // Start the logo animation
+    // Longer delay to ensure you can see the fade-in effect clearly
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    // Start the elegant lettering fade-in animation
+    print('Starting fade-in animation...');
     _animationController.forward();
 
     // Wait for splash duration then navigate to welcome screen
     await Future.delayed(AppConfig.splashDuration);
-    
+
     if (mounted) {
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
@@ -84,48 +129,39 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Responsive design: detect tablet vs mobile
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > AppConfig.tabletBreakpoint;
+
     return Scaffold(
-      body: GradientContainer.primary(
+      // Full-screen gradient background with Black-to-Grey-to-Light Grey
+      body: Container(
         width: double.infinity,
         height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: AppConfig.splashGradient,
+        ),
         child: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Animated logo section
+              // Elegant "The Nook" lettering with staggered fade-in animation
               Expanded(
-                flex: 3,
+                flex: 4,
                 child: Center(
                   child: AnimatedBuilder(
                     animation: _animationController,
                     builder: (context, child) {
-                      return FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: ScaleTransition(
-                          scale: _scaleAnimation,
-                          child: _buildLogoSection(),
-                        ),
+                      return ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: _buildElegantLettering(isTablet),
                       );
                     },
                   ),
                 ),
               ),
 
-              // App name and tagline
-              Expanded(
-                flex: 1,
-                child: AnimatedBuilder(
-                  animation: _fadeAnimation,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _fadeAnimation.value,
-                      child: _buildAppInfo(),
-                    );
-                  },
-                ),
-              ),
-
-              // Loading indicator
+              // Loading indicator with smooth fade
               Expanded(
                 flex: 1,
                 child: AnimatedBuilder(
@@ -145,105 +181,104 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  Widget _buildLogoSection() {
-    return Container(
-      padding: const EdgeInsets.all(AppConfig.spacingXL),
-      decoration: BoxDecoration(
-        color: AppConfig.primaryWhite.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(AppConfig.radiusXL),
-        boxShadow: [
-          BoxShadow(
-            color: AppConfig.primaryBlack.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Logo image
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: AppConfig.primaryWhite,
-              borderRadius: BorderRadius.circular(AppConfig.radiusL),
-              boxShadow: [
-                BoxShadow(
-                  color: AppConfig.primaryBlack.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppConfig.radiusL),
-              child: Image.asset(
-                AppConfig.logoPath,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  // Fallback if logo image is not found
-                  return Container(
-                    decoration: BoxDecoration(
-                      gradient: AppConfig.lightGradient,
-                      borderRadius: BorderRadius.circular(AppConfig.radiusL),
-                    ),
-                    child: const Icon(
-                      Icons.restaurant,
-                      size: 60,
-                      color: AppConfig.primaryBlack,
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildElegantLettering(bool isTablet) {
+    // Responsive font sizing for elegant lettering
+    final mainFontSize = isTablet ? 72.0 : 56.0;
+    final letterSpacing = isTablet ? 8.0 : 6.0;
 
-  Widget _buildAppInfo() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // App name
-        Text(
-          AppConfig.appName,
-          style: AppConfig.headingLarge.copyWith(
-            color: AppConfig.primaryWhite,
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
+        // Main "The Nook" lettering with staggered fade-in
+        AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _titleFadeAnimation.value,
+              child: Transform.scale(
+                scale: 0.8 + (_titleFadeAnimation.value * 0.2), // Slight scale effect
+                child: Text(
+                  'The Nook',
+                  style: TextStyle(
+                    fontSize: mainFontSize,
+                    fontWeight: FontWeight.w300, // Light weight for elegance
+                    color: AppConfig.primaryWhite,
+                    letterSpacing: letterSpacing,
+                    height: 1.1,
+                    shadows: [
+                      // Multiple shadows for depth and elegance
+                      Shadow(
+                        color: AppConfig.primaryBlack.withValues(alpha: 0.8),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                      Shadow(
+                        color: AppConfig.primaryBlack.withValues(alpha: 0.4),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          },
         ),
-        
-        const SizedBox(height: AppConfig.spacingS),
-        
-        // Business name subtitle
-        Text(
-          AppConfig.businessName,
-          style: AppConfig.bodyLarge.copyWith(
-            color: AppConfig.primaryWhite.withOpacity(0.8),
-            fontSize: 18,
-            fontWeight: FontWeight.w300,
-            letterSpacing: 1.0,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        
+
         const SizedBox(height: AppConfig.spacingM),
-        
-        // Tagline
-        Text(
-          'Delicious Buffets, Delivered Fresh',
-          style: AppConfig.bodyMedium.copyWith(
-            color: AppConfig.primaryWhite.withOpacity(0.6),
-            fontSize: 14,
-            fontStyle: FontStyle.italic,
-          ),
-          textAlign: TextAlign.center,
+
+        // Subtle underline decoration with delayed fade-in
+        AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _underlineFadeAnimation.value,
+              child: Container(
+                width: isTablet ? 200 : 150,
+                height: 2,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      AppConfig.primaryWhite.withValues(alpha: 0.6),
+                      Colors.transparent,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(1),
+                ),
+              ),
+            );
+          },
+        ),
+
+        const SizedBox(height: AppConfig.spacingL),
+
+        // Elegant tagline with final fade-in
+        AnimatedBuilder(
+          animation: _animationController,
+          builder: (context, child) {
+            return Opacity(
+              opacity: _taglineFadeAnimation.value,
+              child: Text(
+                'Buffet Excellence',
+                style: TextStyle(
+                  fontSize: isTablet ? 20 : 16,
+                  fontWeight: FontWeight.w200,
+                  color: AppConfig.primaryWhite.withValues(alpha: 0.8),
+                  letterSpacing: isTablet ? 4.0 : 3.0,
+                  shadows: [
+                    Shadow(
+                      color: AppConfig.primaryBlack.withValues(alpha: 0.6),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            );
+          },
         ),
       ],
     );
@@ -269,7 +304,7 @@ class _SplashScreenState extends State<SplashScreen>
         Text(
           'Preparing your experience...',
           style: AppConfig.bodySmall.copyWith(
-            color: AppConfig.primaryWhite.withOpacity(0.6),
+            color: AppConfig.primaryWhite.withValues(alpha: 0.6),
             fontSize: 12,
           ),
           textAlign: TextAlign.center,

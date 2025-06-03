@@ -36,6 +36,18 @@ class AppConfig {
     colors: [softBlack, primaryBlack],
   );
 
+  // Animated Splash Screen Gradient: Black-to-Grey-to-Light Grey
+  static const LinearGradient splashGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      primaryBlack,      // Black at top
+      charcoalGray,      // Grey in middle
+      Color(0xFF757575), // Light Grey at bottom
+    ],
+    stops: [0.0, 0.5, 1.0],
+  );
+
   static const LinearGradient lightGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -116,5 +128,15 @@ class AppConfig {
   static const Duration animationFast = Duration(milliseconds: 200);
   static const Duration animationMedium = Duration(milliseconds: 300);
   static const Duration animationSlow = Duration(milliseconds: 500);
-  static const Duration splashDuration = Duration(seconds: 5);
+  static const Duration splashAnimationDuration = Duration(milliseconds: 1200); // 1.2 seconds for animation
+  static const Duration splashDuration = Duration(seconds: 5); // 5 seconds total display time
+
+  // Responsive Design Constants
+  static const double tabletBreakpoint = 600.0; // Screen width threshold for tablet detection
+  static const double mobileLogoSize = 120.0;
+  static const double tabletLogoSize = 160.0;
+  static const double mobileFontSizeLarge = 32.0;
+  static const double tabletFontSizeLarge = 42.0;
+  static const double mobileFontSizeMedium = 18.0;
+  static const double tabletFontSizeMedium = 24.0;
 }
