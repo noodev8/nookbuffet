@@ -1,0 +1,621 @@
+/* ========================================
+   FONTS - Import Google Fonts for the website
+   ======================================== */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Source+Sans+Pro:wght@400;600&display=swap');
+
+/* ========================================
+   GLOBAL RESET - Remove default browser styling
+   ======================================== */
+* {
+  margin: 0;           /* Remove default margins */
+  padding: 0;          /* Remove default padding */
+  box-sizing: border-box; /* Make padding/border included in width/height */
+}
+
+/* ========================================
+   MAIN CONTAINER - Overall page styling
+   ======================================== */
+.welcome-page-option3 {
+  font-family: 'Source Sans Pro', sans-serif; /* Main font for the website */
+  color: #333;         /* Dark gray text color */
+  overflow-x: hidden;  /* Hide horizontal scrollbar */
+}
+
+/* ========================================
+   NAVIGATION BAR - Top menu that stays fixed
+   ======================================== */
+.navbar-option3 {
+  position: fixed;        /* Stays at top when scrolling */
+  top: 0;                /* Positioned at very top */
+  left: 0;               /* Spans full width */
+  right: 0;
+  background: rgba(0, 0, 0, 0.9); /* Semi-transparent black background */
+  backdrop-filter: blur(10px);    /* Blurs content behind navbar */
+  z-index: 1000;         /* Appears above other content */
+  transition: all 0.3s ease;     /* Smooth animations */
+}
+
+/* Container that centers and limits navbar width */
+.nav-container-option3 {
+  max-width: 1200px;     /* Maximum width of navbar content */
+  margin: 0 auto;        /* Centers the navbar */
+  padding: 1rem 2rem;    /* Space inside navbar */
+  display: flex;         /* Arranges items in a row */
+  justify-content: space-between; /* Logo left, menu right */
+  align-items: center;   /* Vertically centers items */
+}
+
+/* ========================================
+   LOGO SECTION - Left side of navbar
+   ======================================== */
+.logo-option3 {
+  display: flex;         /* Arranges logo image and text side by side */
+  align-items: center;   /* Vertically centers logo elements */
+  gap: 0.75rem;         /* Space between logo image and text */
+}
+
+/* Navigation logo container */
+.nav-logo-option3 {
+  display: flex;
+  align-items: center;
+}
+
+/* Navigation logo image */
+.nav-logo-option3 img {
+  height: 50px;          /* Logo height */
+  width: auto;           /* Maintain aspect ratio */
+  object-fit: contain;   /* Fit image properly */
+}
+
+/* Logo image styling */
+.logo-image-option3 {
+  height: 40px;          /* Logo height  */
+  width: 40px;           /* Logo width */
+  object-fit: cover;     /* Crops image to fit circle */
+  border-radius: 50%;    /* Makes image circular */
+  border: 2px solid #fff; /* White border around logo */
+}
+
+/* Logo text styling */
+.logo-text-option3 {
+  font-family: 'Oswald', sans-serif; /* Bold font for logo text */
+  font-size: 1.5rem;     /* Logo text size  */
+  font-weight: 600;      /* Makes text bold */
+  color: white;          /* White text color */
+  text-transform: uppercase; /* Makes text ALL CAPS */
+  letter-spacing: 2px;   /* Adds space between letters */
+}
+
+/* ========================================
+   NAVIGATION MENU LINKS - Right side of navbar
+   ======================================== */
+.nav-links-option3 {
+  display: flex;         /* Arranges menu items in a row */
+  gap: 2.5rem;          /* Space between menu items */
+}
+
+/* Individual menu link styling */
+.nav-links-option3 a {
+  color: rgba(255, 255, 255, 0.8); /* Semi-transparent white text */
+  text-decoration: none; /* Removes underline from links */
+  font-weight: 600;      /* Makes text semi-bold */
+  font-size: 0.9rem;     /* Text size  */
+  text-transform: uppercase; /* Makes text ALL CAPS */
+  letter-spacing: 1px;   /* Adds space between letters */
+  transition: all 0.3s ease; /* Smooth hover animations */
+  position: relative;    /* Needed for the underline effect */
+}
+
+/* Creates the animated underline effect */
+.nav-links-option3 a::after {
+  content: '';           /* Creates invisible element */
+  position: absolute;    /* Positions relative to the link */
+  bottom: -5px;         /* Places underline below text */
+  left: 0;              /* Starts from left edge */
+  width: 0;             /* Starts with no width (invisible) */
+  height: 2px;          /* Thickness of underline  */
+  background: #fff;      /* White underline color  */
+  transition: width 0.3s ease; /* Animates the width change */
+}
+
+/* What happens when you hover over a menu link */
+.nav-links-option3 a:hover {
+  color: white;          /* Text becomes fully white */
+}
+
+/* Underline appears on hover */
+.nav-links-option3 a:hover::after {
+  width: 100%;          /* Underline expands to full width */
+}
+
+/* ========================================
+   HAMBURGER MENU - Mobile menu button (3 lines)
+   Only shows on small screens
+   ======================================== */
+.hamburger-menu-option3 {
+  display: none;         /* Hidden on desktop - shows on mobile */
+  flex-direction: column; /* Stacks the 3 lines vertically */
+  background: none;      /* No background */
+  border: none;          /* No border */
+  cursor: pointer;       /* Shows hand cursor when hovering */
+  padding: 0.5rem;       /* Space around the button */
+  z-index: 1001;        /* Appears above other content */
+}
+
+/* The 3 horizontal lines that make the hamburger icon */
+.hamburger-line-option3 {
+  width: 25px;           /* Width of each line  */
+  height: 3px;           /* Thickness of each line */
+  background: white;     /* Color of lines  */
+  margin: 3px 0;         /* Space between lines */
+  transition: 0.3s;      /* Smooth animation when transforming */
+  transform-origin: center; /* Rotation happens from center */
+}
+
+/* When menu is open, transform lines into an X */
+/* First line rotates and moves to form top part of X */
+.hamburger-line-option3.active:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+
+/* Middle line disappears */
+.hamburger-line-option3.active:nth-child(2) {
+  opacity: 0;
+}
+
+/* Third line rotates and moves to form bottom part of X */
+.hamburger-line-option3.active:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* Mobile Menu */
+.mobile-menu-option3 {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  padding: 2rem 0;
+}
+
+.mobile-menu-option3.active {
+  display: block;
+}
+
+.mobile-menu-option3 a {
+  display: block;
+  padding: 1rem 2rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-option3 a:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-option3 a:last-child {
+  border-bottom: none;
+}
+
+/* ========================================
+   HERO SECTION - Large banner with background image
+   This is the big section with your main title
+   ======================================== */
+.hero-section-option3 {
+  height: 100vh;         /* Takes up full screen height */
+  position: relative;    /* Allows layering of background and text */
+  display: flex;         /* Centers content */
+  align-items: center;   /* Centers content vertically */
+  justify-content: center; /* Centers content horizontally */
+  overflow: hidden;      /* Hides any content that goes outside */
+}
+
+/* Background image container */
+.hero-background-option3 {
+  position: absolute;    /* Positions behind other content */
+  top: 0;               /* Covers entire hero section */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -2;          /* Places behind overlay and text */
+}
+
+/* The actual background image */
+.hero-bg-image-option3 {
+  width: 100%;          /* Covers full width */
+  height: 100%;         /* Covers full height */
+  object-fit: cover;    /* Crops image to fit without stretching */
+  filter: brightness(0.4) contrast(1.2); /* Makes image darker */
+}
+
+/* Dark overlay on top of background image */
+.hero-overlay-option3 {
+  position: absolute;    /* Positions over background image */
+  top: 0;               /* Covers entire hero section */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.3)); /* Dark gradient overlay */
+  z-index: -1;          /* Places above background but behind text */
+}
+
+/* ========================================
+   HERO CONTENT - Text and buttons in hero section
+   ======================================== */
+.hero-content-option3 {
+  text-align: center;    /* Centers all text */
+  color: white;          /* White text color */
+  z-index: 1;           /* Appears above background and overlay */
+  max-width: 800px;     /* Limits width so text doesn't spread too wide */
+  padding: 0 2rem;      /* Space on left and right sides */
+}
+
+/* Container for hero text with animation */
+.hero-text-center-option3 {
+  animation: fadeInUp 1s ease-out; /* Slides up and fades in when page loads */
+}
+
+/* Main title - "THE NOOK" */
+.hero-title-option3 {
+  font-family: 'Oswald', sans-serif; /* Bold font */
+  font-size: 5rem;       /* Very large text  */
+  font-weight: 700;      /* Extra bold */
+  letter-spacing: 8px;   /* Space between letters  */
+  margin-bottom: 1rem;   /* Space below title */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Adds shadow behind text */
+}
+
+/* Subtitle - "Sandwich Bar & Buffets" */
+.hero-subtitle-option3 {
+  font-family: 'Oswald', sans-serif; /* Same font as title */
+  font-size: 1.5rem;     /* Medium size  */
+  font-weight: 300;      /* Light weight */
+  letter-spacing: 4px;   /* Space between letters */
+  text-transform: uppercase; /* Makes text ALL CAPS */
+  margin-bottom: 2rem;   /* Space below subtitle */
+  opacity: 0.9;         /* Slightly transparent */
+}
+
+/* Description paragraph */
+.hero-description-option3 {
+  font-size: 1.2rem;     /* Text size */
+  line-height: 1.6;      /* Space between lines of text */
+  margin-bottom: 3rem;   /* Space below description */
+  opacity: 0.8;         /* Slightly transparent */
+  max-width: 600px;     /* Limits width of description */
+  margin-left: auto;    /* Centers the description */
+  margin-right: auto;
+}
+
+/* ========================================
+   HERO BUTTON - "Start Your Order" button
+   ======================================== */
+.cta-button-option3 {
+  background: transparent;  /* No background color initially */
+  color: white;            /* White text */
+  border: 2px solid white; /* White border */
+  padding: 1.2rem 3rem;    /* Space inside button  */
+  font-size: 1rem;         /* Button text size */
+  font-weight: 600;        /* Semi-bold text */
+  text-transform: uppercase; /* Makes text ALL CAPS */
+  letter-spacing: 2px;     /* Space between letters */
+  cursor: pointer;         /* Shows hand cursor when hovering */
+  transition: all 0.3s ease; /* Smooth hover animation */
+  font-family: 'Oswald', sans-serif; /* Bold font */
+}
+
+/* What happens when you hover over the button */
+.cta-button-option3:hover {
+  background: white;       /* Button fills with white */
+  color: #000;            /* Text turns black */
+  transform: translateY(-2px); /* Button moves up slightly */
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3); /* Adds glowing shadow */
+}
+
+/* ========================================
+   SCROLL INDICATOR - "Scroll to explore" at bottom
+   ======================================== */
+.scroll-indicator-option3 {
+  position: absolute;      /* Positioned relative to hero section */
+  bottom: 2rem;           /* Distance from bottom  */
+  left: 50%;              /* Centers horizontally */
+  transform: translateX(-50%); /* Perfect centering */
+  text-align: center;     /* Centers text */
+  color: white;           /* White text */
+  opacity: 0.7;          /* Semi-transparent */
+  animation: bounce 2s infinite; /* Bouncing animation that repeats */
+}
+
+/* The down arrow */
+.scroll-arrow-option3 {
+  font-size: 2rem;        /* Size of arrow  */
+  margin-bottom: 0.5rem;  /* Space below arrow */
+}
+
+/* "Scroll to explore" text */
+.scroll-indicator-option3 span {
+  font-size: 0.9rem;      /* Text size */
+  text-transform: uppercase; /* Makes text ALL CAPS */
+  letter-spacing: 1px;    /* Space between letters */
+}
+
+/* ========================================
+   INFO CARDS SECTION - Three feature cards
+   "Custom Buffets", "Professional Service", "Fresh Daily"
+   ======================================== */
+.info-section-option3 {
+  padding: 6rem 0;        /* Space above and below section  */
+  background: #000;       /* Black background -*/
+  color: white;           /* White text */
+}
+
+/* Container that centers and limits width of cards */
+.info-container-option3 {
+  max-width: 1200px;      /* Maximum width of card section */
+  margin: 0 auto;         /* Centers the container */
+  padding: 0 2rem;        /* Space on left and right sides */
+}
+
+/* Grid layout for the three cards */
+.info-grid-option3 {
+  display: grid;          /* Creates grid layout */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive columns */
+  gap: 3rem;             /* Space between cards */
+}
+
+/* Individual info card styling */
+.info-card-option3 {
+  padding: 3rem 2rem;     /* Space inside each card  */
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle white border */
+  transition: all 0.3s ease; /* Smooth hover animation */
+  position: relative;     /* Allows positioning of card number */
+}
+
+/* What happens when you hover over a card */
+.info-card-option3:hover {
+  border-color: rgba(255, 255, 255, 0.3); /* Border becomes more visible */
+  transform: translateY(-10px); /* Card moves up slightly */
+}
+
+/* Large number in top-right corner (01, 02, 03) */
+.card-number-option3 {
+  font-family: 'Oswald', sans-serif; /* Bold font */
+  font-size: 4rem;        /* Very large number  */
+  font-weight: 300;       /* Light weight */
+  opacity: 0.3;          /* Very transparent  */
+  position: absolute;     /* Positioned in corner */
+  top: 1rem;             /* Distance from top */
+  right: 2rem;           /* Distance from right edge */
+}
+
+/* Card title (e.g., "Custom Buffets") */
+.info-card-option3 h3 {
+  font-family: 'Oswald', sans-serif; /* Bold font */
+  font-size: 1.5rem;      /* Title size  */
+  font-weight: 600;       /* Semi-bold */
+  text-transform: uppercase; /* Makes text ALL CAPS */
+  letter-spacing: 1px;    /* Space between letters */
+  margin-bottom: 1rem;    /* Space below title */
+}
+
+/* Card description text */
+.info-card-option3 p {
+  line-height: 1.6;       /* Space between lines of text */
+  opacity: 0.8;          /* Slightly transparent */
+}
+
+/* ========================================
+   FINAL CTA SECTION - Bottom call-to-action
+   "Ready to elevate your team's dining?"
+   ======================================== */
+.cta-section-option3 {
+  padding: 6rem 0;        /* Space above and below  */
+  background: #fff;       /* White background  */
+  text-align: center;     /* Centers all content */
+}
+
+/* Container that centers and limits width */
+.cta-container-option3 {
+  max-width: 800px;       /* Maximum width of content */
+  margin: 0 auto;         /* Centers the container */
+  padding: 0 2rem;        /* Space on left and right sides */
+}
+
+/* Main heading "Ready to elevate your team's dining?" */
+.cta-section-option3 h2 {
+  font-family: 'Oswald', sans-serif; /* Bold font */
+  font-size: 2.5rem;      /* Large heading  */
+  font-weight: 600;       /* Semi-bold */
+  color: #000;           /* Black text  */
+  margin-bottom: 1rem;    /* Space below heading */
+  text-transform: uppercase; /* Makes text ALL CAPS */
+  letter-spacing: 2px;    /* Space between letters */
+}
+
+/* Description paragraph */
+.cta-section-option3 p {
+  font-size: 1.1rem;      /* Text size  */
+  color: #666;           /* Gray text  */
+  margin-bottom: 3rem;    /* Space below paragraph */
+}
+
+/* Container for the two buttons */
+.cta-buttons-option3 {
+  display: flex;          /* Arranges buttons side by side */
+  gap: 2rem;             /* Space between buttons */
+  justify-content: center; /* Centers buttons */
+  flex-wrap: wrap;        /* Buttons stack on small screens */
+}
+
+/* ========================================
+   CTA BUTTONS - "Order Now" and "View Menu"
+   ======================================== */
+/* Shared styling for both buttons */
+.cta-primary-option3,
+.cta-secondary-option3 {
+  padding: 1.2rem 3rem;   /* Space inside buttons */
+  font-size: 1rem;        /* Button text size */
+  font-weight: 600;       /* Semi-bold text */
+  text-transform: uppercase; /* Makes text ALL CAPS */
+  letter-spacing: 2px;    /* Space between letters */
+  cursor: pointer;        /* Shows hand cursor when hovering */
+  transition: all 0.3s ease; /* Smooth hover animation */
+  font-family: 'Oswald', sans-serif; /* Bold font */
+  border: 2px solid #000; /* Black border */
+}
+
+/* "Order Now" button (filled) */
+.cta-primary-option3 {
+  background: #000;       /* Black background */
+  color: white;          /* White text */
+}
+
+/* "Order Now" button hover effect */
+.cta-primary-option3:hover {
+  background: transparent; /* Background becomes transparent */
+  color: #000;           /* Text becomes black */
+  transform: translateY(-2px); /* Button moves up slightly */
+}
+
+/* "View Menu" button (outline) */
+.cta-secondary-option3 {
+  background: transparent; /* No background initially */
+  color: #000;           /* Black text */
+}
+
+/* "View Menu" button hover effect */
+.cta-secondary-option3:hover {
+  background: #000;       /* Background fills with black */
+  color: white;          /* Text becomes white */
+  transform: translateY(-2px); /* Button moves up slightly */
+}
+
+/* ========================================
+   ANIMATIONS - Movement effects for the website
+   ======================================== */
+
+/* Fade in and slide up animation for hero text */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;            /* Starts invisible */
+    transform: translateY(30px); /* Starts 30px below normal position */
+  }
+  to {
+    opacity: 1;            /* Ends fully visible */
+    transform: translateY(0); /* Ends at normal position */
+  }
+}
+
+/* Bouncing animation for scroll indicator */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateX(-50%) translateY(0); /* Normal position */
+  }
+  40% {
+    transform: translateX(-50%) translateY(-10px); /* Moves up 10px */
+  }
+  60% {
+    transform: translateX(-50%) translateY(-5px); /* Moves up 5px */
+  }
+}
+
+/* ========================================
+   RESPONSIVE DESIGN - How website looks on different screen sizes
+   TABLET AND MOBILE STYLES (screens smaller than 768px)
+   ======================================== */
+@media (max-width: 768px) {
+  /* Hide desktop menu, show hamburger menu */
+  .nav-links-option3 {
+    display: none;          /* Hides desktop navigation menu */
+  }
+
+  .hamburger-menu-option3 {
+    display: flex;          /* Shows hamburger menu button */
+  }
+
+  /* Make hero title smaller on mobile */
+  .hero-title-option3 {
+    font-size: 3.5rem;      /* Smaller than desktop*/
+    letter-spacing: 4px;    /* Less letter spacing */
+  }
+
+  /* Make hero subtitle smaller on mobile */
+  .hero-subtitle-option3 {
+    font-size: 1.2rem;      /* Smaller than desktop*/
+    letter-spacing: 2px;    /* Less letter spacing */
+  }
+
+  /* Stack info cards vertically on mobile */
+  .info-grid-option3 {
+    grid-template-columns: 1fr; /* Single column instead of three */
+    gap: 2rem;              /* Less space between cards */
+  }
+
+  /* Make info cards smaller on mobile */
+  .info-card-option3 {
+    padding: 2rem 1.5rem;   /* Less padding inside cards */
+  }
+
+  /* Stack CTA buttons vertically on mobile */
+  .cta-buttons-option3 {
+    flex-direction: column; /* Buttons stack vertically */
+    align-items: center;    /* Centers buttons */
+  }
+
+  /* Make CTA buttons full width on mobile */
+  .cta-primary-option3,
+  .cta-secondary-option3 {
+    width: 100%;           /* Buttons take full width */
+    max-width: 300px;      /* But not wider than 300px */
+  }
+}
+
+/* ========================================
+   SMALL MOBILE STYLES (screens smaller than 480px)
+   Extra small phones - even smaller text and elements
+   ======================================== */
+@media (max-width: 480px) {
+  /* Make hero title even smaller on small phones */
+  .hero-title-option3 {
+    font-size: 2.5rem;      /* Even smaller  */
+    letter-spacing: 2px;    /* Minimal letter spacing */
+  }
+
+  /* Make hero subtitle even smaller on small phones */
+  .hero-subtitle-option3 {
+    font-size: 1rem;        /* Even smaller*/
+    letter-spacing: 1px;    /* Minimal letter spacing */
+  }
+
+  /* Make hero description smaller on small phones */
+  .hero-description-option3 {
+    font-size: 1rem;        /* Smaller description text  */
+  }
+
+  /* Make CTA section heading smaller on small phones */
+  .cta-section-option3 h2 {
+    font-size: 2rem;        /* Smaller heading*/
+    letter-spacing: 1px;    /* Minimal letter spacing */
+  }
+
+  /* Make logo text smaller on small phones */
+  .logo-text-option3 {
+    font-size: 1.2rem;      /* Smaller logo text  */
+    letter-spacing: 1px;    /* Minimal letter spacing */
+  }
+
+  /* Make logo image smaller on small phones */
+  .logo-image-option3 {
+    height: 35px;           /* Smaller logo  */
+    width: 35px;            /* Smaller logo*/
+  }
+}

@@ -1,0 +1,136 @@
+/* ========================================
+   ORDER PAGE STYLES - Dedicated styling for the order page
+   ======================================== */
+
+/* Main order page container */
+.order-page-container {
+  padding-top: 100px;     /* Space for fixed navbar */
+  min-height: 100vh;      /* Full screen height */
+  background: #f5f5f5;    /* Light gray background - CHANGE THIS for different background color */
+}
+
+/* Content wrapper that centers and limits width */
+.order-content-wrapper {
+  max-width: 1200px;      /* Maximum width of content */
+  margin: 0 auto;         /* Centers the content */
+  padding: 2rem;          /* Space around content */
+}
+
+/* Main page title "Place Your Order" */
+.order-page-title {
+  font-family: 'Oswald', sans-serif; /* Bold font */
+  font-size: 3rem;        /* Large title - CHANGE THIS for bigger/smaller title */
+  text-align: center;     /* Centers the title */
+  margin-bottom: 2rem;    /* Space below title */
+  color: #333;           /* Dark gray color - CHANGE THIS for different color */
+}
+
+/* White card container for the main content */
+.order-card {
+  background: white;      /* White background */
+  padding: 3rem;          /* Space inside card - CHANGE THIS for bigger/smaller card */
+  border-radius: 10px;    /* Rounded corners - CHANGE THIS for more/less rounded */
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Subtle shadow */
+  text-align: center;     /* Centers all content */
+}
+
+/* "Coming Soon!" heading */
+.order-card-title {
+  font-family: 'Oswald', sans-serif; /* Bold font */
+  font-size: 2rem;        /* Heading size - CHANGE THIS for bigger/smaller heading */
+  margin-bottom: 1rem;    /* Space below heading */
+  color: #333;           /* Dark gray color - CHANGE THIS for different color */
+}
+
+/* Description paragraph */
+.order-card-description {
+  font-size: 1.2rem;      /* Text size - CHANGE THIS for bigger/smaller text */
+  color: #666;           /* Medium gray color - CHANGE THIS for different color */
+  margin-bottom: 2rem;    /* Space below description */
+  line-height: 1.6;       /* Space between lines of text */
+}
+
+/* Contact information section */
+.order-contact-section {
+  margin-bottom: 2rem;    /* Space below contact section */
+}
+
+/* "Contact Us:" heading */
+.order-contact-title {
+  color: #333;           /* Dark gray color - CHANGE THIS for different color */
+  margin-bottom: 1rem;    /* Space below heading */
+}
+
+/* Contact details (phone and email) */
+.order-contact-details {
+  font-size: 1.1rem;      /* Text size - CHANGE THIS for bigger/smaller text */
+  color: #666;           /* Medium gray color - CHANGE THIS for different color */
+}
+
+/* "Back to Home" button */
+.order-back-button {
+  background: #000;       /* Black background - CHANGE THIS for different button color */
+  color: white;          /* White text */
+  border: none;          /* No border */
+  padding: 1rem 2rem;    /* Space inside button - CHANGE THIS for bigger/smaller button */
+  font-size: 1rem;       /* Button text size - CHANGE THIS for bigger/smaller text */
+  font-weight: 600;      /* Semi-bold text */
+  text-transform: uppercase; /* Makes text ALL CAPS */
+  letter-spacing: 1px;   /* Space between letters */
+  cursor: pointer;       /* Shows hand cursor when hovering */
+  border-radius: 5px;    /* Slightly rounded corners */
+  transition: all 0.3s ease; /* Smooth hover animation */
+}
+
+/* Button hover effect */
+.order-back-button:hover {
+  background: #333;      /* Lighter black on hover - CHANGE THIS for different hover color */
+  transform: translateY(-2px); /* Button moves up slightly */
+}
+
+/* ========================================
+   RESPONSIVE DESIGN - Mobile styles
+   ======================================== */
+
+/* Tablet and mobile styles (screens smaller than 768px) */
+@media (max-width: 768px) {
+  .order-content-wrapper {
+    padding: 1rem;        /* Less padding on mobile */
+  }
+  
+  .order-page-title {
+    font-size: 2.5rem;    /* Smaller title on mobile */
+  }
+  
+  .order-card {
+    padding: 2rem;        /* Less padding inside card on mobile */
+  }
+  
+  .order-card-title {
+    font-size: 1.5rem;    /* Smaller heading on mobile */
+  }
+  
+  .order-card-description {
+    font-size: 1rem;      /* Smaller text on mobile */
+  }
+}
+
+/* Small mobile styles (screens smaller than 480px) */
+@media (max-width: 480px) {
+  .order-page-container {
+    padding-top: 80px;    /* Less top padding on small screens */
+  }
+  
+  .order-page-title {
+    font-size: 2rem;      /* Even smaller title on small mobile */
+  }
+  
+  .order-card {
+    padding: 1.5rem;      /* Even less padding on small mobile */
+  }
+  
+  .order-back-button {
+    width: 100%;          /* Full width button on small mobile */
+    max-width: 300px;     /* But not wider than 300px */
+  }
+}

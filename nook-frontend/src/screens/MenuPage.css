@@ -1,0 +1,188 @@
+/* Menu Page Styling - Dark theme with checkboxes */
+
+/* Main container for menu page */
+.menu-page-container {
+  font-family: 'Source Sans Pro', sans-serif;
+  color: white;
+  padding-top: 80px;
+  min-height: 100vh;
+  background: #1a1a1a;
+}
+
+/* Content wrapper */
+.menu-content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Page title - "Build Your Buffet" */
+.menu-page-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 3rem;
+  color: white;
+  text-align: left;
+  margin-bottom: 3rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+  border-bottom: 2px solid #333;
+  padding-bottom: 1rem;
+}
+
+/* Buffet section container */
+.buffet-section {
+  margin-bottom: 3rem;
+  border-bottom: 1px solid #333;
+  padding-bottom: 2rem;
+}
+
+.buffet-section:last-of-type {
+  border-bottom: none;
+}
+
+/* Section content - flex layout with image on right */
+.section-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+/* Section info (left side) */
+.section-info {
+  flex: 1;
+}
+
+/* Section titles */
+.section-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+/* Section description area */
+.section-description {
+  color: #ccc;
+  line-height: 1.6;
+  min-height: 60px; /* Space for future content */
+}
+
+/* Section image (right side) */
+.section-image {
+  flex-shrink: 0;
+}
+
+/* Menu images */
+.menu-image {
+  width: 200px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #555;
+}
+
+/* Image placeholder (fallback) */
+.image-placeholder {
+  width: 200px;
+  height: 150px;
+  background: #333;
+  border: 1px solid #555;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Call to action section - dark theme */
+.menu-cta {
+  background: #2a2a2a;
+  color: white;
+  padding: 3rem 2rem;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #444;
+  margin-top: 2rem;
+}
+
+.menu-cta h3 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: white;
+}
+
+.menu-cta p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: #ccc;
+}
+
+.cta-button {
+  background: #444;
+  color: white;
+  border: 1px solid #666;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cta-button:hover {
+  background: #555;
+  border-color: #777;
+  transform: translateY(-2px);
+}
+
+/* Mobile responsive design */
+@media (max-width: 768px) {
+  .menu-content-wrapper {
+    padding: 1rem;
+  }
+
+  .menu-page-title {
+    font-size: 2.2rem;
+    text-align: center;
+  }
+
+  .section-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .section-image {
+    align-self: center;
+  }
+
+  .menu-image,
+  .image-placeholder {
+    width: 250px;
+    height: 180px;
+  }
+
+  .section-title {
+    font-size: 1.3rem;
+  }
+
+  .menu-cta {
+    padding: 2rem 1rem;
+  }
+
+  .menu-cta h3 {
+    font-size: 1.6rem;
+  }
+}

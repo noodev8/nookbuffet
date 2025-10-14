@@ -1,0 +1,224 @@
+/* Contact Page Styling */
+
+/* Main container for contact page */
+.contact-page-container {
+  font-family: 'Source Sans Pro', sans-serif;
+  color: #333;
+  padding-top: 80px;
+  min-height: 100vh;
+  background: #fff;
+}
+
+/* Content wrapper */
+.contact-content-wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Page title - matches About page style */
+.contact-page-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.5rem;
+  color: #000;
+  text-align: center;
+  margin-bottom: 3rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+/* Contact introduction */
+.contact-intro {
+  background: #f8f8f8;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.contact-intro p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #666;
+  margin: 0;
+}
+
+/* Contact form container */
+.contact-form-container {
+  background: #fff;
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  margin-bottom: 3rem;
+}
+
+/* Contact form */
+.contact-form {
+  max-width: 100%;
+}
+
+/* Form rows */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Form groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Form labels */
+.form-group label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
+  color: #333;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+/* Form inputs */
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: 'Source Sans Pro', sans-serif;
+  transition: border-color 0.3s ease;
+  background: #fff;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #333;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #999;
+}
+
+/* Textarea specific styling */
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* Submit button */
+.submit-button {
+  background: #333;
+  color: white;
+  border: none;
+  padding: 1.2rem 3rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: 'Oswald', sans-serif;
+  width: 100%;
+}
+
+.submit-button:hover {
+  background: #555;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Contact information section */
+.contact-info-section {
+  background: #000;
+  color: white;
+  padding: 3rem 2rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.contact-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.contact-info-item h3 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.2rem;
+  color: white;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.contact-info-item p {
+  color: #ccc;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Mobile responsive design */
+@media (max-width: 768px) {
+  .contact-content-wrapper {
+    padding: 1rem;
+  }
+
+  .contact-page-title {
+    font-size: 2rem;
+  }
+
+  .contact-form-container {
+    padding: 2rem 1.5rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .contact-info-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .contact-info-section {
+    padding: 2rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .contact-page-title {
+    font-size: 1.8rem;
+  }
+
+  .contact-form-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.8rem;
+  }
+
+  .submit-button {
+    padding: 1rem 2rem;
+  }
+}
