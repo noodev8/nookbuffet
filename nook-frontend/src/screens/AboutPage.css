@@ -168,8 +168,6 @@
   margin-bottom: 1rem;    /* Consistent spacing */
 }
 
-/* Location section - inherits all black styling from .about-section */
-/* No additional CSS needed - .location-section inherits all styles from .about-section */
 
 /* Building photo styling */
 .location-image {

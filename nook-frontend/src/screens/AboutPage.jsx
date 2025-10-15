@@ -34,9 +34,7 @@ function AboutPage() {
     navigate('/'); // Go to home page
   };
 
-  const goToOrder = () => {
-    navigate('/order'); // Go to order page
-  };
+
 
   const goToAbout = () => {
     navigate('/about'); // Go to about page

@@ -1,5 +1,5 @@
 // Import React library and hooks
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 // Import your custom images
@@ -24,9 +24,67 @@ import './MenuPage.css'
 function MenuPage() {
   // State for mobile menu toggle
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  
+
+  // State for menu data from API
+  const [menuSections, setMenuSections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   // Hook for navigation between pages
   const navigate = useNavigate();
+
+  // Function to fetch menu data from API
+  const fetchMenuData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Call your API endpoint
+      const response = await fetch('http://localhost:3013/api/menu');
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Check if the API returned success
+      if (data.success) {
+        setMenuSections(data.data || []);
+        console.log('✅ Menu data loaded:', data.data);
+      } else {
+        throw new Error(data.message || 'Failed to load menu data');
+      }
+
+    } catch (err) {
+      console.error('❌ Error fetching menu data:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch menu data when component mounts
+  useEffect(() => {
+    fetchMenuData();
+  }, []);
+
+  // Function to get the appropriate image for each category
+  const getCategoryImage = (categoryName) => {
+    // Map category names to images
+    const imageMap = {
+      'Sandwiches': sandwichesImg,
+      'Wraps': wrapsImg,
+      'Savoury Tray': savouryImg,
+      'Dips and Sticks': dipsImg,
+      'Fruit': fruitImg,
+      'Cakes': cakeImg,
+      'Continental Tray': savouryImg, // Using savoury image for continental
+    };
+
+    // Return the mapped image or a default
+    return imageMap[categoryName] || savouryImg;
+  };
 
   // Function to toggle mobile menu
   const toggleMenu = () => {
@@ -86,112 +144,88 @@ function MenuPage() {
       {/* Main Menu Page Content */}
       <div className="menu-page-container">
         <div className="menu-content-wrapper">
-          
 
-          {/* Sandwiches Section */}
-          <div className="buffet-section">
-            <div className="section-content">
-              <div className="section-info">
-                <h2 className="section-title">Sandwiches</h2>
-                <div className="section-description">
-                  {/* Content will be added later */}
+          {/* Loading State */}
+          {loading && (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'white' }}>
+              <p>Loading menu sections...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#ff6b6b' }}>
+              <p>Error loading menu: {error}</p>
+              <button
+                onClick={fetchMenuData}
+                style={{
+                  marginTop: '1rem',
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#444',
+                  color: 'white',
+                  border: '1px solid #666',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {/* Dynamic Menu Sections */}
+          {!loading && !error && menuSections.map((section) => (
+            <div key={section.id} className="buffet-section">
+              <div className="section-content">
+                <div className="section-info">
+                  <h2 className="section-title">{section.name}</h2>
+                  <div className="section-description">
+                    {section.description && (
+                      <p>{section.description}</p>
+                    )}
+
+                    {/* Display menu items if they exist */}
+                    {section.items && section.items.length > 0 && (
+                      <div className="menu-items-list">
+                        <h4 style={{ color: '#ccc', marginTop: '1rem', marginBottom: '0.5rem' }}>
+                          Available Items:
+                        </h4>
+                        <ul style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                          {section.items.map((item) => (
+                            <li key={item.id} style={{ marginBottom: '0.3rem' }}>
+                              <strong>{item.name}</strong>
+                              {item.description && (
+                                <span> - {item.description}</span>
+                              )}
+                              {item.dietary_info && (
+                                <span style={{ color: '#90EE90', fontSize: '0.8rem' }}>
+                                  {' '}({item.dietary_info})
+                                </span>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="section-image">
+                  <img
+                    src={getCategoryImage(section.name)}
+                    alt={section.name}
+                    className="menu-image"
+                  />
                 </div>
               </div>
-              <div className="section-image">
-                <img src={sandwichesImg} alt="Sandwiches" className="menu-image" />
-              </div>
             </div>
-          </div>
+          ))}
 
-          {/* Wraps Section */}
-          <div className="buffet-section">
-            <div className="section-content">
-              <div className="section-info">
-                <h2 className="section-title">Wraps</h2>
-                <div className="section-description">
-                  {/* Content will be added later */}
-                </div>
-              </div>
-              <div className="section-image">
-                <img src={wrapsImg} alt="Wraps" className="menu-image" />
-              </div>
+          {/* Show message if no sections found */}
+          {!loading && !error && menuSections.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#ccc' }}>
+              <p>No menu sections found. Please add some categories to your database.</p>
             </div>
-          </div>
-
-          {/* Savoury Tray Section */}
-          <div className="buffet-section">
-            <div className="section-content">
-              <div className="section-info">
-                <h2 className="section-title">Savoury Tray</h2>
-                <div className="section-description">
-                  {/* Content will be added later */}
-                </div>
-              </div>
-              <div className="section-image">
-                <img src={savouryImg} alt="Savoury Tray" className="menu-image" />
-              </div>
-            </div>
-          </div>
-
-          {/* Dips and Sticks Section */}
-          <div className="buffet-section">
-            <div className="section-content">
-              <div className="section-info">
-                <h2 className="section-title">Dips and Sticks</h2>
-                <div className="section-description">
-                  {/* Content will be added later */}
-                </div>
-              </div>
-              <div className="section-image">
-                <img src={dipsImg} alt="Dips and Sticks" className="menu-image" />
-              </div>
-            </div>
-          </div>
-
-          {/* Fruit Tray Section */}
-          <div className="buffet-section">
-            <div className="section-content">
-              <div className="section-info">
-                <h2 className="section-title">Fruit</h2>
-                <div className="section-description">
-                  {/* Content will be added later */}
-                </div>
-              </div>
-              <div className="section-image">
-                <img src={fruitImg} alt="Fruit Tray" className="menu-image" />
-              </div>
-            </div>
-          </div>
-
-          {/* Cakes Section */}
-          <div className="buffet-section">
-            <div className="section-content">
-              <div className="section-info">
-                <h2 className="section-title">Cakes</h2>
-                <div className="section-description">
-                  {/* Content will be added later */}
-                </div>
-              </div>
-              <div className="section-image">
-                <img src={cakeImg} alt="Cakes" className="menu-image" />
-              </div>
-            </div>
-          </div>
-
-          {/* Continental Upgrade Section */}
-          <div className="buffet-section">
-            <div className="section-content">
-              <div className="section-info">
-                <h2 className="section-title">Continental Tray</h2>
-                <div className="section-description">
-                  {/* Content will be added later */}
-                </div>
-              </div>
-              <div className="section-image">
-                <img src={savouryImg} alt="Continental Tray" className="menu-image" />
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Call to Action */}
           <div className="menu-cta">
