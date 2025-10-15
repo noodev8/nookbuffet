@@ -5,11 +5,14 @@ import { useNavigate } from 'react-router-dom'
 // Import your custom images
 import logoImage from '../assets/logo.jpg'
 import sandwichesImg from '../assets/sandwiches.png'
+import sandwiches3Img from '../assets/sandwiches3.png'
 import wrapsImg from '../assets/wraps.png'
 import savouryImg from '../assets/savoury.png'
 import dipsImg from '../assets/dipsandsticks.png'
 import fruitImg from '../assets/fruit.png'
 import cakeImg from '../assets/cake.png'
+import food2Img from '../assets/food2.png'
+import nookImg from '../assets/nook.jpg'
 
 // Import main styles (for navigation and global styles)
 import '../style.css'
@@ -69,21 +72,24 @@ function MenuPage() {
     fetchMenuData();
   }, []);
 
-  // Function to get the appropriate image for each category
-  const getCategoryImage = (categoryName) => {
-    // Map category names to images
-    const imageMap = {
-      'Sandwiches': sandwichesImg,
-      'Wraps': wrapsImg,
-      'Savoury Tray': savouryImg,
-      'Dips and Sticks': dipsImg,
-      'Fruit': fruitImg,
-      'Cakes': cakeImg,
-      'Continental Tray': savouryImg, // Using savoury image for continental
+  // Function to get different images for each position in each category
+  const getCategoryImage = (categoryName, position = 0) => {
+    // Map category names to arrays of 4 different images
+    const imageArrays = {
+      'Sandwiches': [sandwichesImg, sandwiches3Img, food2Img, nookImg],
+      'Wraps': [wrapsImg, food2Img, nookImg, savouryImg],
+      'Savoury Tray': [savouryImg, food2Img, nookImg, sandwichesImg],
+      'Dips and Sticks': [dipsImg, food2Img, nookImg, savouryImg],
+      'Fruit': [fruitImg, food2Img, nookImg, savouryImg],
+      'Cakes': [cakeImg, food2Img, nookImg, savouryImg],
+      'Continental Tray': [savouryImg, food2Img, nookImg, sandwichesImg],
     };
 
-    // Return the mapped image or a default
-    return imageMap[categoryName] || savouryImg;
+    // Get the image array for this category, or use default array
+    const images = imageArrays[categoryName] || [savouryImg, food2Img, nookImg, sandwichesImg];
+
+    // Return the image at the specified position, or first image if position is invalid
+    return images[position] || images[0];
   };
 
   // Function to toggle mobile menu
@@ -147,26 +153,18 @@ function MenuPage() {
 
           {/* Loading State */}
           {loading && (
-            <div style={{ textAlign: 'center', padding: '2rem', color: 'white' }}>
+            <div className="loading-state">
               <p>Loading menu sections...</p>
             </div>
           )}
 
           {/* Error State */}
           {error && (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#ff6b6b' }}>
+            <div className="error-state">
               <p>Error loading menu: {error}</p>
               <button
                 onClick={fetchMenuData}
-                style={{
-                  marginTop: '1rem',
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#444',
-                  color: 'white',
-                  border: '1px solid #666',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
+                className="retry-button"
               >
                 Try Again
               </button>
@@ -187,19 +185,17 @@ function MenuPage() {
                     {/* Display menu items if they exist */}
                     {section.items && section.items.length > 0 && (
                       <div className="menu-items-list">
-                        <h4 style={{ color: '#ccc', marginTop: '1rem', marginBottom: '0.5rem' }}>
-                          Available Items:
-                        </h4>
-                        <ul style={{ color: '#aaa', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                        <h4>Available Items:</h4>
+                        <ul>
                           {section.items.map((item) => (
-                            <li key={item.id} style={{ marginBottom: '0.3rem' }}>
+                            <li key={item.id}>
                               <strong>{item.name}</strong>
                               {item.description && (
                                 <span> - {item.description}</span>
                               )}
                               {item.dietary_info && (
-                                <span style={{ color: '#90EE90', fontSize: '0.8rem' }}>
-                                  {' '}({item.dietary_info})
+                                <span className="dietary-info">
+                                  {item.dietary_info}
                                 </span>
                               )}
                             </li>
@@ -210,11 +206,28 @@ function MenuPage() {
                   </div>
                 </div>
                 <div className="section-image">
-                  <img
-                    src={getCategoryImage(section.name)}
-                    alt={section.name}
-                    className="menu-image"
-                  />
+                  <div className="image-grid">
+                    <img
+                      src={getCategoryImage(section.name, 0)}
+                      alt={`${section.name} - Image 1`}
+                      className="menu-image"
+                    />
+                    <img
+                      src={getCategoryImage(section.name, 1)}
+                      alt={`${section.name} - Image 2`}
+                      className="menu-image"
+                    />
+                    <img
+                      src={getCategoryImage(section.name, 2)}
+                      alt={`${section.name} - Image 3`}
+                      className="menu-image"
+                    />
+                    <img
+                      src={getCategoryImage(section.name, 3)}
+                      alt={`${section.name} - Image 4`}
+                      className="menu-image fourth-image"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -222,7 +235,7 @@ function MenuPage() {
 
           {/* Show message if no sections found */}
           {!loading && !error && menuSections.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#ccc' }}>
+            <div className="no-data-state">
               <p>No menu sections found. Please add some categories to your database.</p>
             </div>
           )}

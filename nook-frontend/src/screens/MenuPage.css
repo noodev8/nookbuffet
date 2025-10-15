@@ -30,28 +30,39 @@
   padding-bottom: 1rem;
 }
 
-/* Buffet section container */
+/* Buffet section container - Modern card layout */
 .buffet-section {
-  margin-bottom: 3rem;
-  border-bottom: 1px solid #333;
-  padding-bottom: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.buffet-section:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #555;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
 .buffet-section:last-of-type {
-  border-bottom: none;
+  margin-bottom: 2rem;
 }
 
-/* Section content - flex layout with image on right */
+/* Section content - Grid layout with image header */
 .section-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 2rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
 }
 
-/* Section info (left side) */
+/* Section info */
 .section-info {
-  flex: 1;
+  order: 2;
 }
 
 /* Section titles */
@@ -72,24 +83,188 @@
   min-height: 60px; /* Space for future content */
 }
 
-/* Section image (right side) */
-.section-image {
-  flex-shrink: 0;
+/* Menu items list styling */
+.menu-items-list {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #444;
 }
 
-/* Menu images */
+.menu-items-list h4 {
+  font-family: 'Oswald', sans-serif;
+  color: #e0e0e0;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.8rem;
+  font-weight: 500;
+}
+
+.menu-items-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-items-list li {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.6rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.menu-items-list li:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #555;
+  transform: translateX(5px);
+}
+
+.menu-items-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Menu item name styling */
+.menu-items-list li strong {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Menu item description */
+.menu-items-list li span {
+  color: #bbb;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* Dietary info styling */
+.dietary-info {
+  display: inline-block;
+  background: rgba(144, 238, 144, 0.2);
+  color: #90EE90 !important;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem !important;
+  font-weight: 500;
+  margin-left: 0.5rem;
+  border: 1px solid rgba(144, 238, 144, 0.3);
+}
+
+/* Loading state styling */
+.loading-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #ccc;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid #444;
+  margin: 2rem 0;
+}
+
+.loading-state p {
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Error state styling */
+.error-state {
+  text-align: center;
+  padding: 2rem;
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  margin: 2rem 0;
+}
+
+.error-state p {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.retry-button {
+  background: #444;
+  color: white;
+  border: 1px solid #666;
+  padding: 0.7rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.retry-button:hover {
+  background: #555;
+  border-color: #777;
+  transform: translateY(-1px);
+}
+
+/* No data state styling */
+.no-data-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #999;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid #333;
+  margin: 2rem 0;
+}
+
+.no-data-state p {
+  font-size: 1rem;
+  margin: 0;
+  font-style: italic;
+}
+
+/* Section image - Three image grid */
+.section-image {
+  order: 1;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+/* Image grid container */
+.image-grid {
+  display: flex;
+  gap: 0.8rem;
+  width: 100%;
+}
+
+/* Menu images - Square-ish proportions for 4 images */
 .menu-image {
-  width: 200px;
-  height: 150px;
+  width: 100%;
+  height: 120px;
   object-fit: cover;
   border-radius: 8px;
   border: 1px solid #555;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.menu-image:hover {
+  transform: scale(1.05);
+  border-color: #666;
+  z-index: 2;
+  position: relative;
+}
+
+/* Fourth image - hidden on mobile */
+.menu-image.fourth-image {
+  display: block;
 }
 
 /* Image placeholder (fallback) */
 .image-placeholder {
-  width: 200px;
-  height: 150px;
+  width: 100%;
+  height: 120px;
   background: #333;
   border: 1px solid #555;
   border-radius: 8px;
@@ -97,9 +272,17 @@
   align-items: center;
   justify-content: center;
   color: #999;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.image-placeholder:hover {
+  background: #3a3a3a;
+  border-color: #666;
+  transform: scale(1.05);
 }
 
 /* Call to action section - dark theme */
@@ -159,19 +342,31 @@
     text-align: center;
   }
 
+  .buffet-section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
   .section-content {
-    flex-direction: column;
     gap: 1rem;
   }
 
-  .section-image {
-    align-self: center;
+  /* Mobile: Hide 4th image, keep 3 images */
+  .image-grid {
+    gap: 0.6rem;
   }
 
-  .menu-image,
+  .menu-image.fourth-image {
+    display: none;
+  }
+
+  .menu-image {
+    height: 90px;
+  }
+
   .image-placeholder {
-    width: 250px;
-    height: 180px;
+    height: 90px;
+    font-size: 0.6rem;
   }
 
   .section-title {
@@ -184,5 +379,33 @@
 
   .menu-cta h3 {
     font-size: 1.6rem;
+  }
+
+  /* Mobile menu items styling */
+  .menu-items-list li {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .menu-items-list li strong {
+    font-size: 0.9rem;
+  }
+
+  .menu-items-list li span {
+    font-size: 0.8rem;
+  }
+
+  .dietary-info {
+    font-size: 0.7rem !important;
+    padding: 0.15rem 0.4rem;
+    margin-left: 0.3rem;
+  }
+
+  /* Mobile state styling */
+  .loading-state,
+  .error-state,
+  .no-data-state {
+    padding: 2rem 1rem;
+    margin: 1rem 0;
   }
 }

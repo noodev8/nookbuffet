@@ -7,21 +7,14 @@
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "nook",
-    "buffet",
-    "server",
-    "express",
-    "api"
-  ],
+  "keywords": ["nook", "buffet", "server", "express", "api"],
   "author": "",
   "license": "ISC",
   "description": "Backend server for Nook Buffet application",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0",
-    "pg": "^8.16.3"
+    "express": "^5.1.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
