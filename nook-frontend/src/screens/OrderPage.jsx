@@ -40,6 +40,10 @@ function OrderPage() {
     navigate('/menu'); // Go to menu page
   };
 
+  const goToContact = () => {
+    navigate('/contact'); // Go to contact page
+  };
+
   return (
     <div className="welcome-page-option3">
       {/* Navigation - Same as home page */}
@@ -53,7 +57,7 @@ function OrderPage() {
             <a href="#" onClick={goHome}>Home</a>
             <a href="#" onClick={goToMenu}>Menu</a>
             <a href="#" onClick={goToAbout}>About</a>
-            <a href="#contact">Contact</a>
+            <a href="#" onClick={goToContact}>Contact</a>
           </div>
           <button className="hamburger-menu-option3" onClick={toggleMenu} aria-label="Toggle menu">
             <span className={`hamburger-line-option3 ${isMenuOpen ? 'active' : ''}`}></span> 
@@ -65,7 +69,7 @@ function OrderPage() {
             <a href="#" onClick={toggleMenu}>Order</a>
             <a href="#" onClick={() => {toggleMenu(); goToMenu();}}>Menu</a>
             <a href="#" onClick={() => {toggleMenu(); goToAbout();}}>About</a>
-            <a href="#contact" onClick={toggleMenu}>Contact</a>
+            <a href="#" onClick={() => {toggleMenu(); goToContact();}}>Contact</a>
           </div>
         </div>
       </nav>
