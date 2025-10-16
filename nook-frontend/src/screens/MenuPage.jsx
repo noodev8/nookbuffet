@@ -148,6 +148,7 @@ function MenuPage() {
           </button>
           <div className={`mobile-menu-option3 ${isMenuOpen ? 'active' : ''}`}>
             <a href="#" onClick={() => {toggleMenu(); goHome();}}>Home</a>
+            <a href="#" onClick={() => {toggleMenu(); goToOrder();}}>Order</a>
             <a href="#" onClick={() => {toggleMenu(); goToMenu();}}>Menu</a>
             <a href="#" onClick={() => {toggleMenu(); goToAbout();}}>About</a>
             <a href="#" onClick={() => {toggleMenu(); goToContact();}}>Contact</a>

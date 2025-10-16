@@ -36,6 +36,10 @@ function OrderPage() {
     navigate('/about'); // Go to about page
   };
 
+  const goToMenu = () => {
+    navigate('/menu'); // Go to menu page
+  };
+
   return (
     <div className="welcome-page-option3">
       {/* Navigation - Same as home page */}
@@ -47,7 +51,7 @@ function OrderPage() {
           </div>
           <div className="nav-links-option3">
             <a href="#" onClick={goHome}>Home</a>
-            <a href="#menu">Menu</a>
+            <a href="#" onClick={goToMenu}>Menu</a>
             <a href="#" onClick={goToAbout}>About</a>
             <a href="#contact">Contact</a>
           </div>
@@ -58,7 +62,8 @@ function OrderPage() {
           </button>
           <div className={`mobile-menu-option3 ${isMenuOpen ? 'active' : ''}`}>
             <a href="#" onClick={() => {toggleMenu(); goHome();}}>Home</a>
-            <a href="#menu" onClick={toggleMenu}>Menu</a>
+            <a href="#" onClick={toggleMenu}>Order</a>
+            <a href="#" onClick={() => {toggleMenu(); goToMenu();}}>Menu</a>
             <a href="#" onClick={() => {toggleMenu(); goToAbout();}}>About</a>
             <a href="#contact" onClick={toggleMenu}>Contact</a>
           </div>

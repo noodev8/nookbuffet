@@ -44,6 +44,10 @@ function AboutPage() {
     navigate('/menu'); // Go to menu page
   };
 
+  const goToOrder = () => {
+    navigate('/order'); // Go to order page
+  };
+
   const goToContact = () => {
     navigate('/contact'); // Go to contact page
   };
@@ -70,6 +74,7 @@ function AboutPage() {
           </button>
           <div className={`mobile-menu-option3 ${isMenuOpen ? 'active' : ''}`}>
             <a href="#" onClick={() => {toggleMenu(); goHome();}}>Home</a>
+            <a href="#" onClick={() => {toggleMenu(); goToOrder();}}>Order</a>
             <a href="#" onClick={() => {toggleMenu(); goToMenu();}}>Menu</a>
             <a href="#" onClick={() => {toggleMenu(); goToAbout();}}>About</a>
             <a href="#" onClick={() => {toggleMenu(); goToContact();}}>Contact</a>
