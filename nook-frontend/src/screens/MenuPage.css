@@ -116,11 +116,7 @@
   position: relative;
 }
 
-.menu-items-list li:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #555;
-  transform: translateX(5px);
-}
+
 
 .menu-items-list li:last-child {
   margin-bottom: 0;
