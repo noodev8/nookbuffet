@@ -241,7 +241,7 @@
 /* Menu images - Square-ish proportions for 4 images */
 .menu-image {
   width: 100%;
-  height: 120px;
+  height: 150px;
   object-fit: cover;
   border-radius: 8px;
   border: 1px solid #555;

@@ -2,12 +2,19 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+// Import API configuration
+import { API_BASE_URL } from '../config.js'
+
 // Import your custom images
 import logoImage from '../assets/logo.jpg'
 import sandwichesImg from '../assets/sandwiches.png'
 import sandwiches3Img from '../assets/sandwiches3.png'
+import sandwiches2Img from '../assets/sandwiches2.png'
 import wrapsImg from '../assets/wraps.png'
+import wraps2Img from '../assets/wraps2.png'
 import savouryImg from '../assets/savoury.png'
+import savoury2Img from '../assets/savoury2.png'
+import savoury3Img from '../assets/savoury3.png'
 import dipsImg from '../assets/dipsandsticks.png'
 import fruitImg from '../assets/fruit.png'
 import cakeImg from '../assets/cake.png'
@@ -42,8 +49,9 @@ function MenuPage() {
       setLoading(true);
       setError(null);
 
-      // Call your API endpoint
-      const response = await fetch('http://localhost:3013/api/menu');
+      // Call your API endpoint using config file
+      // TO CHANGE IP: Edit the config.js file
+      const response = await fetch(`${API_BASE_URL}/api/menu`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -76,9 +84,9 @@ function MenuPage() {
   const getCategoryImage = (categoryName, position = 0) => {
     // Map category names to arrays of 4 different images
     const imageArrays = {
-      'Sandwiches': [sandwichesImg, sandwiches3Img, food2Img, nookImg],
-      'Wraps': [wrapsImg, food2Img, nookImg, savouryImg],
-      'Savoury Tray': [savouryImg, food2Img, nookImg, sandwichesImg],
+      'Sandwiches': [sandwichesImg, nookImg, sandwiches2Img, sandwiches3Img],
+      'Wraps': [wrapsImg, wraps2Img, nookImg, savouryImg],
+      'Savoury Tray': [savouryImg, savoury2Img, savoury3Img, sandwichesImg],
       'Dips and Sticks': [dipsImg, food2Img, nookImg, savouryImg],
       'Fruit': [fruitImg, food2Img, nookImg, savouryImg],
       'Cakes': [cakeImg, food2Img, nookImg, savouryImg],

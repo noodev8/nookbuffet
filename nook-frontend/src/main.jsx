@@ -48,7 +48,7 @@ function App() {
         {/* Home page route - shows when user visits "/" */}
         <Route path="/" element={<Home />} />
 
-        {/* Order page route - shows when user visits "/order" */}
+        {/* Order page route */}
         <Route path="/order" element={<OrderPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/menu" element={<MenuPage />} />
