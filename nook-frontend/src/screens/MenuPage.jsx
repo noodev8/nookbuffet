@@ -13,11 +13,13 @@ import sandwiches2Img from '../assets/sandwiches2.png'
 import wrapsImg from '../assets/wraps.png'
 import wraps2Img from '../assets/wraps2.png'
 import wraps3Img from '../assets/wraps3.png'
+import wraps4Img from '../assets/wraps4.png'
 import savouryImg from '../assets/savoury.png'
 import savoury2Img from '../assets/savoury2.png'
 import savoury3Img from '../assets/savoury3.png'
 import dipsImg from '../assets/dipsandsticks.png'
 import fruitImg from '../assets/fruit.png'
+import fruit2Img from '../assets/fruit2.png'
 import cakeImg from '../assets/cake.png'
 import food2Img from '../assets/food2.png'
 import nookImg from '../assets/nook.jpg'
@@ -86,10 +88,10 @@ function MenuPage() {
     // Map category names to arrays of 4 different images
     const imageArrays = {
       'Sandwiches': [sandwichesImg, nookImg, sandwiches2Img, sandwiches3Img],
-      'Wraps': [wrapsImg, wraps2Img, wraps3Img, savouryImg],
+      'Wraps': [wrapsImg, wraps2Img, wraps3Img, wraps4Img],
       'Savoury Tray': [savouryImg, savoury2Img, savoury3Img, sandwichesImg],
       'Dips and Sticks': [dipsImg, food2Img, nookImg, savouryImg],
-      'Fruit': [fruitImg, food2Img, nookImg, savouryImg],
+      'Fruit': [fruitImg, fruit2Img, nookImg, savouryImg],
       'Cakes': [cakeImg, food2Img, nookImg, savouryImg],
       'Continental Tray': [savouryImg, food2Img, nookImg, sandwichesImg],
     };
