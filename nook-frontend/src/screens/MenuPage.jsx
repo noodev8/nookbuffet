@@ -17,10 +17,16 @@ import wraps4Img from '../assets/wraps4.png'
 import savouryImg from '../assets/savoury.png'
 import savoury2Img from '../assets/savoury2.png'
 import savoury3Img from '../assets/savoury3.png'
+import savoury4Img from '../assets/savoury4.png'
 import dipsImg from '../assets/dipsandsticks.png'
+import dips2Img from '../assets/dips2.png'
+import dips3Img from '../assets/dips3.png'
+import dips4Img from '../assets/dips4.png'
 import fruitImg from '../assets/fruit.png'
 import fruit2Img from '../assets/fruit2.png'
+import fruit3Img from '../assets/fruit3.png'
 import cakeImg from '../assets/cake.png'
+import cake2Img from '../assets/cake2.png'
 import food2Img from '../assets/food2.png'
 import nookImg from '../assets/nook.jpg'
 
@@ -89,10 +95,10 @@ function MenuPage() {
     const imageArrays = {
       'Sandwiches': [sandwichesImg, nookImg, sandwiches2Img, sandwiches3Img],
       'Wraps': [wrapsImg, wraps2Img, wraps3Img, wraps4Img],
-      'Savoury Tray': [savouryImg, savoury2Img, savoury3Img, sandwichesImg],
-      'Dips and Sticks': [dipsImg, food2Img, nookImg, savouryImg],
-      'Fruit': [fruitImg, fruit2Img, nookImg, savouryImg],
-      'Cakes': [cakeImg, food2Img, nookImg, savouryImg],
+      'Savoury': [savoury3Img, savoury2Img, savouryImg, savoury4Img],
+      'Dips and Sticks': [dipsImg, dips2Img, dips3Img, dips4Img],
+      'Fruit': [fruitImg, fruit2Img, fruit3Img, savouryImg],
+      'Cake': [cakeImg, cake2Img, nookImg, savouryImg],
       'Continental Tray': [savouryImg, food2Img, nookImg, sandwichesImg],
     };
 
