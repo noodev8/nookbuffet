@@ -11,6 +11,9 @@ import '../style.css'
 // Import ContactPage specific styles
 import './ContactPage.css'
 
+// Import API configuration
+import { API_BASE_URL } from '../config.js'
+
 /**
  * Contact Page Component - Contact form for customer inquiries
  * Allows customers to send messages to the company
@@ -27,6 +30,11 @@ function ContactPage() {
     subject: '',
     message: ''
   });
+
+  // State for form submission
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+  const [submitError, setSubmitError] = useState('');
 
   // Navigation hook
   const navigate = useNavigate();
@@ -62,21 +70,52 @@ function ContactPage() {
     }));
   };
 
-  // Handle form submission (placeholder for now)
-  const handleSubmit = (e) => {
+  // Handle form submission
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    // TODO: Integrate with Resend later
-    alert('Thank you for your message! We will get back to you soon.');
-    
-    // Reset form
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      subject: '',
-      message: ''
-    });
+
+    // Clear previous messages
+    setSubmitMessage('');
+    setSubmitError('');
+    setIsSubmitting(true);
+
+    try {
+      console.log('Submitting contact form:', formData);
+
+      // Send form data to backend API
+      const response = await fetch(`${API_BASE_URL}/api/contact`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log('Contact form submitted successfully');
+        setSubmitMessage(data.message);
+
+        // Reset form on success
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          subject: '',
+          message: ''
+        });
+      } else {
+        console.error('Contact form submission failed:', data.message);
+        setSubmitError(data.message || 'Failed to send message. Please try again.');
+      }
+
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      setSubmitError('Failed to send message. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -194,8 +233,25 @@ function ContactPage() {
               ></textarea>
             </div>
 
-            <button type="submit" className="submit-button">
-              Send Message
+            {/* Success/Error Messages */}
+            {submitMessage && (
+              <div className="form-message success-message">
+                {submitMessage}
+              </div>
+            )}
+
+            {submitError && (
+              <div className="form-message error-message">
+                {submitError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className={`submit-button ${isSubmitting ? 'submitting' : ''}`}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Sending...' : 'Send Message'}
             </button>
           </form>
         </div>

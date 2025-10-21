@@ -11,7 +11,7 @@ const { pool } = require('../config/database');
  */
 const getAllMenuSections = async () => {
   try {
-    console.log('📋 Fetching all menu sections from database...');
+    console.log('Fetching all menu sections from database...');
 
     // Query to get all categories (sections) with their menu items
     // This uses PostgreSQL's JSON aggregation to group items by category
@@ -50,32 +50,11 @@ const getAllMenuSections = async () => {
     // Execute the query
     const result = await pool.query(query);
 
-    console.log(`✅ Found ${result.rows.length} menu sections`);
+    console.log(`Found ${result.rows.length} menu sections`);
 
     return result.rows;
 
-    // TODO: Replace the above mock data with real database queries like:
-    /*
-    // Example for SQL databases:
-    const sections = await db.query(`
-      SELECT s.*, 
-             JSON_ARRAYAGG(
-               JSON_OBJECT(
-                 'id', i.id,
-                 'name', i.name,
-                 'description', i.description,
-                 'price', i.price,
-                 'available', i.available
-               )
-             ) as items
-      FROM menu_sections s
-      LEFT JOIN menu_items i ON s.id = i.section_id
-      WHERE i.available = true
-      GROUP BY s.id
-      ORDER BY s.display_order
-    `);
-    return sections;
-    */
+  
 
   } catch (error) {
     console.error('Error fetching menu sections:', error);
@@ -89,7 +68,7 @@ const getAllMenuSections = async () => {
  */
 const getMenuSectionById = async (sectionId) => {
   try {
-    console.log(`📋 Fetching menu section with ID: ${sectionId}`);
+    console.log(`Fetching menu section with ID: ${sectionId}`);
 
     // Query to get a specific category (section) with its menu items
     const query = `
@@ -131,7 +110,7 @@ const getMenuSectionById = async (sectionId) => {
       throw new Error('Section not found');
     }
 
-    console.log(`✅ Found section: ${result.rows[0].name}`);
+    console.log(`Found section: ${result.rows[0].name}`);
 
     return result.rows[0];
 

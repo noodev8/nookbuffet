@@ -6,6 +6,7 @@ require('dotenv').config();
 // Import all your route files here
 // Each route file handles a specific part of your API
 const menuRoutes = require('./routes/menuRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 // ===== IMPORT DATABASE CONNECTION =====
 // Import database connection for testing
@@ -25,6 +26,10 @@ app.use(express.urlencoded({ extended: true })); // Parses form data from reques
 // All menu routes will be available under /api/menu
 // Example: /api/menu, /api/menu/1, /api/menu/formatted
 app.use('/api/menu', menuRoutes);
+
+// All contact routes will be available under /api/contact
+// Example: /api/contact (POST), /api/contact/test (GET)
+app.use('/api/contact', contactRoutes);
 
 // Basic route
 app.get('/', (req, res) => {
@@ -57,10 +62,13 @@ app.get('/api', (req, res) => {
       'GET /health',
       'GET /api',
 
-      // Menu endpoints - these are the new ones we just added
+      // Menu endpoints
       'GET /api/menu',           // Get all menu sections
       'GET /api/menu/formatted', // Get menu sections formatted for frontend
-      'GET /api/menu/:id'        // Get specific menu section by ID
+      'GET /api/menu/:id',       // Get specific menu section by ID
+
+      // Contact endpoints
+      'POST /api/contact'        // Send contact form email
     ]
   });
 });
