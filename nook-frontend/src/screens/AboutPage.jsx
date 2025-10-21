@@ -1,5 +1,5 @@
 // Import React library and hooks
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 // Import your custom images
@@ -23,6 +23,29 @@ function AboutPage() {
   
   // Hook for navigation between pages
   const navigate = useNavigate();
+
+  // Load Juicer script when component mounts
+  useEffect(() => {
+    // Remove any existing Juicer scripts first
+    const existingScripts = document.querySelectorAll('script[src*="juicer.io"]');
+    existingScripts.forEach(script => script.remove());
+
+    // Create and load the Juicer script
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://www.juicer.io/embed/_thenooksandwichbar/embed-code.js';
+    script.async = true;
+    script.defer = true;
+
+    // Add script to body instead of head for better compatibility
+    document.body.appendChild(script);
+
+    // Cleanup function
+    return () => {
+      const scripts = document.querySelectorAll('script[src*="juicer.io"]');
+      scripts.forEach(script => script.remove());
+    };
+  }, []);
 
   // Function to toggle mobile menu
   const toggleMenu = () => {
@@ -87,10 +110,12 @@ function AboutPage() {
         <div className="about-content-wrapper">
           <h1 className="about-page-title">About The Little Nook Buffet</h1>
 
-          {/* Introduction Section */}
+          {/* Main Section with Background Image */}
           <div className="about-intro">
-            <p>Welcome to The Little Nook Buffet, where we specialize in creating exceptional workplace dining experiences with fresh, customizable sandwich buffets. We're passionate about bringing quality, convenience, and flavor directly to your office or event.</p>
+            {/* Introduction Text - No Card */}
+            <p className="intro-text">Welcome to The Little Nook Buffet, where we specialize in creating exceptional workplace dining experiences with fresh, customizable sandwich buffets. We're passionate about bringing quality, convenience, and flavor directly to your office or event.</p>
 
+            {/* How We Work Card */}
             <div className="ordering-info">
               <h3>How We Work</h3>
               <p><strong>Easy Ordering:</strong> Place your orders before 4pm for next-day delivery or pickup. We believe in giving you the freshest experience possible, which is why we prepare everything the morning of your order.</p>
@@ -101,42 +126,49 @@ function AboutPage() {
 
               <p><strong>Perfect for:</strong> Office meetings, corporate events, team lunches, training sessions, or any occasion where you want to impress with quality food that brings people together.</p>
             </div>
-          </div>
 
-          {/* Sections Grid */}
-          <div className="about-sections-grid">
-
-            {/* Opening Hours Section */}
-            <div className="about-section">
-              <h3>Opening Hours</h3>
-              <ul className="hours-list">
-                <li><span className="day">Monday</span><span className="time">10:00 - 15:00</span></li>
-                <li><span className="day">Tuesday</span><span className="time">10:00 - 15:00</span></li>
-                <li><span className="day">Wednesday</span><span className="time">10:00 - 15:00</span></li>
-                <li><span className="day">Thursday</span><span className="time">10:00 - 15:00</span></li>
-                <li><span className="day">Friday</span><span className="time">10:00 - 15:00</span></li>
-                <li><span className="day">Saturday</span><span className="time">10:00 - 15:00</span></li>
-                <li><span className="day">Sunday</span><span className="time">Closed</span></li>
-              </ul>
-            </div>
-            {/* Location Section */}
-            <div className="about-section location-section">
-              <h3>Where to Find Us</h3>
-              <div className="location-image">
-                <img src={buildingImage} alt="The Little Nook Buffet Building" className="building-photo" />
+            {/* Opening Hours and Location Cards */}
+            <div className="info-cards-grid">
+              {/* Opening Hours Card */}
+              <div className="info-card">
+                <h3>Opening Hours</h3>
+                <ul className="hours-list">
+                  <li><span className="day">Monday</span><span className="time">10:00 - 15:00</span></li>
+                  <li><span className="day">Tuesday</span><span className="time">10:00 - 15:00</span></li>
+                  <li><span className="day">Wednesday</span><span className="time">10:00 - 15:00</span></li>
+                  <li><span className="day">Thursday</span><span className="time">10:00 - 15:00</span></li>
+                  <li><span className="day">Friday</span><span className="time">10:00 - 15:00</span></li>
+                  <li><span className="day">Saturday</span><span className="time">10:00 - 15:00</span></li>
+                  <li><span className="day">Sunday</span><span className="time">Closed</span></li>
+                </ul>
               </div>
-              
-              <p>42 High Street<br/>
-                 Welshpool SY21 7JQ<br/>
-                 Wales</p>
-              <p>Phone: +44 7551 428162<br/>
-                 </p>
+
+              {/* Location Card */}
+              <div className="info-card location-card">
+                <h3>Where to Find Us</h3>
+                <div className="location-image">
+                  <img src={buildingImage} alt="The Little Nook Buffet Building" className="building-photo" />
+                </div>
+
+                <p>42 High Street<br/>
+                   Welshpool SY21 7JQ<br/>
+                   Wales</p>
+                <p>Phone: +44 7551 428162<br/>
+                   </p>
+              </div>
             </div>
-
-
-
-
           </div>
+
+          {/* Social Media Feed Section */}
+          <div className="social-feed-section">
+            <h2>Follow Our Journey</h2>
+            <p>Stay up to date with our latest creations, behind-the-scenes moments, and customer favorites!</p>
+            <div className="juicer-feed-container">
+              <ul className="juicer-feed" data-feed-id="_thenooksandwichbar" data-per="12" data-gutter="20"></ul>
+            </div>
+          </div>
+
+
         </div>
       </div>
     </div>

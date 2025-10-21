@@ -30,7 +30,7 @@
   padding: 2rem 2rem;     /* Less top padding to reduce space */
 }
 
-/* Introduction section - with food photo background */
+/* Main section with food photo background - contains all cards */
 .about-intro {
   background-image: url('../assets/food2.png'); /* Food photo background */
   background-size: cover;  /* Cover the entire section */
@@ -38,11 +38,11 @@
   background-repeat: no-repeat; /* Don't repeat the image */
   padding: 4rem 2rem;     /* More padding for better text readability */
   border-radius: 8px;     /* Subtle rounded corners */
-  margin-bottom: 3rem;    /* Same spacing as Home page */
+  margin-bottom: 4rem;    /* Same spacing as Home page */
   text-align: center;     /* Center align text */
-  transition: all 0.3s ease; /* Smooth hover animation */
   box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Slightly stronger shadow */
   position: relative;     /* For overlay positioning */
+  transition: all 0.6s ease; /* Smooth transition for hover effects */
 }
 
 /* Dark overlay for better text readability */
@@ -59,8 +59,8 @@
 }
 
 .about-intro:hover {
-  transform: translateY(-5px); /* Subtle lift on hover */
-  box-shadow: 0 5px 20px rgba(0,0,0,0.2); /* Stronger shadow on hover */
+  transform: translateY(-3px); /* More subtle lift on hover */
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15); /* Smoother, more diffused shadow */
 }
 
 .about-intro p {
@@ -73,10 +73,17 @@
   text-shadow: 1px 1px 2px rgba(0,0,0,0.7); /* Text shadow for better readability */
 }
 
-.about-intro p:first-child {
-  font-size: 1.2rem;      /* Larger first paragraph */
-  color: white;          /* White color for emphasis */
-  font-weight: 500;       /* Semi-bold */
+/* Introduction text - white text without card */
+.intro-text {
+  color: white;          /* White text for contrast against photo */
+  font-size: 1.2rem;     /* Larger text */
+  font-weight: 500;      /* Semi-bold */
+  margin-bottom: 2rem;   /* Space below */
+  line-height: 1.6;      /* Good line spacing */
+  position: relative;    /* Position above overlay */
+  z-index: 2;           /* Place above overlay */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.7); /* Text shadow for better readability */
+  text-align: center;    /* Center the text */
 }
 
 /* How We Work section */
@@ -86,7 +93,7 @@
   box-shadow: 0 6px 25px rgba(0,0,0,0.2); /* Strong shadow for elevation */
   margin: 2rem auto;      /* Center with margin */
   padding: 2rem 3rem;     /* Less vertical, more horizontal padding */
-  max-width: 1000px;      /* Wider max width */
+  max-width: 1000px;      /* Original wider max width */
   width: 90%;            /* Take up more width, slightly shorter */
   position: relative;     /* Position above everything */
   z-index: 10;           /* HIGHEST z-index - above overlay and background */
@@ -119,6 +126,94 @@
   color: #000 !important;           /* Black for emphasis */
   font-weight: 600 !important;      /* Semi-bold */
   text-shadow: none !important;     /* REMOVE text shadow */
+}
+
+/* Info cards grid - for opening hours and location */
+.info-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two columns side by side */
+  gap: 2rem;             /* Space between cards */
+  margin-top: 2rem;      /* Space above grid */
+  max-width: 1000px;     /* Same max width as ordering-info */
+  width: 90%;            /* Same width as ordering-info */
+  margin-left: auto;     /* Center the grid */
+  margin-right: auto;    /* Center the grid */
+}
+
+/* Individual info cards - match ordering-info styling */
+.info-card {
+  background: white;      /* SOLID white background - no transparency */
+  border-radius: 12px;    /* Rounded corners */
+  box-shadow: 0 6px 25px rgba(0,0,0,0.2); /* Strong shadow for elevation */
+  margin: 0;              /* No margin - controlled by grid */
+  padding: 2rem;          /* Consistent padding */
+  width: 100%;            /* Fill grid cell */
+  position: relative;     /* Position above everything */
+  z-index: 10;           /* HIGHEST z-index - above overlay and background */
+  text-align: left;      /* Left align content in cards */
+}
+
+.info-card h3 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2rem;       /* Larger title - match ordering-info */
+  color: #333;           /* Dark text - NOT white */
+  margin-bottom: 2rem;   /* Space below title */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.info-card p {
+  color: #333 !important;           /* Dark text - NOT white */
+  font-size: 0.95rem !important;   /* Slightly smaller text */
+  line-height: 1.6 !important;     /* Good line spacing */
+  margin-bottom: 1.2rem !important; /* Space between paragraphs */
+  text-align: left !important;     /* Left align paragraphs */
+  text-shadow: none !important;    /* REMOVE text shadow - no blur */
+  position: relative;               /* Position above everything */
+  z-index: 11;                     /* Even higher z-index */
+}
+
+/* Hours list styling within info cards */
+.info-card .hours-list {
+  list-style: none !important;      /* Remove bullet points */
+  padding: 0 !important;            /* Remove default padding */
+  margin: 0 !important;             /* Remove default margin */
+}
+
+.info-card .hours-list li {
+  display: flex !important;         /* Flexbox for day/time alignment */
+  justify-content: space-between !important; /* Space between day and time */
+  padding: 0.5rem 0 !important;     /* Vertical padding */
+  border-bottom: 1px solid #eee !important; /* Light border between items */
+  color: #333 !important;           /* Dark text */
+}
+
+.info-card .hours-list li:last-child {
+  border-bottom: none !important;   /* Remove border from last item */
+}
+
+.info-card .day {
+  font-weight: 500 !important;      /* Semi-bold for day names */
+  color: #333 !important;           /* Dark text */
+}
+
+.info-card .time {
+  color: #666 !important;           /* Slightly lighter for times */
+}
+
+/* Building photo styling within info cards */
+.info-card .location-image {
+  text-align: center;    /* Center the image */
+  margin: 1rem 0;        /* Space above and below */
+}
+
+.info-card .building-photo {
+  max-width: 100%;       /* Responsive width */
+  max-height: 200px;     /* Limit height */
+  border-radius: 4px;    /* Subtle rounded corners */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* Subtle shadow */
 }
 
 /* Grid layout for sections - matches Home page info grid */
@@ -188,9 +283,7 @@
   transition: transform 0.3s ease; /* Smooth hover animation */
 }
 
-.building-photo:hover {
-  transform: scale(1.05); /* Slightly enlarge on hover */
-}
+/* Removed hover effect for building photo */
 
 /* Opening hours styling */
 .hours-list {
@@ -262,6 +355,31 @@
     line-height: 1.6;     /* Adjust line height for mobile */
   }
 
+  /* Mobile styles for info cards */
+  .info-cards-grid {
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 1.5rem;          /* Smaller gap on mobile */
+    margin-top: 1.5rem;   /* Adjust spacing */
+  }
+
+  .info-card {
+    padding: 2rem 1.5rem; /* Better mobile padding - match ordering-info */
+    margin: 0;            /* Remove margins on mobile - controlled by grid */
+  }
+
+  .info-card h3 {
+    font-size: 1.4rem;    /* Maintain readability on mobile - match ordering-info */
+  }
+
+  .info-card p {
+    font-size: 0.95rem;   /* Slightly smaller on mobile */
+    line-height: 1.6;     /* Adjust line height for mobile */
+  }
+
+  .info-card .building-photo {
+    max-height: 150px;    /* Smaller image on mobile */
+  }
+
   .about-sections-grid {
     grid-template-columns: 1fr; /* Single column on mobile */
     gap: 2rem;           /* Maintain breathing room */
@@ -276,4 +394,53 @@
     max-width: 200px;     /* Smaller max width on mobile */
     max-height: 150px;    /* Smaller max height on mobile */
   }
+
+  .social-feed-section h2 {
+    font-size: 2rem;        /* Smaller title on mobile */
+  }
+}
+
+/* ========================================
+   SOCIAL MEDIA FEED SECTION
+   ======================================== */
+
+.social-feed-section {
+  margin-top: 4rem;
+  margin-bottom: 4rem;
+  padding: 3rem 0;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.social-feed-section h2 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.5rem;
+  color: #000;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+.social-feed-section p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.juicer-feed-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.juicer-feed {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
