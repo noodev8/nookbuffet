@@ -201,22 +201,15 @@ function ContactPage() {
               </div>
               
               <div className="form-group">
-                <label htmlFor="subject">Subject *</label>
-                <select
+                <label htmlFor="subject">Subject</label>
+                <input
+                  type="text"
                   id="subject"
                   name="subject"
                   value={formData.subject}
                   onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select a subject</option>
-                  <option value="catering-inquiry">Catering Inquiry</option>
-                  <option value="menu-questions">Menu Questions</option>
-                  <option value="pricing">Pricing Information</option>
-                  <option value="booking">Booking Request</option>
-                  <option value="feedback">Feedback</option>
-                  <option value="other">Other</option>
-                </select>
+                  placeholder="Brief description of your inquiry"
+                />
               </div>
             </div>
 
