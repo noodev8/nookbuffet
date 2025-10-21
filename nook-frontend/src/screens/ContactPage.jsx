@@ -80,8 +80,6 @@ function ContactPage() {
     setIsSubmitting(true);
 
     try {
-      console.log('Submitting contact form:', formData);
-
       // Send form data to backend API
       const response = await fetch(`${API_BASE_URL}/api/contact`, {
         method: 'POST',
@@ -94,7 +92,6 @@ function ContactPage() {
       const data = await response.json();
 
       if (data.success) {
-        console.log('Contact form submitted successfully');
         setSubmitMessage(data.message);
 
         // Reset form on success
@@ -106,12 +103,10 @@ function ContactPage() {
           message: ''
         });
       } else {
-        console.error('Contact form submission failed:', data.message);
         setSubmitError(data.message || 'Failed to send message. Please try again.');
       }
 
     } catch (error) {
-      console.error('Error submitting contact form:', error);
       setSubmitError('Failed to send message. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);

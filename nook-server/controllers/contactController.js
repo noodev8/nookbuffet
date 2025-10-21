@@ -12,13 +12,6 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  */
 const sendContactEmail = async (req, res) => {
   try {
-    console.log('Processing contact form submission...');
-    console.log('Request body:', req.body);
-    console.log('Environment variables check:');
-    console.log('- RESEND_API_KEY:', process.env.RESEND_API_KEY ? 'Set' : 'Missing');
-    console.log('- FROM_EMAIL:', process.env.FROM_EMAIL);
-    console.log('- TO_EMAIL:', process.env.TO_EMAIL);
-
     // Extract form data from request body
     const { name, email, phone, subject, message } = req.body;
     
@@ -69,13 +62,6 @@ const sendContactEmail = async (req, res) => {
     `;
     
     // Send email using Resend
-    console.log('Attempting to send email with Resend...');
-    console.log('Email config:', {
-      from: process.env.FROM_EMAIL,
-      to: process.env.TO_EMAIL,
-      subject: emailSubject
-    });
-
     const emailData = await resend.emails.send({
       from: process.env.FROM_EMAIL,
       to: process.env.TO_EMAIL,
@@ -84,9 +70,6 @@ const sendContactEmail = async (req, res) => {
       // Optional: Add reply-to so you can reply directly to the customer
       reply_to: email
     });
-
-    console.log('Email sent successfully:', emailData);
-    console.log('Email ID:', emailData.id);
     
     // Send successful response
     res.status(200).json({
@@ -96,19 +79,11 @@ const sendContactEmail = async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error sending contact email:', error);
-    console.error('Error details:', {
-      message: error.message,
-      name: error.name,
-      stack: error.stack
-    });
-
     // Send error response
     res.status(500).json({
       success: false,
       message: 'Failed to send your message. Please try again later.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-      errorDetails: process.env.NODE_ENV === 'development' ? error : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
