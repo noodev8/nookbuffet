@@ -123,7 +123,7 @@ function ContactPage() {
       {/* Navigation */}
       <nav className="navbar-option3">
         <div className="nav-container-option3">
-          <div className="logo-option3">
+          <div className="logo-option3" onClick={goHome} style={{ cursor: 'pointer' }}>
             <img src={logoImage} alt="The Nook Buffet" className="logo-image-option3" />
             <span className="logo-text-option3">The Nook Buffet</span>
           </div>

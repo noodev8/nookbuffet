@@ -184,11 +184,19 @@
 }
 
 .contact-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
   gap: 2rem;
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.contact-info-item {
+  flex: 1;
+  min-width: 200px;
+  text-align: center;
 }
 
 .contact-info-item h3 {
@@ -227,8 +235,12 @@
   }
 
   .contact-info-grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     gap: 1.5rem;
+  }
+
+  .contact-info-item {
+    min-width: auto;
   }
 
   .contact-info-section {
