@@ -1,48 +1,28 @@
-// Database Connection Configuration
-// This file sets up the PostgreSQL connection using the pg package
+// This file connects to your PostgreSQL database
 
 const { Pool } = require('pg');
 
-// Create a connection pool using environment variables
-// A pool manages multiple database connections efficiently
+// Set up database connection using your .env file settings
 const pool = new Pool({
-  host: process.env.DB_HOST,        // Database server address
-  port: process.env.DB_PORT,        // Database port (usually 5432 for PostgreSQL)
-  database: process.env.DB_NAME,    // Database name
-  user: process.env.DB_USER,        // Database username
-  password: process.env.DB_PASSWORD, // Database password
-  
-  // Connection pool settings
-  max: 20,                          // Maximum number of connections in pool
-  idleTimeoutMillis: 30000,         // How long a client can be idle before closing
-  connectionTimeoutMillis: 2000,    // How long to wait when connecting
+  host: process.env.DB_HOST,      
+  port: process.env.DB_PORT,      
+  database: process.env.DB_NAME,   
+  user: process.env.DB_USER,     
+  password: process.env.DB_PASSWORD, 
+
+  // Connection settings 
+  max: 200,                          // Max connections at once
+  idleTimeoutMillis: 60000,         // Close unused connections after 1 min
+  connectionTimeoutMillis: 60000,    // Give up connecting after 1 min
 });
 
-// Test the database connection when the module loads
-pool.on('connect', () => {
-  // Database connected successfully
-});
-
+// If database has problems, show error and stop server
 pool.on('error', (err) => {
-  console.error('❌ Unexpected error on idle client', err);
+  console.error('Database error:', err);
   process.exit(-1);
 });
 
-// Function to test database connection
-const testConnection = async () => {
-  try {
-    const client = await pool.connect();
-    await client.query('SELECT NOW()');
-    client.release();
-    return true;
-  } catch (error) {
-    console.error('❌ Database connection test failed:', error.message);
-    return false;
-  }
-};
-
-// Export the pool so other files can use it
+// Make pool available to other files
 module.exports = {
-  pool,
-  testConnection
+  pool
 };

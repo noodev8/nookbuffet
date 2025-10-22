@@ -1,20 +1,13 @@
-// Menu Model - Handles all database operations for menu items
-// This file contains functions to get menu data from the database
+// This file gets menu data from your database
 
-// Import the PostgreSQL database connection
 const { pool } = require('../config/database');
 
-/**
- * Get all menu sections with their items
- * This function will return all sections like "Sandwiches", "Wraps", etc.
- * with all the menu items in each section
- */
+// Get all menu sections (like "Sandwiches", "Wraps", etc.) with their items
 const getAllMenuSections = async () => {
   try {
-    console.log('Fetching all menu sections from database...');
 
-    // Query to get all categories (sections) with their menu items
-    // This uses PostgreSQL's JSON aggregation to group items by category
+    // Database query to get menu sections and their items
+    // Don't worry about understanding this SQL - it just gets your menu data
     const query = `
       SELECT
         c.id,
@@ -47,30 +40,20 @@ const getAllMenuSections = async () => {
       ORDER BY c.id;
     `;
 
-    // Execute the query
+    // Run the query and get results
     const result = await pool.query(query);
-
-    console.log(`Found ${result.rows.length} menu sections`);
-
     return result.rows;
 
-  
-
   } catch (error) {
-    console.error('Error fetching menu sections:', error);
-    throw new Error('Failed to fetch menu sections');
+    console.error('Could not get menu sections:', error);
+    throw new Error('Failed to get menu sections');
   }
 };
 
-/**
- * Get a specific menu section by ID
- * @param {number} sectionId - The ID of the section to get
- */
+// Get one specific menu section by its ID number
 const getMenuSectionById = async (sectionId) => {
   try {
-    console.log(`Fetching menu section with ID: ${sectionId}`);
-
-    // Query to get a specific category (section) with its menu items
+    // Same query as above, but only get the section with this ID
     const query = `
       SELECT
         c.id,
@@ -102,25 +85,23 @@ const getMenuSectionById = async (sectionId) => {
       GROUP BY c.id, c.name, c.description, c.is_required, c.buffet_version_id;
     `;
 
-    // Execute the query with the section ID parameter
+    // Run the query with the specific ID
     const result = await pool.query(query, [sectionId]);
 
-    // Check if section was found
+    // Check if we found anything
     if (!result.rows || result.rows.length === 0) {
       throw new Error('Section not found');
     }
 
-    console.log(`Found section: ${result.rows[0].name}`);
-
     return result.rows[0];
 
   } catch (error) {
-    console.error('Error fetching menu section:', error);
+    console.error('Could not get menu section:', error);
     throw error;
   }
 };
 
-// Export the functions so other files can use them
+// Make these functions available to other files
 module.exports = {
   getAllMenuSections,
   getMenuSectionById
