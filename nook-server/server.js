@@ -13,7 +13,13 @@ const PORT = process.env.PORT || 3013;
 const HOST = process.env.SERVER_HOST || 'localhost';
 
 // Set up the server basics
-app.use(cors()); // Let your website talk to this server
+const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['*'];
+app.use(cors({
+  origin: corsOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+})); // Let your website talk to this server
 app.use(express.json()); // Understand JSON data
 app.use(express.urlencoded({ extended: true })); // Understand form data
 
