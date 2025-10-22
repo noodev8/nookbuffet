@@ -20,7 +20,7 @@ const pool = new Pool({
 
 // Test the database connection when the module loads
 pool.on('connect', () => {
-  console.log('✅ Connected to PostgreSQL database');
+  // Database connected successfully
 });
 
 pool.on('error', (err) => {
@@ -32,8 +32,7 @@ pool.on('error', (err) => {
 const testConnection = async () => {
   try {
     const client = await pool.connect();
-    const result = await client.query('SELECT NOW()');
-    console.log('🔗 Database connection test successful:', result.rows[0].now);
+    await client.query('SELECT NOW()');
     client.release();
     return true;
   } catch (error) {

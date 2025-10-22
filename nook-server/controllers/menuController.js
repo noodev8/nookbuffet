@@ -1,135 +1,104 @@
-// Menu Controller - Handles HTTP requests for menu data
-// This file receives requests from routes and sends responses back to the frontend
+// This file gets menu data from the database and sends it to the website
 
-// Import the menu model to get data from database
+// Get the database functions
 const menuModel = require('../models/menuModel');
 
-/**
- * Get all menu sections with items
- * This function handles GET /api/menu requests
- */
+// Get all menu sections (like "Sandwiches", "Salads", etc.)
 const getAllMenuSections = async (req, res) => {
   try {
-    console.log('📋 Getting all menu sections...');
-    
-    // Call the model to get data from database
+    // Get menu data from database
     const sections = await menuModel.getAllMenuSections();
-    
-    console.log(`✅ Found ${sections.length} menu sections`);
-    
-    // Send successful response with data
-    res.status(200).json({
+
+    // Send the menu data back to the website
+    res.json({
       success: true,
-      message: 'Menu sections retrieved successfully',
+      message: 'Got the menu!',
       data: sections,
       count: sections.length
     });
-    
+
   } catch (error) {
-    console.error('❌ Error in getAllMenuSections controller:', error.message);
-    
-    // Send error response
-    res.status(500).json({
+    // If something goes wrong, tell the website
+    res.json({
       success: false,
-      message: 'Failed to retrieve menu sections',
-      error: error.message
+      message: 'Could not get menu data'
     });
   }
 };
 
-/**
- * Get a specific menu section by ID
- * This function handles GET /api/menu/:id requests
- */
+// Get one specific menu section (like just "Sandwiches")
 const getMenuSectionById = async (req, res) => {
   try {
-    // Get the section ID from the URL parameter
+    // Get the ID from the URL (like /api/menu/1)
     const sectionId = req.params.id;
-    
-    console.log(`📋 Getting menu section with ID: ${sectionId}`);
-    
-    // Validate that ID is a number
+
+    // Check if the ID is a valid number
     if (!sectionId || isNaN(sectionId)) {
-      return res.status(400).json({
+      return res.json({
         success: false,
-        message: 'Invalid section ID. Must be a number.'
+        message: 'Please provide a valid section ID number'
       });
     }
-    
-    // Call the model to get data from database
+
+    // Get that specific section from database
     const section = await menuModel.getMenuSectionById(sectionId);
-    
-    console.log(`✅ Found section: ${section.name}`);
-    
-    // Send successful response with data
-    res.status(200).json({
+
+    // Send the section data back to the website
+    res.json({
       success: true,
-      message: 'Menu section retrieved successfully',
+      message: 'Found the menu section!',
       data: section
     });
-    
+
   } catch (error) {
-    console.error('❌ Error in getMenuSectionById controller:', error.message);
-    
-    // Check if it's a "not found" error
+    // If section doesn't exist
     if (error.message === 'Section not found') {
-      return res.status(404).json({
+      return res.json({
         success: false,
-        message: 'Menu section not found'
+        message: 'That menu section does not exist'
       });
     }
-    
-    // Send general error response
-    res.status(500).json({
+
+    // If something else goes wrong
+    res.json({
       success: false,
-      message: 'Failed to retrieve menu section',
-      error: error.message
+      message: 'Could not get that menu section'
     });
   }
 };
 
-/**
- * Get menu sections formatted for frontend
- * This function handles GET /api/menu/formatted requests
- * Returns data in the exact format your frontend expects
- */
+// Get menu data formatted exactly how the website needs it
 const getFormattedMenuSections = async (req, res) => {
   try {
-    console.log('📋 Getting formatted menu sections for frontend...');
-    
-    // Get all sections from model
+    // Get all menu sections from database
     const sections = await menuModel.getAllMenuSections();
-    
-    // Format the data to match what your frontend expects
+
+    // Change the data format to match what the website expects
     const formattedSections = sections.map(section => ({
       id: section.id,
-      title: section.name,
+      title: section.name,              // Change "name" to "title"
       description: section.description,
-      image: section.image_url,
+      image: section.image_url,         // Change "image_url" to "image"
       items: section.items || []
     }));
-    
-    console.log(`✅ Formatted ${formattedSections.length} sections for frontend`);
-    
-    // Send response
-    res.status(200).json({
+
+    // Send the formatted data to the website
+    res.json({
       success: true,
-      message: 'Formatted menu sections retrieved successfully',
+      message: 'Got formatted menu data!',
       sections: formattedSections
     });
-    
+
   } catch (error) {
-    console.error('❌ Error in getFormattedMenuSections controller:', error.message);
-    
-    res.status(500).json({
+    // If something goes wrong
+    res.json({
       success: false,
-      message: 'Failed to retrieve formatted menu sections',
-      error: error.message
+      message: 'Could not get formatted menu data'
     });
   }
 };
 
-// Export all controller functions
+// Export these functions so other files can use them
 module.exports = {
   getAllMenuSections,
   getMenuSectionById,

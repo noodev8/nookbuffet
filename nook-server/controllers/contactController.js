@@ -1,93 +1,76 @@
-// Contact Controller - Handles contact form submissions
-// This file processes contact form data and sends emails using Resend
+// This file sends emails when someone fills out the contact form
 
 const { Resend } = require('resend');
 
-// Initialize Resend with API key from environment variables
+// Set up email service with your API key
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-/**
- * Send contact form email
- * This function handles POST /api/contact requests
- */
+// This function runs when someone submits the contact form
 const sendContactEmail = async (req, res) => {
   try {
-    // Extract form data from request body
+    // Get the form data that was submitted
     const { name, email, phone, subject, message } = req.body;
-    
-    // Validate required fields
+
+    // Check if required fields are filled out
     if (!name || !email || !message) {
-      return res.status(400).json({
+      return res.json({
         success: false,
-        message: 'Missing required fields: name, email, and message are required'
+        message: 'Please fill out name, email, and message'
       });
     }
-    
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({
+
+    // Check if email looks valid
+    if (!email.includes('@')) {
+      return res.json({
         success: false,
-        message: 'Invalid email format'
+        message: 'Please enter a valid email address'
       });
     }
-    
-    // Create email content
-    const emailSubject = subject ? `Contact Form: ${subject}` : 'Contact Form Submission';
-    const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333; border-bottom: 2px solid #333; padding-bottom: 10px;">
-          New Contact Form Submission
-        </h2>
-        
-        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="color: #333; margin-top: 0;">Contact Details</h3>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-          <p><strong>Subject:</strong> ${subject || 'Not specified'}</p>
-        </div>
-        
-        <div style="background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-          <h3 style="color: #333; margin-top: 0;">Message</h3>
-          <p style="line-height: 1.6; white-space: pre-wrap;">${message}</p>
-        </div>
-        
-        <div style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px;">
-          <p style="margin: 0; font-size: 14px; color: #666;">
-            This email was sent from the Nook Buffet contact form on ${new Date().toLocaleString()}.
-          </p>
-        </div>
-      </div>
+
+    // Create the email subject line
+    const emailSubject = subject ? `Contact Form: ${subject}` : 'New Contact Form Message';
+
+    // Create the email content (what you'll receive)
+    const emailContent = `
+      <h2>New Contact Form Message</h2>
+
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+      <p><strong>Subject:</strong> ${subject || 'No subject'}</p>
+
+      <h3>Message:</h3>
+      <p>${message}</p>
+
+      <hr>
+      <p><small>Sent from your website contact form</small></p>
     `;
-    
-    // Send email using Resend
-    const emailData = await resend.emails.send({
-      from: process.env.FROM_EMAIL,
-      to: process.env.TO_EMAIL,
-      subject: emailSubject,
-      html: emailHtml,
-      // Optional: Add reply-to so you can reply directly to the customer
-      reply_to: email
+
+    // Send the email
+    await resend.emails.send({
+      from: process.env.FROM_EMAIL,        // Who the email is from
+      to: process.env.TO_EMAIL,            // Who receives the email (you)
+      subject: emailSubject,               // Email subject line
+      html: emailContent,                  // Email content
+      reply_to: email                      // So you can reply directly to the customer
     });
-    
-    // Send successful response
-    res.status(200).json({
+
+    // Tell the website the email was sent successfully
+    res.json({
       success: true,
-      message: 'Your message has been sent successfully! We will get back to you soon.',
-      emailId: emailData.id
+      message: 'Your message has been sent! We will get back to you soon.'
     });
-    
+
   } catch (error) {
-    // Send error response
-    res.status(500).json({
+    // If something goes wrong, tell the website
+    res.json({
       success: false,
-      message: 'Failed to send your message. Please try again later.',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'Sorry, there was a problem sending your message. Please try again.'
     });
   }
 };
 
+// Export the function so other files can use it
 module.exports = {
   sendContactEmail
 };

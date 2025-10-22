@@ -93,15 +93,7 @@ app.use((req, res) => {
 // ===== START SERVER =====
 // This starts your server and makes it listen for requests
 app.listen(PORT, async () => {
-  console.log(`🚀 Nook Server is running on port ${PORT}`);
-  console.log(`📍 Local: http://localhost:${PORT}`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/health`);
-  console.log(`🔌 API info: http://localhost:${PORT}/api`);
-  console.log(`📋 Menu API: http://localhost:${PORT}/api/menu`);
-  console.log(`📋 Formatted Menu: http://localhost:${PORT}/api/menu/formatted`);
-
   // Test database connection on startup
-  console.log('🔗 Testing database connection...');
   await testConnection();
 });
 
