@@ -2,7 +2,7 @@
 // Change the IP address here to use in different buildings
 
 // CHANGE THIS IP ADDRESS FOR DIFFERENT LOCATIONS:
-const SERVER_IP = 'localhost';  // Change to your server's IP address
+const SERVER_IP = '192.168.1.187';  // Change to your server's IP address
 const SERVER_PORT = '3013';
 
 // API Base URL - automatically built from IP and port

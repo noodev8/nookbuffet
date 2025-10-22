@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 // Get the different parts of your API
@@ -33,9 +35,28 @@ app.get('/', (req, res) => {
 
 
 
+// Function to read IP from frontend config
+const getFrontendIP = () => {
+  try {
+    const configPath = path.join(__dirname, '../nook-frontend/src/config.js');
+    const configFile = fs.readFileSync(configPath, 'utf8');
+
+    // Extract IP from the config file
+    const ipMatch = configFile.match(/SERVER_IP = ['"`]([^'"`]+)['"`]/);
+    if (ipMatch) {
+      return ipMatch[1];
+    }
+  } catch (error) {
+    // If can't read frontend config, fall back to localhost
+  }
+  return 'localhost';
+};
+
 // Start the server
 app.listen(PORT, () => {
-  // Server is now running
+  const host = getFrontendIP();
+  console.log(`Server running on http://${host}:${PORT}`);
+  console.log(`Frontend is configured to use: http://${host}:${PORT}`);
 });
 
 module.exports = app;
