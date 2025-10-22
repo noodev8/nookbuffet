@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom'
 import nookImage from '../assets/nook.jpg'
 import logoImage from '../assets/logo.jpg'
 
+// Import PhotoGallery component
+import PhotoGallery from '../components/PhotoGallery'
+
 /**
  * Home Page Component - The main landing page
  * Contains hero section, info cards, and call-to-action
@@ -123,7 +126,8 @@ function Home() {
         </div>
       </section>
 
-      
+      {/* Photo Gallery Section */}
+      <PhotoGallery />
     </div>
   );
 }
