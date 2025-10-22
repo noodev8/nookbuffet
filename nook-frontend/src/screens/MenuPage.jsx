@@ -25,8 +25,11 @@ import dips4Img from '../assets/dips4.png'
 import fruitImg from '../assets/fruit.png'
 import fruit2Img from '../assets/fruit2.png'
 import fruit3Img from '../assets/fruit3.png'
+import fruit4Img from '../assets/fruit4.png'
 import cakeImg from '../assets/cake.png'
 import cake2Img from '../assets/cake2.png'
+import cake3Img from '../assets/cake3.png'
+import cake4Img from '../assets/cake4.png'
 import food2Img from '../assets/food2.png'
 import nookImg from '../assets/nook.jpg'
 
@@ -97,8 +100,8 @@ function MenuPage() {
       'Wraps': [wrapsImg, wraps2Img, wraps3Img, wraps4Img],
       'Savoury': [savoury3Img, savoury2Img, savouryImg, savoury4Img],
       'Dips and Sticks': [dipsImg, dips2Img, dips3Img, dips4Img],
-      'Fruit': [fruitImg, fruit2Img, fruit3Img, savouryImg],
-      'Cake': [cakeImg, cake2Img, nookImg, savouryImg],
+      'Fruit': [fruitImg, fruit2Img, fruit3Img, fruit4Img],
+      'Cake': [cakeImg, cake2Img, cake3Img, cake4Img],
       'Continental Tray': [savouryImg, food2Img, nookImg, sandwichesImg],
     };
 
