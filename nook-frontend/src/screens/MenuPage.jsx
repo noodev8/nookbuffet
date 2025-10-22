@@ -61,8 +61,7 @@ function MenuPage() {
       setLoading(true);
       setError(null);
 
-      // Call your API endpoint using config file
-      // TO CHANGE IP: Edit the config.js file
+      // Call the API endpoint using config file
       const response = await fetch(`${API_BASE_URL}/api/menu`);
 
       if (!response.ok) {
@@ -74,13 +73,13 @@ function MenuPage() {
       // Check if the API returned success
       if (data.success) {
         setMenuSections(data.data || []);
-        console.log('✅ Menu data loaded:', data.data);
+        console.log('Menu data loaded:', data.data);
       } else {
         throw new Error(data.message || 'Failed to load menu data');
       }
 
     } catch (err) {
-      console.error('❌ Error fetching menu data:', err);
+      console.error('Error fetching menu data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -206,7 +205,7 @@ function MenuPage() {
                     {/* Display menu items if they exist */}
                     {section.items && section.items.length > 0 && (
                       <div className="menu-items-list">
-                        <h4>Available Items:</h4>
+                        
                         <ul>
                           {section.items.map((item) => (
                             <li key={item.id}>
