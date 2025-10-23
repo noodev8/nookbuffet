@@ -75,7 +75,7 @@ export default function AboutPage() {
             <h2>Follow Our Journey</h2>
             <p>Stay up to date with our latest creations, behind-the-scenes moments, and customer favorites!</p>
             <div className="juicer-feed-container">
-              <ul className="juicer-feed" data-feed-id="_thenooksandwichbar-2ae03aed-f6c4-4629-b200-887df65f70bd" data-per="12" data-gutter="20"></ul>
+              <ul className="juicer-feed" data-feed-id="_thenooksandwichbar-2ae03aed-f6c4-4629-b200-887df65f70bd" data-per="3" data-gutter="20"></ul>
             </div>
           </div>
         </div>
