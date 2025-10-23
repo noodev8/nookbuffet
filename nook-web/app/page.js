@@ -97,7 +97,15 @@ export default function Home() {
           <div className="gallery-grid">
             <div className="gallery-item">
               <Image
-                src="/assets/sandwiches.png"
+                src="/assets/fullbuffet1.png"
+                alt="Buffets"
+                fill
+                style={{ objectFit: 'cover' }}
+              />
+            </div>
+            <div className="gallery-item">
+              <Image
+                src="/assets/fullbuffet2.png"
                 alt="Sandwiches"
                 fill
                 style={{ objectFit: 'cover' }}
@@ -105,15 +113,7 @@ export default function Home() {
             </div>
             <div className="gallery-item">
               <Image
-                src="/assets/wraps.png"
-                alt="Wraps"
-                fill
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-            <div className="gallery-item">
-              <Image
-                src="/assets/savoury.png"
+                src="/assets/savoury3.png"
                 alt="Savoury"
                 fill
                 style={{ objectFit: 'cover' }}
@@ -121,24 +121,8 @@ export default function Home() {
             </div>
             <div className="gallery-item">
               <Image
-                src="/assets/fruit.png"
-                alt="Fruit"
-                fill
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-            <div className="gallery-item">
-              <Image
-                src="/assets/cake.png"
-                alt="Cake"
-                fill
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-            <div className="gallery-item">
-              <Image
-                src="/assets/dipsandsticks.png"
-                alt="Dips and Sticks"
+                src="/assets/dips3.png"
+                alt="Dips"
                 fill
                 style={{ objectFit: 'cover' }}
               />
