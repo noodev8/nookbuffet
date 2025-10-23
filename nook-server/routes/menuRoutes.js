@@ -1,5 +1,66 @@
-// This file creates the URL routes for the menu
-// When someone visits these URLs, it runs the menu functions
+/*
+=======================================================================================================================================
+API Routes: Menu Management
+=======================================================================================================================================
+Purpose: Handles all menu-related API endpoints for retrieving menu sections and items
+=======================================================================================================================================
+
+ENDPOINTS:
+
+1. GET /api/menu
+   Purpose: Retrieve all menu sections with their items
+   Success Response:
+   {
+     "return_code": "SUCCESS",
+     "message": "Got the menu!",
+     "data": [
+       {
+         "id": 1,
+         "name": "Sandwiches",
+         "description": "Fresh sandwiches",
+         "items": [...]
+       }
+     ],
+     "count": 5
+   }
+   Return Codes: SUCCESS, SERVER_ERROR
+
+2. GET /api/menu/formatted
+   Purpose: Retrieve all menu sections in formatted structure for frontend
+   Success Response:
+   {
+     "return_code": "SUCCESS",
+     "message": "Got formatted menu data!",
+     "sections": [
+       {
+         "id": 1,
+         "title": "Sandwiches",
+         "description": "Fresh sandwiches",
+         "image": "url",
+         "items": [...]
+       }
+     ]
+   }
+   Return Codes: SUCCESS, SERVER_ERROR
+
+3. GET /api/menu/:id
+   Purpose: Retrieve a specific menu section by ID
+   URL Parameters: id (integer, required)
+   Success Response:
+   {
+     "return_code": "SUCCESS",
+     "message": "Found the menu section!",
+     "data": {
+       "id": 1,
+       "name": "Sandwiches",
+       "description": "Fresh sandwiches",
+       "items": [...]
+     }
+   }
+   Return Codes: SUCCESS, INVALID_ID, NOT_FOUND, SERVER_ERROR
+
+=======================================================================================================================================
+*/
 
 const express = require('express');
 const router = express.Router();
