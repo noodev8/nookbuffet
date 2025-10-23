@@ -104,12 +104,12 @@ export default function MenuPage() {
                 </div>
                 <div className="section-image">
                   <div className="image-grid">
-                    {[0, 1, 2].map((index) => (
+                    {[0, 1, 2, 3].map((index) => (
                       <Image
                         key={index}
                         src={getCategoryImage(section.name, index)}
                         alt={`${section.name} - Image ${index + 1}`}
-                        className="menu-image"
+                        className={`menu-image ${index === 3 ? 'fourth-image' : ''}`}
                         width={300}
                         height={200}
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 300px"

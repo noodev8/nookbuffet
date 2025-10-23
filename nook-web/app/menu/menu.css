@@ -49,17 +49,17 @@
 /* Section content - Grid layout */
 .section-content {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 2rem;
-  align-items: center;
+  align-items: start;
 }
 
 .section-info {
-  order: 1;
+  order: 2;
 }
 
 .section-image {
-  order: 2;
+  order: 1;
 }
 
 /* Section titles */
@@ -131,9 +131,10 @@
   border: 1px solid rgba(144, 238, 144, 0.3);
 }
 
-/* Image grid - 3 small images per section */
+/* Image grid - 4 images on desktop, 3 on smaller devices */
 .image-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.8rem;
   width: 100%;
 }
@@ -145,7 +146,6 @@
   border-radius: 8px;
   border: 1px solid #555;
   transition: all 0.3s ease;
-  flex: 1;
 }
 
 .menu-image:hover {
@@ -154,7 +154,7 @@
 }
 
 .fourth-image {
-  display: none;
+  display: grid;
 }
 
 /* Menu CTA Section */
@@ -286,7 +286,11 @@
   }
 
   .image-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .fourth-image {
+    display: none;
   }
 }
 
@@ -308,12 +312,16 @@
   }
 
   .image-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.75rem;
   }
 
   .menu-image {
     height: 150px;
+  }
+
+  .fourth-image {
+    display: none;
   }
 
   .menu-cta {
