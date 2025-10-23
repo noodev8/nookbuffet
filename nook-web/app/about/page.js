@@ -2,9 +2,26 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect } from 'react';
 import './about.css';
 
 export default function AboutPage() {
+  useEffect(() => {
+    // Load Juicer script when component mounts
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://www.juicer.io/embed/_thenooksandwichbar-2ae03aed-f6c4-4629-b200-887df65f70bd/embed-code.js';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    // Cleanup function
+    return () => {
+      const scripts = document.querySelectorAll('script[src*="juicer.io"]');
+      scripts.forEach(script => script.remove());
+    };
+  }, []);
+
   return (
     <div className="welcome-page-option3">
       <div className="about-page-container">

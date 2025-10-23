@@ -2,13 +2,37 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 import './page.css';
 
 export default function Home() {
+  const scrollIndicatorRef = useRef(null);
+  const heroSectionRef = useRef(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!heroSectionRef.current || !scrollIndicatorRef.current) return;
+
+      const heroBottom = heroSectionRef.current.getBoundingClientRect().bottom;
+
+      // Hide indicator when hero section is no longer in view
+      if (heroBottom < 0) {
+        scrollIndicatorRef.current.style.opacity = '0';
+        scrollIndicatorRef.current.style.pointerEvents = 'none';
+      } else {
+        scrollIndicatorRef.current.style.opacity = '1';
+        scrollIndicatorRef.current.style.pointerEvents = 'none';
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div className="welcome-page-option3">
       {/* Hero Section */}
-      <section className="hero-section-option3">
+      <section className="hero-section-option3" ref={heroSectionRef}>
         <div className="hero-background-option3">
           <Image
             src="/assets/nook.jpg"
@@ -37,7 +61,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="scroll-indicator-option3">
+        <div className="scroll-indicator-option3" ref={scrollIndicatorRef}>
           <div className="scroll-arrow-option3">↓</div>
           <span>Scroll to explore</span>
         </div>

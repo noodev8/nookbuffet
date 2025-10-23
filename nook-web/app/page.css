@@ -9,8 +9,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: visible;
   margin-top: 60px;
+  padding-bottom: 5rem;
 }
 
 .hero-background-option3 {
@@ -93,7 +94,7 @@
 /* Scroll Indicator */
 .scroll-indicator-option3 {
   position: absolute;
-  bottom: 2rem;
+  bottom: 5rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 3;
@@ -105,6 +106,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  transition: opacity 0.3s ease;
 }
 
 .scroll-arrow-option3 {

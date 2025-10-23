@@ -1,5 +1,4 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import Navigation from "./components/Navigation";
 
@@ -28,10 +27,6 @@ export default function RootLayout({ children }) {
       >
         <Navigation />
         {children}
-        <Script
-          src="https://www.juicer.io/embed/_thenooksandwichbar-2ae03aed-f6c4-4629-b200-887df65f70bd/embed-code.js"
-          strategy="afterInteractive"
-        />
       </body>
     </html>
   );
