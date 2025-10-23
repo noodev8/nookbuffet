@@ -43,7 +43,7 @@ export default function ContactPage() {
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.return_code === 'SUCCESS') {
         setSubmitMessage(data.message);
 
         setFormData({

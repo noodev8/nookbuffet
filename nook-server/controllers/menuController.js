@@ -11,7 +11,7 @@ const getAllMenuSections = async (req, res) => {
 
     // Send the menu data back to the website
     res.json({
-      success: true,
+      return_code: 'SUCCESS',
       message: 'Got the menu!',
       data: sections,
       count: sections.length
@@ -20,7 +20,7 @@ const getAllMenuSections = async (req, res) => {
   } catch (error) {
     // If something goes wrong, tell the website
     res.json({
-      success: false,
+      return_code: 'SERVER_ERROR',
       message: 'Could not get menu data'
     });
   }
@@ -35,7 +35,7 @@ const getMenuSectionById = async (req, res) => {
     // Check if the ID is a valid number
     if (!sectionId || isNaN(sectionId)) {
       return res.json({
-        success: false,
+        return_code: 'INVALID_ID',
         message: 'Please provide a valid section ID number'
       });
     }
@@ -45,7 +45,7 @@ const getMenuSectionById = async (req, res) => {
 
     // Send the section data back to the website
     res.json({
-      success: true,
+      return_code: 'SUCCESS',
       message: 'Found the menu section!',
       data: section
     });
@@ -54,14 +54,14 @@ const getMenuSectionById = async (req, res) => {
     // If section doesn't exist
     if (error.message === 'Section not found') {
       return res.json({
-        success: false,
+        return_code: 'NOT_FOUND',
         message: 'That menu section does not exist'
       });
     }
 
     // If something else goes wrong
     res.json({
-      success: false,
+      return_code: 'SERVER_ERROR',
       message: 'Could not get that menu section'
     });
   }
@@ -84,7 +84,7 @@ const getFormattedMenuSections = async (req, res) => {
 
     // Send the formatted data to the website
     res.json({
-      success: true,
+      return_code: 'SUCCESS',
       message: 'Got formatted menu data!',
       sections: formattedSections
     });
@@ -92,7 +92,7 @@ const getFormattedMenuSections = async (req, res) => {
   } catch (error) {
     // If something goes wrong
     res.json({
-      success: false,
+      return_code: 'SERVER_ERROR',
       message: 'Could not get formatted menu data'
     });
   }

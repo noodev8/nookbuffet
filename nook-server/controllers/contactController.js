@@ -14,7 +14,7 @@ const sendContactEmail = async (req, res) => {
     // Check if required fields are filled out
     if (!name || !email || !message) {
       return res.json({
-        success: false,
+        return_code: 'MISSING_FIELDS',
         message: 'Please fill out name, email, and message'
       });
     }
@@ -22,7 +22,7 @@ const sendContactEmail = async (req, res) => {
     // Check if email looks valid
     if (!email.includes('@')) {
       return res.json({
-        success: false,
+        return_code: 'INVALID_EMAIL',
         message: 'Please enter a valid email address'
       });
     }
@@ -57,14 +57,14 @@ const sendContactEmail = async (req, res) => {
 
     // Tell the website the email was sent successfully
     res.json({
-      success: true,
+      return_code: 'SUCCESS',
       message: 'Your message has been sent! We will get back to you soon.'
     });
 
   } catch (error) {
     // If something goes wrong, tell the website
     res.json({
-      success: false,
+      return_code: 'SERVER_ERROR',
       message: 'Sorry, there was a problem sending your message. Please try again.'
     });
   }

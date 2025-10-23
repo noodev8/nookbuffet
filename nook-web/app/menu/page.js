@@ -40,7 +40,7 @@ export default function MenuPage() {
 
         const data = await response.json();
 
-        if (data.success) {
+        if (data.return_code === 'SUCCESS') {
           setMenuSections(data.data || []);
         } else {
           throw new Error(data.message || 'Failed to load menu data');
