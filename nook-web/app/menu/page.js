@@ -15,9 +15,9 @@ export default function MenuPage() {
       'Sandwiches': ['/assets/sandwiches.png', '/assets/nook.jpg', '/assets/sandwiches2.png', '/assets/sandwiches3.png'],
       'Wraps': ['/assets/wraps.png', '/assets/wraps2.png', '/assets/wraps3.png', '/assets/wraps4.png'],
       'Savoury': ['/assets/savoury3.png', '/assets/savoury2.png', '/assets/savoury.png', '/assets/savoury4.png'],
-      'Dips and Sticks': ['/assets/dipsandsticks.png', '/assets/dips2.png', '/assets/dips3.png', '/assets/dips4.png'],
-      'Fruit': ['/assets/fruit.png', '/assets/fruit2.png', '/assets/fruit3.png', '/assets/fruit4.png'],
-      'Cake': ['/assets/cake.png', '/assets/cake2.png', '/assets/cake3.png', '/assets/cake4.png'],
+      'Dips and Sticks': ['/assets/dips3.png','/assets/dipsandsticks.png', '/assets/dips2.png', '/assets/dips4.png'],
+      'Fruit': ['/assets/fruit4.png','/assets/fruit3.png','/assets/fruit.png', '/assets/fruit2.png'],
+      'Cake': ['/assets/cake3.png', '/assets/cake4.png','/assets/cake.png', '/assets/cake2.png'],
       'Continental Tray': ['/assets/savoury.png', '/assets/food2.png', '/assets/nook.jpg', '/assets/sandwiches.png'],
     };
 
