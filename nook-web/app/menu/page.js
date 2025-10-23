@@ -43,11 +43,13 @@ export default function MenuPage() {
         if (data.return_code === 'SUCCESS') {
           setMenuSections(data.data || []);
         } else {
-          throw new Error(data.message || 'Failed to load menu data');
+          // Handle API-level errors without throwing - let caller decide what to do
+          setError(data.message || 'Failed to load menu data');
         }
       } catch (err) {
+        // Only network/connection errors reach here
         console.error('Error fetching menu data:', err);
-        setError(err.message);
+        setError('Failed to load menu data. Please check your connection and try again.');
       } finally {
         setLoading(false);
       }

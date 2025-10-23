@@ -1,6 +1,7 @@
 // This file gets menu data from your database
 
-const { pool } = require('../config/database');
+const { query } = require('../database');
+const { withTransaction } = require('../utils/transaction');
 
 // Get all menu sections (like "Sandwiches", "Wraps", etc.) with their items
 const getAllMenuSections = async () => {
@@ -8,7 +9,7 @@ const getAllMenuSections = async () => {
 
     // Database query to get menu sections and their items
     // Don't worry about understanding this SQL - it just gets your menu data
-    const query = `
+    const queryText = `
       SELECT
         c.id,
         c.name,
@@ -41,7 +42,7 @@ const getAllMenuSections = async () => {
     `;
 
     // Run the query and get results
-    const result = await pool.query(query);
+    const result = await query(queryText);
     return result.rows;
 
   } catch (error) {
@@ -54,7 +55,7 @@ const getAllMenuSections = async () => {
 const getMenuSectionById = async (sectionId) => {
   try {
     // Same query as above, but only get the section with this ID
-    const query = `
+    const queryText = `
       SELECT
         c.id,
         c.name,
@@ -86,7 +87,7 @@ const getMenuSectionById = async (sectionId) => {
     `;
 
     // Run the query with the specific ID
-    const result = await pool.query(query, [sectionId]);
+    const result = await query(queryText, [sectionId]);
 
     // Check if we found anything
     if (!result.rows || result.rows.length === 0) {
