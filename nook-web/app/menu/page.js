@@ -60,7 +60,7 @@ export default function MenuPage() {
     <div className="welcome-page-option3">
       <div className="menu-page-container">
         <div className="menu-content-wrapper">
-          <h1 className="menu-page-title">Build Your Buffet</h1>
+         
 
           {loading && (
             <div className="loading-state">
