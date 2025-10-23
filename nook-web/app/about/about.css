@@ -1,0 +1,382 @@
+/* About Page Styling */
+
+.about-page-container {
+  font-family: 'Source Sans Pro', sans-serif;
+  color: #333;
+  padding-top: 80px;
+  min-height: 100vh;
+  background: #fff;
+}
+
+.about-content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.about-page-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.5rem;
+  color: #000;
+  text-align: center;
+  margin-bottom: 3rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+/* About Intro Section */
+.about-intro {
+  background-image: url('/assets/food2.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 4rem 2rem;
+  border-radius: 8px;
+  margin-bottom: 4rem;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  position: relative;
+  transition: all 0.6s ease;
+}
+
+.about-intro::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.about-intro:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.intro-text {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: white;
+  margin-bottom: 2rem;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+  font-weight: 500;
+}
+
+/* Ordering Info Card */
+.ordering-info {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+  margin: 2rem auto;
+  padding: 2rem 3rem;
+  max-width: 1000px;
+  width: 90%;
+  position: relative;
+  z-index: 10;
+}
+
+.ordering-info h3 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.ordering-info p {
+  color: #555 !important;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+  margin-bottom: 1.2rem !important;
+  text-align: left !important;
+  text-shadow: none !important;
+  position: relative;
+  z-index: 11;
+}
+
+.ordering-info strong {
+  color: #000 !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+}
+
+/* Info Cards Grid */
+.info-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+  max-width: 1000px;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.info-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+  margin: 0;
+  padding: 2rem;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+  text-align: left;
+}
+
+.info-card h3 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.info-card p {
+  color: #333 !important;
+  font-size: 0.95rem !important;
+  line-height: 1.6 !important;
+  margin-bottom: 1.2rem !important;
+  text-align: left !important;
+  text-shadow: none !important;
+  position: relative;
+  z-index: 11;
+}
+
+.info-card .hours-list {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.info-card .hours-list li {
+  display: flex !important;
+  justify-content: space-between !important;
+  padding: 0.5rem 0 !important;
+  border-bottom: 1px solid #eee !important;
+  color: #333 !important;
+}
+
+.info-card .hours-list li:last-child {
+  border-bottom: none !important;
+}
+
+.info-card .day {
+  font-weight: 500 !important;
+  color: #333 !important;
+}
+
+.info-card .time {
+  color: #666 !important;
+}
+
+/* Location Card */
+.location-card {
+  text-align: center;
+}
+
+.info-card .location-image {
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.info-card .building-photo {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Social Feed Section */
+.social-feed-section {
+  margin-top: 4rem;
+  margin-bottom: 4rem;
+  padding: 3rem 0;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.social-feed-section h2 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.5rem;
+  color: #000;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+}
+
+.social-feed-section p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 2rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.juicer-feed-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.juicer-feed-container .juicer-feed {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 0 !important;
+  width: 100% !important;
+  max-width: 900px !important;
+  padding: 0 !important;
+}
+
+.juicer-feed-container .juicer-feed li {
+  aspect-ratio: 1 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.juicer-feed-container .juicer-feed li img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.juicer-feed {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  width: 100%;
+  max-width: 900px;
+}
+
+.juicer-feed li {
+  display: block;
+  margin: 0;
+  padding: 0;
+  aspect-ratio: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.juicer-feed li a {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.juicer-feed li a img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.juicer-feed img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+  display: block;
+  max-width: none;
+  max-height: none;
+}
+
+/* Target any wrapper divs Juicer might use */
+.juicer-feed li > div {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.juicer-feed li > div img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .about-page-title {
+    font-size: 2rem;
+  }
+
+  .about-content-wrapper {
+    padding: 1rem;
+  }
+
+  .info-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ordering-info {
+    padding: 1.5rem;
+  }
+
+  .intro-text {
+    font-size: 1rem;
+  }
+
+  .juicer-feed {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+  }
+
+  .juicer-feed li {
+    aspect-ratio: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-page-title {
+    font-size: 1.5rem;
+  }
+
+  .ordering-info h3,
+  .info-card h3,
+  .social-feed-section h2 {
+    font-size: 1.2rem;
+  }
+
+  .juicer-feed {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .juicer-feed li {
+    aspect-ratio: 1;
+  }
+}
+

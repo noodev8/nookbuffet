@@ -1,0 +1,202 @@
+/* ========================================
+   NAVIGATION BAR - Top menu that stays fixed
+   ======================================== */
+.navbar-option3 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+/* Container that centers and limits navbar width */
+.nav-container-option3 {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ========================================
+   LOGO SECTION - Left side of navbar
+   ======================================== */
+.logo-option3 {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Logo image styling */
+.logo-image-option3 {
+  height: 40px;
+  width: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+/* Logo text styling */
+.logo-text-option3 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* ========================================
+   NAVIGATION MENU LINKS - Right side of navbar
+   ======================================== */
+.nav-links-option3 {
+  display: flex;
+  gap: 2.5rem;
+}
+
+/* Individual menu link styling */
+.nav-links-option3 a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-links-option3 a:hover {
+  color: white;
+}
+
+.nav-links-option3 a::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #fff;
+  transition: width 0.3s ease;
+}
+
+.nav-links-option3 a:hover::after {
+  width: 100%;
+}
+
+/* ========================================
+   HAMBURGER MENU - Mobile menu button (3 lines)
+   Only shows on small screens
+   ======================================== */
+.hamburger-menu-option3 {
+  display: none;
+  flex-direction: column;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 1001;
+}
+
+.hamburger-line-option3 {
+  width: 25px;
+  height: 3px;
+  background: white;
+  margin: 3px 0;
+  transition: 0.3s;
+  transform-origin: center;
+}
+
+/* When menu is open, transform lines into an X */
+.hamburger-line-option3.active:nth-child(1) {
+  transform: rotate(45deg) translate(6px, 6px);
+}
+
+.hamburger-line-option3.active:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-line-option3.active:nth-child(3) {
+  transform: rotate(-45deg) translate(6px, -6px);
+}
+
+/* ========================================
+   MOBILE MENU - Hidden by default
+   ======================================== */
+.mobile-menu-option3 {
+  display: none;
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  padding: 2rem 0;
+}
+
+.mobile-menu-option3.active {
+  display: block;
+}
+
+.mobile-menu-option3 a {
+  display: block;
+  padding: 1rem 2rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-option3 a:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-option3 a:last-child {
+  border-bottom: none;
+}
+
+/* ========================================
+   RESPONSIVE DESIGN - Mobile screens
+   ======================================== */
+@media (max-width: 768px) {
+  .nav-links-option3 {
+    display: none;
+  }
+
+  .hamburger-menu-option3 {
+    display: flex;
+  }
+
+  .hamburger-line-option3.active:nth-child(1) {
+    transform: rotate(45deg) translate(10px, 10px);
+  }
+
+  .hamburger-line-option3.active:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger-line-option3.active:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+  }
+
+  .logo-text-option3 {
+    font-size: 1.2rem;
+  }
+
+  .nav-container-option3 {
+    padding: 1rem;
+  }
+}
+
