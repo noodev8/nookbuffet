@@ -5,6 +5,42 @@ import Link from 'next/link';
 import { useEffect, useRef } from 'react';
 import './page.css';
 
+const CONFIG = {
+  hero: {
+    title: 'THE LITTLE NOOK BUFFET',
+    description: 'Crafting exceptional workplace dining experiences with fresh, customizable sandwich buffets',
+    ctaText: 'Start Your Order',
+    ctaLink: '/order',
+    backgroundImage: '/assets/nook.jpg',
+  },
+  infoCards: [
+    {
+      number: '01',
+      title: 'Custom Buffets',
+      description: 'Build your perfect buffet with premium meats, fresh vegetables, artisan breads, and gourmet cheeses.',
+    },
+    {
+      number: '02',
+      title: 'Professional Service',
+      description: 'White-glove setup and service that respects your workspace and schedule requirements.',
+    },
+    {
+      number: '03',
+      title: 'Fresh Daily',
+      description: 'All ingredients sourced and prepared fresh every morning for maximum quality and taste.',
+    },
+  ],
+  gallery: {
+    title: 'Our Creations',
+    items: [
+      { src: '/assets/fullbuffet1.png', alt: 'Buffets' },
+      { src: '/assets/fullbuffet2.png', alt: 'Sandwiches' },
+      { src: '/assets/savoury3.png', alt: 'Savoury' },
+      { src: '/assets/dips3.png', alt: 'Dips' },
+    ],
+  },
+};
+
 export default function Home() {
   const scrollIndicatorRef = useRef(null);
   const heroSectionRef = useRef(null);
@@ -30,103 +66,73 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="welcome-page-option3">
-      {/* Hero Section */}
-      <section className="hero-section-option3" ref={heroSectionRef}>
-        <div className="hero-background-option3">
+    <div className="home-page">
+      {/* ========== HERO SECTION ========== */}
+      <section className="hero-section" ref={heroSectionRef}>
+        <div className="hero-background">
           <Image
-            src="/assets/nook.jpg"
+            src={CONFIG.hero.backgroundImage}
             alt="The Nook Sandwich Bar and Buffets"
-            className="hero-bg-image-option3"
+            className="hero-bg-image"
             fill
             priority
             style={{ objectFit: 'cover' }}
           />
-          <div className="hero-overlay-option3"></div>
+          <div className="hero-overlay"></div>
         </div>
 
-        <div className="hero-content-option3">
-          <div className="hero-text-center-option3">
-            <h1 className="hero-title-option3">
-              THE LITTLE NOOK <br />
-              BUFFET
+        <div className="hero-content">
+          <div className="hero-text-center">
+            <h1 className="hero-title">
+              {CONFIG.hero.title.split(' ').slice(0, 2).join(' ')} <br />
+              {CONFIG.hero.title.split(' ').slice(2).join(' ')}
             </h1>
 
-            <p className="hero-description-option3">
-              Crafting exceptional workplace dining experiences with fresh, customizable sandwich buffets
+            <p className="hero-description">
+              {CONFIG.hero.description}
             </p>
-            <Link href="/order" className="cta-button-option3">
-              Start Your Order
+            <Link href={CONFIG.hero.ctaLink} className="cta-button">
+              {CONFIG.hero.ctaText}
             </Link>
           </div>
         </div>
 
-        <div className="scroll-indicator-option3" ref={scrollIndicatorRef}>
-          <div className="scroll-arrow-option3">↓</div>
+        <div className="scroll-indicator" ref={scrollIndicatorRef}>
+          <div className="scroll-arrow">↓</div>
           <span>Scroll to explore</span>
         </div>
       </section>
 
-      {/* Info Cards Section */}
-      <section className="info-section-option3">
-        <div className="info-container-option3">
-          <div className="info-grid-option3">
-            <div className="info-card-option3 card-1">
-              <div className="card-number-option3">01</div>
-              <h3>Custom Buffets</h3>
-              <p>Build your perfect buffet with premium meats, fresh vegetables, artisan breads, and gourmet cheeses.</p>
-            </div>
-            <div className="info-card-option3 card-2">
-              <div className="card-number-option3">02</div>
-              <h3>Professional Service</h3>
-              <p>White-glove setup and service that respects your workspace and schedule requirements.</p>
-            </div>
-            <div className="info-card-option3 card-3">
-              <div className="card-number-option3">03</div>
-              <h3>Fresh Daily</h3>
-              <p>All ingredients sourced and prepared fresh every morning for maximum quality and taste.</p>
-            </div>
+      {/* ========== INFO CARDS SECTION ========== */}
+      <section className="info-section">
+        <div className="info-container">
+          <div className="info-grid">
+            {CONFIG.infoCards.map((card, index) => (
+              <div key={index} className="info-card">
+                <div className="card-number">{card.number}</div>
+                <h3>{card.title}</h3>
+                <p>{card.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Photo Gallery Section */}
+      {/* ========== PHOTO GALLERY SECTION ========== */}
       <section className="photo-gallery-section">
         <div className="gallery-container">
-          <h2 className="gallery-title">Our Creations</h2>
+          <h2 className="gallery-title">{CONFIG.gallery.title}</h2>
           <div className="gallery-grid">
-            <div className="gallery-item">
-              <Image
-                src="/assets/fullbuffet1.png"
-                alt="Buffets"
-                fill
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-            <div className="gallery-item">
-              <Image
-                src="/assets/fullbuffet2.png"
-                alt="Sandwiches"
-                fill
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-            <div className="gallery-item">
-              <Image
-                src="/assets/savoury3.png"
-                alt="Savoury"
-                fill
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-            <div className="gallery-item">
-              <Image
-                src="/assets/dips3.png"
-                alt="Dips"
-                fill
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
+            {CONFIG.gallery.items.map((item, index) => (
+              <div key={index} className="gallery-item">
+                <Image
+                  src={item.src}
+                  alt={item.alt}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </section>

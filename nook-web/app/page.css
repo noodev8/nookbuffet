@@ -2,8 +2,8 @@
    HOME PAGE STYLING
    ======================================== */
 
-/* Hero Section */
-.hero-section-option3 {
+/* ========== HERO SECTION ========== */
+.hero-section {
   position: relative;
   height: 100vh;
   display: flex;
@@ -14,7 +14,7 @@
   padding-bottom: 5rem;
 }
 
-.hero-background-option3 {
+.hero-background {
   position: absolute;
   top: 0;
   left: 0;
@@ -23,13 +23,13 @@
   z-index: 1;
 }
 
-.hero-bg-image-option3 {
+.hero-bg-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.hero-overlay-option3 {
+.hero-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -39,7 +39,7 @@
   z-index: 2;
 }
 
-.hero-content-option3 {
+.hero-content {
   position: relative;
   z-index: 3;
   text-align: center;
@@ -48,14 +48,14 @@
   padding: 2rem;
 }
 
-.hero-text-center-option3 {
+.hero-text-center {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
 }
 
-.hero-title-option3 {
+.hero-title {
   font-family: 'Oswald', sans-serif;
   font-size: 4rem;
   font-weight: 700;
@@ -64,13 +64,13 @@
   letter-spacing: 3px;
 }
 
-.hero-description-option3 {
+.hero-description {
   font-size: 1.25rem;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.9);
 }
 
-.cta-button-option3 {
+.cta-button {
   background: transparent;
   color: white;
   border: 2px solid white;
@@ -82,17 +82,19 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Oswald', sans-serif;
+  display: inline-block;
+  text-decoration: none;
 }
 
-.cta-button-option3:hover {
+.cta-button:hover {
   background: white;
   color: #000;
   transform: translateY(-2px);
   box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
 }
 
-/* Scroll Indicator */
-.scroll-indicator-option3 {
+/* ========== SCROLL INDICATOR ========== */
+.scroll-indicator {
   position: absolute;
   bottom: 5rem;
   left: 50%;
@@ -109,13 +111,13 @@
   transition: opacity 0.3s ease;
 }
 
-.scroll-arrow-option3 {
+.scroll-arrow {
   font-size: 2rem;
   margin: 0;
   display: block;
 }
 
-.scroll-indicator-option3 span {
+.scroll-indicator span {
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -132,26 +134,26 @@
   }
 }
 
-/* Info Section */
-.info-section-option3 {
+/* ========== INFO SECTION ========== */
+.info-section {
   padding: 6rem 0;
   background: #000;
   color: white;
 }
 
-.info-container-option3 {
+.info-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }
 
-.info-grid-option3 {
+.info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 3rem;
 }
 
-.info-card-option3 {
+.info-card {
   background: transparent;
   padding: 3rem 2rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -163,12 +165,12 @@
   position: relative;
 }
 
-.info-card-option3:hover {
+.info-card:hover {
   transform: translateY(-10px);
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-.card-number-option3 {
+.card-number {
   font-family: 'Oswald', sans-serif;
   font-size: 4rem;
   font-weight: 300;
@@ -180,7 +182,7 @@
   right: 2rem;
 }
 
-.info-card-option3 h3 {
+.info-card h3 {
   font-family: 'Oswald', sans-serif;
   font-size: 1.5rem;
   margin-bottom: 1rem;
@@ -189,13 +191,13 @@
   letter-spacing: 1px;
 }
 
-.info-card-option3 p {
+.info-card p {
   color: #ccc;
   line-height: 1.6;
   font-size: 1rem;
 }
 
-/* Photo Gallery Section */
+/* ========== PHOTO GALLERY SECTION ========== */
 .photo-gallery-section {
   padding: 4rem 2rem;
   background: white;
@@ -241,22 +243,22 @@
   transform: scale(1.05);
 }
 
-/* Responsive Design */
+/* ========== RESPONSIVE DESIGN ========== */
 @media (max-width: 768px) {
-  .hero-title-option3 {
+  .hero-title {
     font-size: 2.5rem;
   }
 
-  .hero-description-option3 {
+  .hero-description {
     font-size: 1rem;
   }
 
-  .cta-button-option3 {
+  .cta-button {
     padding: 0.75rem 2rem;
     font-size: 1rem;
   }
 
-  .info-grid-option3 {
+  .info-grid {
     grid-template-columns: 1fr;
   }
 
@@ -266,11 +268,11 @@
 }
 
 @media (max-width: 480px) {
-  .hero-title-option3 {
+  .hero-title {
     font-size: 1.8rem;
   }
 
-  .hero-description-option3 {
+  .hero-description {
     font-size: 0.9rem;
   }
 
