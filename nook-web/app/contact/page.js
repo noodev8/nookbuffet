@@ -70,7 +70,7 @@ export default function ContactPage() {
         <h1 className="contact-page-title">Get In Touch</h1>
 
         <div className="contact-intro">
-          <p>Have a question about our buffet services? Want to discuss your catering needs? We'd love to hear from you! Send us a message and we'll get back to you as soon as possible.</p>
+          <p>Have a question about our buffet services? Want to discuss your catering needs? We&apos;d love to hear from you! Send us a message and we&apos;ll get back to you as soon as possible.</p>
         </div>
 
         <div className="contact-form-container">

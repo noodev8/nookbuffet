@@ -30,7 +30,7 @@ export default function AboutPage() {
 
           <div className="about-intro">
             <p className="intro-text">
-              Welcome to The Little Nook Buffet, where we specialize in creating exceptional workplace dining experiences with fresh, customizable sandwich buffets. We're passionate about bringing quality, convenience, and flavor directly to your office or event.
+              Welcome to The Little Nook Buffet, where we specialize in creating exceptional workplace dining experiences with fresh, customizable sandwich buffets. We&apos;re passionate about bringing quality, convenience, and flavor directly to your office or event.
             </p>
 
             <div className="ordering-info">
@@ -40,7 +40,7 @@ export default function AboutPage() {
               </p>
 
               <p>
-                <strong>Flexible Options:</strong> Choose between convenient pickup from our Welshpool location or delivery straight to your workplace. For deliveries, select your preferred time slot between 9am and 7pm - we'll work around your schedule.
+                <strong>Flexible Options:</strong> Choose between convenient pickup from our Welshpool location or delivery straight to your workplace. For deliveries, select your preferred time slot between 9am and 7pm - we&apos;ll work around your schedule.
               </p>
 
               <p>
