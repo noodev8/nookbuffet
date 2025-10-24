@@ -167,7 +167,7 @@ export default function ContactPage() {
           <div className="contact-info-grid">
             <div className="contact-info-item">
               <h3>Phone</h3>
-              <p>01938 555 123</p>
+              <p>+44 7551 428162</p>
             </div>
 
             <div className="contact-info-item">
