@@ -172,7 +172,7 @@ export default function ContactPage() {
 
             <div className="contact-info-item">
               <h3>Email</h3>
-              <p>hello@littlenookbuffet.co.uk</p>
+              <p>nookbuffet@gmail.com</p>
             </div>
 
             <div className="contact-info-item">
