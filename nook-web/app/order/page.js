@@ -14,6 +14,7 @@ export default function OrderPage() {
   const [numPeople, setNumPeople] = useState(1);
   const [modalMessage, setModalMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [pricePerPerson, setPricePerPerson] = useState(0);
 
   const toggleItemSelection = (itemId) => {
     setSelectedItems(prev => ({
@@ -100,6 +101,12 @@ export default function OrderPage() {
         if (data.return_code === 'SUCCESS') {
           const sections = data.data || [];
           setMenuSections(sections);
+
+          // Extract price per person from the first section
+          if (sections.length > 0 && sections[0].price_per_person) {
+            const price = parseFloat(sections[0].price_per_person);
+            setPricePerPerson(price);
+          }
 
           // Initialize all items as selected, except Bread items (which start unselected)
           const initialSelected = {};
@@ -309,9 +316,11 @@ export default function OrderPage() {
                   if (!validateSelections()) {
                     return;
                   }
-                  // Pass selected items and people count to checkout page via URL params
+                  // Pass selected items, people count, buffet version, and price to more info page via URL params
                   const selectedItemIds = Object.keys(selectedItems).filter(id => selectedItems[id]);
-                  router.push(`/checkout?items=${selectedItemIds.join(',')}&people=${numPeople}`);
+                  // Get the buffet version ID from the first section (they should all be the same)
+                  const buffetVersionId = menuSections[0]?.buffet_version_id || '';
+                  router.push(`/more-info?items=${selectedItemIds.join(',')}&people=${numPeople}&buffetVersionId=${buffetVersionId}&pricePerPerson=${pricePerPerson}`);
                 }}
               >
                 Next Step

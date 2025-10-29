@@ -20,6 +20,7 @@ const getMenuSectionsQuery = (whereClause = '', params = []) => {
         c.description,
         c.is_required,
         c.buffet_version_id,
+        bv.price_per_person,
         -- Convert all menu items for this category into a JSON array
         COALESCE(
           JSON_AGG(
@@ -37,12 +38,14 @@ const getMenuSectionsQuery = (whereClause = '', params = []) => {
           '[]'::json  -- If no items, return empty array instead of null
         ) as items
       FROM categories c
+      -- Join with buffet_versions to get pricing
+      LEFT JOIN buffet_versions bv ON c.buffet_version_id = bv.id AND bv.is_active = true
       -- Join with menu_items table, only get active items
       LEFT JOIN menu_items mi ON c.id = mi.category_id AND mi.is_active = true
       -- Only get active categories, plus any additional filters passed in
       WHERE c.is_active = true ${whereClause}
       -- Group by category so we get one row per category with all its items
-      GROUP BY c.id, c.name, c.description, c.is_required, c.buffet_version_id
+      GROUP BY c.id, c.name, c.description, c.is_required, c.buffet_version_id, bv.price_per_person
       -- Sort by category ID
       ORDER BY c.id;
     `,

@@ -2,7 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import './page.css';
 
 const CONFIG = {
@@ -44,6 +45,23 @@ const CONFIG = {
 export default function Home() {
   const scrollIndicatorRef = useRef(null);
   const heroSectionRef = useRef(null);
+  const router = useRouter();
+  const [hasBasket, setHasBasket] = useState(false);
+
+  useEffect(() => {
+    // Check if there's basket data in localStorage
+    const basketData = localStorage.getItem('basketData');
+    if (basketData) {
+      try {
+        const parsed = JSON.parse(basketData);
+        // Check if it's an array with items or a single object
+        const hasItems = Array.isArray(parsed) ? parsed.length > 0 : !!parsed;
+        setHasBasket(hasItems);
+      } catch (e) {
+        setHasBasket(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -136,6 +154,17 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ========== BASKET BUTTON ========== */}
+      {hasBasket && (
+        <button
+          className="basket-floating-button"
+          onClick={() => router.push('/basket')}
+          title="View your basket"
+        >
+          🛒
+        </button>
+      )}
     </div>
   );
 }

@@ -8,25 +8,32 @@ export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const [numPeople, setNumPeople] = useState(1);
-  const [notes, setNotes] = useState('');
-  const [dietaryInfo, setDietaryInfo] = useState('');
-  const [allergens, setAllergens] = useState('');
-  const [selectedItems, setSelectedItems] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fulfillmentType, setFulfillmentType] = useState('collection');
+  const [email, setEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCVC, setCardCVC] = useState('');
 
-  // Get selected items and people count from URL params
+  // Get orders and fulfillment type from URL params
   useEffect(() => {
-    const itemsParam = searchParams.get('items');
-    const peopleParam = searchParams.get('people');
+    const ordersParam = searchParams.get('orders');
+    const fulfillmentParam = searchParams.get('fulfillmentType');
 
-    if (itemsParam) {
-      const items = itemsParam.split(',').map(id => parseInt(id));
-      setSelectedItems(items);
+    if (ordersParam) {
+      try {
+        const decoded = decodeURIComponent(ordersParam);
+        const parsedOrders = JSON.parse(decoded);
+        setOrders(Array.isArray(parsedOrders) ? parsedOrders : [parsedOrders]);
+      } catch (e) {
+        console.error('Error parsing orders:', e);
+      }
     }
 
-    if (peopleParam) {
-      setNumPeople(Math.max(1, parseInt(peopleParam) || 1));
+    if (fulfillmentParam) {
+      setFulfillmentType(fulfillmentParam);
     }
   }, [searchParams]);
 
@@ -35,23 +42,26 @@ export default function CheckoutPage() {
     try {
       // Here you would send the order data to your backend
       const orderData = {
-        items: selectedItems,
-        numPeople,
-        notes,
-        dietaryInfo,
-        allergens,
+        orders,
+        fulfillmentType,
+        email,
+        address,
+        cardNumber,
+        cardExpiry,
+        cardCVC,
         timestamp: new Date().toISOString()
       };
 
       console.log('Order data:', orderData);
       // TODO: Send to API endpoint
-      
+
       // For now, just show success and redirect
-      alert('Order added to basket!');
+      alert('Order confirmed!');
+      localStorage.removeItem('basketData');
       router.push('/');
     } catch (error) {
-      console.error('Error adding to basket:', error);
-      alert('Failed to add order to basket');
+      console.error('Error confirming order:', error);
+      alert('Failed to confirm order');
     } finally {
       setLoading(false);
     }
@@ -63,67 +73,124 @@ export default function CheckoutPage() {
         <div className="checkout-content-wrapper">
           <h1 className="checkout-title">Complete Your Order</h1>
 
-          {/* Notes Section */}
+          {/* Orders Summary Section */}
           <div className="checkout-section">
-            <h2 className="checkout-section-title">Special Requests</h2>
+            <h2 className="checkout-section-title">Order Summary ({orders.length} buffet{orders.length !== 1 ? 's' : ''})</h2>
+            <div className="checkout-orders-list">
+              {orders.map((order, index) => (
+                <div key={index} className="checkout-order-item">
+                  <div className="checkout-order-header">
+                    <span className="checkout-order-number">Buffet #{index + 1}</span>
+                    <span className="checkout-order-people">{order.numPeople} person{order.numPeople !== 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="checkout-order-details">
+                    {order.notes && <span>Notes: {order.notes}</span>}
+                    {order.totalPrice !== undefined && (
+                      <span className="checkout-order-price">£{order.totalPrice.toFixed(2)}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {orders.length > 0 && (
+              <div className="checkout-grand-total">
+                <span>Grand Total:</span>
+                <span className="checkout-grand-total-value">
+                  £{orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0).toFixed(2)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Contact Information Section */}
+          <div className="checkout-section">
+            <h2 className="checkout-section-title">Contact Information</h2>
+
             <div className="form-group">
-              <label htmlFor="notes">Add any notes:</label>
+              <label htmlFor="email">Email Address:</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your.email@example.com"
+                className="checkout-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="address">Delivery Address:</label>
               <textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g., Special requests, preferences..."
+                id="address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Enter your full delivery address..."
                 className="checkout-textarea"
               />
             </div>
           </div>
 
-          {/* Dietary & Allergen Info Section */}
+          {/* Payment Information Section */}
           <div className="checkout-section">
-            <h2 className="checkout-section-title">Dietary & Allergen Information</h2>
-            
+            <h2 className="checkout-section-title">Payment Details</h2>
+
             <div className="form-group">
-              <label htmlFor="dietary">Dietary Requirements:</label>
+              <label htmlFor="cardNumber">Card Number:</label>
               <input
-                id="dietary"
+                id="cardNumber"
                 type="text"
-                value={dietaryInfo}
-                onChange={(e) => setDietaryInfo(e.target.value)}
-                placeholder="e.g., Vegetarian, Vegan, Gluten-free..."
+                value={cardNumber}
+                onChange={(e) => setCardNumber(e.target.value)}
+                placeholder="1234 5678 9012 3456"
                 className="checkout-input"
+                maxLength="19"
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="allergens">Allergens:</label>
-              <input
-                id="allergens"
-                type="text"
-                value={allergens}
-                onChange={(e) => setAllergens(e.target.value)}
-                placeholder="e.g., Nuts, Dairy, Shellfish..."
-                className="checkout-input"
-              />
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="cardExpiry">Expiry Date:</label>
+                <input
+                  id="cardExpiry"
+                  type="text"
+                  value={cardExpiry}
+                  onChange={(e) => setCardExpiry(e.target.value)}
+                  placeholder="MM/YY"
+                  className="checkout-input"
+                  maxLength="5"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="cardCVC">CVC:</label>
+                <input
+                  id="cardCVC"
+                  type="text"
+                  value={cardCVC}
+                  onChange={(e) => setCardCVC(e.target.value)}
+                  placeholder="123"
+                  className="checkout-input"
+                  maxLength="4"
+                />
+              </div>
             </div>
           </div>
 
-
-
           {/* Action Buttons */}
           <div className="checkout-actions">
-            <button 
+            <button
               className="checkout-back-button"
               onClick={() => router.back()}
               disabled={loading}
             >
               Back
             </button>
-            <button 
+            <button
               className="checkout-submit-button"
               onClick={handleAddToBasket}
               disabled={loading}
             >
-              {loading ? 'Adding...' : 'Add to Basket'}
+              {loading ? 'Processing...' : 'Confirm Order'}
             </button>
           </div>
         </div>

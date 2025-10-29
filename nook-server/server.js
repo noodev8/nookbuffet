@@ -5,6 +5,7 @@ require('dotenv').config();
 // Get the different parts of your API
 const menuRoutes = require('./routes/menuRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const buffetVersionRoutes = require('./routes/buffetVersionRoutes');
 
 
 
@@ -29,6 +30,9 @@ app.use('/api/menu', menuRoutes);
 
 // /api/contact goes to contact form stuff
 app.use('/api/contact', contactRoutes);
+
+// /api/buffet-versions goes to buffet version stuff
+app.use('/api/buffet-versions', buffetVersionRoutes);
 
 // Home page - just shows server is working
 app.get('/', (req, res) => {
