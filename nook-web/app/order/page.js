@@ -101,12 +101,13 @@ export default function OrderPage() {
           const sections = data.data || [];
           setMenuSections(sections);
 
-          // Initialize all items as selected
+          // Initialize all items as selected, except Bread items (which start unselected)
           const initialSelected = {};
           sections.forEach(section => {
             if (section.items && section.items.length > 0) {
               section.items.forEach(item => {
-                initialSelected[item.id] = true;
+                // Bread items start unselected, all others start selected
+                initialSelected[item.id] = section.name !== 'Bread';
               });
             }
           });
@@ -149,77 +150,135 @@ export default function OrderPage() {
           )}
 
           {!loading && !error && menuSections.map((section) => (
-            <div key={section.id} className="section-card">
-              <div className="section-layout">
-                <div className="section-text-area">
-                  <div className="section-header">
-                    <div className="section-title-wrapper">
-                      <h2 className="section-heading">{section.name}</h2>
-                      {section.is_required && (
-                        <span className="required-badge">Required</span>
+            <div key={section.id}>
+              {/* Regular section with images */}
+              {section.name !== 'Bread' && (
+                <div className="section-card">
+                  <div className="section-layout">
+                    <div className="section-text-area">
+                      <div className="section-header">
+                        <div className="section-title-wrapper">
+                          <h2 className="section-heading">{section.name}</h2>
+                          {section.is_required && (
+                            <span className="required-badge">Required</span>
+                          )}
+                        </div>
+                        {section.items && section.items.length > 0 && (
+                          <button
+                            className="deselect-section-button"
+                            onClick={() => deselectSection(section.items)}
+                            title="Deselect all items in this section"
+                          >
+                            Deselect All
+                          </button>
+                        )}
+                      </div>
+                      <div className="section-description">
+                        {section.description && <p>{section.description}</p>}
+
+                        {section.items && section.items.length > 0 && (
+                          <div className="items-list-container">
+                            <ul>
+                              {section.items.map((item) => (
+                                <li
+                                  key={item.id}
+                                  className={`menu-item ${selectedItems[item.id] ? 'selected' : 'deselected'}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedItems[item.id] || false}
+                                    onChange={() => toggleItemSelection(item.id)}
+                                    className="item-checkbox"
+                                  />
+                                  <div
+                                    className="item-text-wrapper"
+                                    onClick={() => toggleItemSelection(item.id)}
+                                  >
+                                    <strong>{item.name}</strong>
+                                    {item.description && <span> - {item.description}</span>}
+                                    {item.dietary_info && (
+                                      <span className="dietary-badge">{item.dietary_info}</span>
+                                    )}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="section-images-area">
+                      <div className="section-images-grid">
+                        {[0, 1, 2, 3].map((index) => (
+                          <Image
+                            key={index}
+                            src={getCategoryImage(section.name, index)}
+                            alt={`${section.name} - Image ${index + 1}`}
+                            className={`section-image-item ${index === 3 ? 'hide-on-mobile' : ''}`}
+                            width={300}
+                            height={200}
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 300px"
+                            style={{ objectFit: 'cover' }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Show bread section right after sandwiches */}
+              {section.name === 'Sandwiches' && menuSections.find(s => s.name === 'Bread') && (
+                (() => {
+                  const breadSection = menuSections.find(s => s.name === 'Bread');
+                  return (
+                    <div className="bread-section-card">
+                      <div className="bread-section-header">
+                        <div className="bread-title-wrapper">
+                          <h3 className="bread-section-title">{breadSection.name}</h3>
+                          {breadSection.is_required && (
+                            <span className="required-badge">Required</span>
+                          )}
+                        </div>
+                      </div>
+                      {breadSection.items && breadSection.items.length > 0 && (
+                        <div className="bread-items-container">
+                          <ul>
+                            {breadSection.items.map((item) => {
+                              const isSelected = selectedItems[item.id] === true;
+                              return (
+                                <li
+                                  key={item.id}
+                                  className={`bread-item ${isSelected ? 'selected' : ''}`}
+                                  onClick={() => {
+                                    // Deselect all bread items first
+                                    const updated = { ...selectedItems };
+                                    breadSection.items.forEach(i => {
+                                      updated[i.id] = false;
+                                    });
+                                    // Select only this item
+                                    updated[item.id] = true;
+                                    setSelectedItems(updated);
+                                  }}
+                                >
+                                  <input
+                                    type="radio"
+                                    name="bread-selection"
+                                    checked={isSelected}
+                                    onChange={() => {}}
+                                    className="bread-item-radio"
+                                  />
+                                  <span className="bread-item-name">{item.name}</span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
                       )}
                     </div>
-                    {section.items && section.items.length > 0 && (
-                      <button
-                        className="deselect-section-button"
-                        onClick={() => deselectSection(section.items)}
-                        title="Deselect all items in this section"
-                      >
-                        Deselect All
-                      </button>
-                    )}
-                  </div>
-                  <div className="section-description">
-                    {section.description && <p>{section.description}</p>}
-
-                    {section.items && section.items.length > 0 && (
-                      <div className="items-list-container">
-                        <ul>
-                          {section.items.map((item) => (
-                            <li
-                              key={item.id}
-                              className={`menu-item ${selectedItems[item.id] ? 'selected' : 'deselected'}`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedItems[item.id] || false}
-                                onChange={() => toggleItemSelection(item.id)}
-                                className="item-checkbox"
-                              />
-                              <div
-                                className="item-text-wrapper"
-                                onClick={() => toggleItemSelection(item.id)}
-                              >
-                                <strong>{item.name}</strong>
-                                {item.description && <span> - {item.description}</span>}
-                                {item.dietary_info && (
-                                  <span className="dietary-badge">{item.dietary_info}</span>
-                                )}
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="section-images-area">
-                  <div className="section-images-grid">
-                    {[0, 1, 2, 3].map((index) => (
-                      <Image
-                        key={index}
-                        src={getCategoryImage(section.name, index)}
-                        alt={`${section.name} - Image ${index + 1}`}
-                        className={`section-image-item ${index === 3 ? 'hide-on-mobile' : ''}`}
-                        width={300}
-                        height={200}
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 300px"
-                        style={{ objectFit: 'cover' }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
+                  );
+                })()
+              )}
             </div>
           ))}
 
