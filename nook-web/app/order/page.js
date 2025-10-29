@@ -12,6 +12,8 @@ export default function OrderPage() {
   const [error, setError] = useState(null);
   const [selectedItems, setSelectedItems] = useState({});
   const [numPeople, setNumPeople] = useState(1);
+  const [modalMessage, setModalMessage] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   const toggleItemSelection = (itemId) => {
     setSelectedItems(prev => ({
@@ -36,7 +38,8 @@ export default function OrderPage() {
       if (section.is_required && section.items && section.items.length > 0) {
         const hasSelection = section.items.some(item => selectedItems[item.id]);
         if (!hasSelection) {
-          alert(`Please select at least one item from "${section.name}" (required)`);
+          setModalMessage(`Please select at least one item from "${section.name}" (required)`);
+          setShowModal(true);
           return false;
         }
       }
@@ -54,7 +57,8 @@ export default function OrderPage() {
         });
 
         if (sectionCount > numPeople) {
-          alert(`You cannot select more ${section.name} (${sectionCount}) than people (${numPeople}). Please adjust your selections.`);
+          setModalMessage(`You cannot select more ${section.name} (${sectionCount}) than people (${numPeople}). Please adjust your selections.`);
+          setShowModal(true);
           return false;
         }
       }
@@ -259,6 +263,21 @@ export default function OrderPage() {
 
         </div>
       </div>
+
+      {/* Modal for validation messages */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <p className="modal-message">{modalMessage}</p>
+            <button
+              className="modal-button"
+              onClick={() => setShowModal(false)}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
