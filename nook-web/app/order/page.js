@@ -11,12 +11,56 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedItems, setSelectedItems] = useState({});
+  const [numPeople, setNumPeople] = useState(1);
 
   const toggleItemSelection = (itemId) => {
     setSelectedItems(prev => ({
       ...prev,
       [itemId]: !prev[itemId]
     }));
+  };
+
+  const deselectSection = (sectionItems) => {
+    setSelectedItems(prev => {
+      const updated = { ...prev };
+      sectionItems.forEach(item => {
+        updated[item.id] = false;
+      });
+      return updated;
+    });
+  };
+
+  const validateSelections = () => {
+    // Check if all required sections have at least one item selected
+    for (const section of menuSections) {
+      if (section.is_required && section.items && section.items.length > 0) {
+        const hasSelection = section.items.some(item => selectedItems[item.id]);
+        if (!hasSelection) {
+          alert(`Please select at least one item from "${section.name}" (required)`);
+          return false;
+        }
+      }
+    }
+
+    // Check Sandwiches and Wraps sections individually - each can't exceed number of people
+    const restrictedSections = ['Sandwiches', 'Wraps'];
+    for (const section of menuSections) {
+      if (restrictedSections.includes(section.name) && section.items) {
+        let sectionCount = 0;
+        section.items.forEach(item => {
+          if (selectedItems[item.id]) {
+            sectionCount++;
+          }
+        });
+
+        if (sectionCount > numPeople) {
+          alert(`You cannot select more ${section.name} (${sectionCount}) than people (${numPeople}). Please adjust your selections.`);
+          return false;
+        }
+      }
+    }
+
+    return true;
   };
 
   const getCategoryImage = (categoryName, position = 0) => {
@@ -104,7 +148,23 @@ export default function OrderPage() {
             <div key={section.id} className="section-card">
               <div className="section-layout">
                 <div className="section-text-area">
-                  <h2 className="section-heading">{section.name}</h2>
+                  <div className="section-header">
+                    <div className="section-title-wrapper">
+                      <h2 className="section-heading">{section.name}</h2>
+                      {section.is_required && (
+                        <span className="required-badge">Required</span>
+                      )}
+                    </div>
+                    {section.items && section.items.length > 0 && (
+                      <button
+                        className="deselect-section-button"
+                        onClick={() => deselectSection(section.items)}
+                        title="Deselect all items in this section"
+                      >
+                        Deselect All
+                      </button>
+                    )}
+                  </div>
                   <div className="section-description">
                     {section.description && <p>{section.description}</p>}
 
@@ -166,13 +226,29 @@ export default function OrderPage() {
           )}
 
           {!loading && !error && menuSections.length > 0 && (
-            <div className="next-step-section">
+            <div className="people-count-section">
+              <div className="people-count-wrapper">
+                <label htmlFor="order-people">How many people?</label>
+                <input
+                  id="order-people"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={numPeople}
+                  onChange={(e) => setNumPeople(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="people-count-input-order"
+                />
+              </div>
               <button
                 className="next-step-button"
                 onClick={() => {
-                  // Pass selected items to checkout page via URL params
+                  // Validate required sections and item count
+                  if (!validateSelections()) {
+                    return;
+                  }
+                  // Pass selected items and people count to checkout page via URL params
                   const selectedItemIds = Object.keys(selectedItems).filter(id => selectedItems[id]);
-                  router.push(`/checkout?items=${selectedItemIds.join(',')}`);
+                  router.push(`/checkout?items=${selectedItemIds.join(',')}&people=${numPeople}`);
                 }}
               >
                 Next Step

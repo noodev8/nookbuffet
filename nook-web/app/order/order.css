@@ -50,6 +50,22 @@
   flex-shrink: 0;
 }
 
+/* ===== SECTION HEADER ===== */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex: 1;
+}
+
 /* ===== SECTION TITLE ===== */
 .section-heading {
   font-family: 'Oswald', sans-serif;
@@ -58,7 +74,44 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin: 0;
+}
+
+/* ===== REQUIRED BADGE ===== */
+.required-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffffc1;
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgb(255, 255, 255);
+}
+
+/* ===== DESELECT BUTTON ===== */
+.deselect-section-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Oswald', sans-serif;
+  white-space: nowrap;
+}
+
+.deselect-section-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
 }
 
 /* ===== SECTION DESCRIPTION ===== */
@@ -372,14 +425,56 @@
   font-style: italic;
 }
 
-/* ===== NEXT STEP BUTTON ===== */
-.next-step-section {
+/* ===== PEOPLE COUNT SECTION ===== */
+.people-count-section {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 1.5rem;
   padding: 2rem 0;
   margin-top: 2rem;
 }
 
+.people-count-wrapper {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.people-count-wrapper label {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Oswald', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.people-count-input-order {
+  width: 100px;
+  padding: 0.8rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.people-count-input-order:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: white;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* ===== NEXT STEP BUTTON ===== */
 .next-step-button {
   width: 100%;
   background: white;

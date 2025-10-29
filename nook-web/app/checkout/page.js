@@ -15,12 +15,18 @@ export default function CheckoutPage() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Get selected items from URL params
+  // Get selected items and people count from URL params
   useEffect(() => {
     const itemsParam = searchParams.get('items');
+    const peopleParam = searchParams.get('people');
+
     if (itemsParam) {
       const items = itemsParam.split(',').map(id => parseInt(id));
       setSelectedItems(items);
+    }
+
+    if (peopleParam) {
+      setNumPeople(Math.max(1, parseInt(peopleParam) || 1));
     }
   }, [searchParams]);
 
@@ -101,22 +107,7 @@ export default function CheckoutPage() {
             </div>
           </div>
 
-          {/* People Count Section */}
-          <div className="checkout-section">
-            <h2 className="checkout-section-title">Party Size</h2>
-            <div className="form-group">
-              <label htmlFor="people">How many people?</label>
-              <input
-                id="people"
-                type="number"
-                min="1"
-                max="100"
-                value={numPeople}
-                onChange={(e) => setNumPeople(Math.max(1, parseInt(e.target.value) || 1))}
-                className="checkout-input-number"
-              />
-            </div>
-          </div>
+
 
           {/* Action Buttons */}
           <div className="checkout-actions">
