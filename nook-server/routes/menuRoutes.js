@@ -1,9 +1,14 @@
 /*
 =======================================================================================================================================
-API Routes: Menu Management
+MENU ROUTES - API endpoints for menu data
 =======================================================================================================================================
-Purpose: Handles all menu-related API endpoints for retrieving menu sections and items
-=======================================================================================================================================
+Routes are like the "front desk" of your API. They receive requests from the website and send them
+to the right controller to handle.
+
+Think of it like a restaurant:
+- Website makes a request (like "give me the menu")
+- Route receives it and says "okay, I'll send you to the menu controller"
+- Controller handles it and sends back the data
 
 ENDPOINTS:
 
@@ -62,21 +67,28 @@ ENDPOINTS:
 =======================================================================================================================================
 */
 
-const express = require('express');
-const router = express.Router();
+const express = require('express');  // Express library for routing
+const router = express.Router();     // Create a new router object
 
-// Get the menu functions
+// Import the menu controller - this has all the functions that handle menu requests
 const menuController = require('../controllers/menuController');
 
-// When someone goes to /api/menu, show all menu sections
+// ===== ROUTE 1: GET ALL MENU SECTIONS =====
+// When someone visits /api/menu, run the getAllMenuSections function
 router.get('/', menuController.getAllMenuSections);
 
-// When someone goes to /api/menu/formatted, show formatted menu data
+// ===== ROUTE 2: GET FORMATTED MENU SECTIONS =====
+// When someone visits /api/menu/formatted, run the getFormattedMenuSections function
+// NOTE: This must come BEFORE the /:id route so it doesn't get confused
+// (otherwise /formatted would be treated as an ID)
 router.get('/formatted', menuController.getFormattedMenuSections);
 
-// When someone goes to /api/menu/1 (or any number), show that specific section
-// Note: This must come AFTER /formatted so it doesn't interfere
+// ===== ROUTE 3: GET ONE SPECIFIC MENU SECTION =====
+// When someone visits /api/menu/1 (or any number), run the getMenuSectionById function
+// The :id is a parameter - it can be any number
+// NOTE: This must come AFTER /formatted so it doesn't interfere
 router.get('/:id', menuController.getMenuSectionById);
 
-// Export so server.js can use these routes
+// ===== EXPORTS =====
+// Make this router available to server.js
 module.exports = router;

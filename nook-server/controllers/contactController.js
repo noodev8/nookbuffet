@@ -1,17 +1,38 @@
-// This file sends emails when someone fills out the contact form
+/*
+=======================================================================================================================================
+CONTACT CONTROLLER - Handles contact form submissions
+=======================================================================================================================================
+This file handles when someone fills out the contact form on your website.
+It takes their information and sends you an email with their message.
 
+The email is sent using the Resend email service (you need an API key for this).
+=======================================================================================================================================
+*/
+
+// Import the Resend email service
 const { Resend } = require('resend');
 
-// Set up email service with your API key
+// ===== SET UP EMAIL SERVICE =====
+// Create a Resend instance with your API key
+// This is like logging into the email service so we can send emails
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// This function runs when someone submits the contact form
+// ===== SEND CONTACT EMAIL =====
+/**
+ * Handle contact form submissions and send an email
+ * This is called when someone POSTs to /api/contact
+ *
+ * @param {object} req - The request object (contains the form data in req.body)
+ * @param {object} res - The response object (we use this to send data back)
+ */
 const sendContactEmail = async (req, res) => {
   try {
-    // Get the form data that was submitted
+    // Extract the form data from the request
+    // This comes from the contact form on the website
     const { name, email, phone, subject, message } = req.body;
 
-    // Check if required fields are filled out
+    // ===== VALIDATION =====
+    // Check if all required fields are filled out
     if (!name || !email || !message) {
       return res.json({
         return_code: 'MISSING_FIELDS',
@@ -19,7 +40,7 @@ const sendContactEmail = async (req, res) => {
       });
     }
 
-    // Check if email looks valid
+    // Check if the email address looks valid (has an @ symbol)
     if (!email.includes('@')) {
       return res.json({
         return_code: 'INVALID_EMAIL',
@@ -27,10 +48,13 @@ const sendContactEmail = async (req, res) => {
       });
     }
 
+    // ===== BUILD EMAIL =====
     // Create the email subject line
+    // If they provided a subject, use it. Otherwise use a generic one.
     const emailSubject = subject ? `Contact Form: ${subject}` : 'New Contact Form Message';
 
-    // Create the email content (what you'll receive)
+    // Create the email content (the HTML that you'll receive)
+    // This is a nicely formatted email with styling
     const emailContent = `
       <!DOCTYPE html>
       <html>
@@ -38,6 +62,7 @@ const sendContactEmail = async (req, res) => {
           <meta charset="UTF-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
+            /* Email styling - makes the email look nice */
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
               line-height: 1.6;
@@ -121,6 +146,7 @@ const sendContactEmail = async (req, res) => {
             </div>
 
             <div class="content">
+              <!-- Contact Information Section -->
               <div class="section">
                 <div class="section-title">Contact Information</div>
 
@@ -131,9 +157,11 @@ const sendContactEmail = async (req, res) => {
 
                 <div class="field">
                   <div class="field-label">Email</div>
+                  <!-- Make the email clickable so you can reply directly -->
                   <div class="field-value"><a href="mailto:${email}" class="reply-link">${email}</a></div>
                 </div>
 
+                <!-- Only show phone if they provided it -->
                 ${phone ? `
                 <div class="field">
                   <div class="field-label">Phone</div>
@@ -141,6 +169,7 @@ const sendContactEmail = async (req, res) => {
                 </div>
                 ` : ''}
 
+                <!-- Only show subject if they provided it -->
                 ${subject ? `
                 <div class="field">
                   <div class="field-label">Subject</div>
@@ -149,9 +178,11 @@ const sendContactEmail = async (req, res) => {
                 ` : ''}
               </div>
 
+              <!-- Message Section -->
               <div class="section">
                 <div class="section-title">Message</div>
                 <div class="message-box">
+                  <!-- Convert line breaks to HTML line breaks so the message displays correctly -->
                   <div class="field-value">${message.replace(/\n/g, '<br>')}</div>
                 </div>
               </div>
@@ -166,28 +197,31 @@ const sendContactEmail = async (req, res) => {
       </html>
     `;
 
-    // Send the email
+    // ===== SEND THE EMAIL =====
+    // Use the Resend service to actually send the email
     const emailResult = await resend.emails.send({
-      from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,  // Use email name
-      to: process.env.TO_EMAIL,            // Who receives the email (you)
-      subject: emailSubject,               // Email subject line
-      html: emailContent,                  // Email content
-      reply_to: email                      // So you can reply directly to the customer
+      from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,  // Who the email is from (your business name + email)
+      to: process.env.TO_EMAIL,            // Who receives the email (you - the business owner)
+      subject: emailSubject,               // The subject line of the email
+      html: emailContent,                  // The HTML content of the email
+      reply_to: email                      // When you reply, it goes to the customer's email
     });
 
     console.log('Email sent successfully:', emailResult);
 
-    // Tell the website the email was sent successfully
+    // ===== SEND SUCCESS RESPONSE =====
+    // Tell the website that the email was sent successfully
     res.json({
       return_code: 'SUCCESS',
       message: 'Your message has been sent! We will get back to you soon.'
     });
 
   } catch (error) {
+    // ===== ERROR HANDLING =====
     // Log the actual error so we can see what went wrong
     console.error('Email sending error:', error);
 
-    // If something goes wrong, tell the website
+    // Tell the website that something went wrong
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Sorry, there was a problem sending your message. Please try again.',
@@ -196,7 +230,8 @@ const sendContactEmail = async (req, res) => {
   }
 };
 
-// Export the function so other files can use it
+// ===== EXPORTS =====
+// Make this function available to the routes file
 module.exports = {
   sendContactEmail
 };

@@ -1,9 +1,9 @@
 /*
 =======================================================================================================================================
-API Routes: Buffet Versions
+BUFFET VERSION ROUTES - API endpoints for buffet version data
 =======================================================================================================================================
-Purpose: Handles all buffet version API endpoints for retrieving pricing and details
-=======================================================================================================================================
+Routes are like the "front desk" of your API. They receive requests from the website and send them
+to the right controller to handle.
 
 ENDPOINTS:
 
@@ -48,19 +48,23 @@ ENDPOINTS:
 =======================================================================================================================================
 */
 
-const express = require('express');
-const router = express.Router();
+const express = require('express');  // Express library for routing
+const router = express.Router();     // Create a new router object
 
-// Get the buffet version functions
+// Import the buffet version controller - this has all the functions that handle buffet version requests
 const buffetVersionController = require('../controllers/buffetVersionController');
 
-// When someone goes to /api/buffet-versions, show all buffet versions
+// ===== ROUTE 1: GET ALL BUFFET VERSIONS =====
+// When someone visits /api/buffet-versions, run the getAllBuffetVersions function
 router.get('/', buffetVersionController.getAllBuffetVersions);
 
-// When someone goes to /api/buffet-versions/1 (or any number), show that specific version
-// Note: This must come AFTER any other specific routes
+// ===== ROUTE 2: GET ONE SPECIFIC BUFFET VERSION =====
+// When someone visits /api/buffet-versions/1 (or any number), run the getBuffetVersionById function
+// The :id is a parameter - it can be any number
+// NOTE: This must come AFTER any other specific routes
 router.get('/:id', buffetVersionController.getBuffetVersionById);
 
-// Export so server.js can use these routes
+// ===== EXPORTS =====
+// Make this router available to server.js
 module.exports = router;
 
