@@ -90,22 +90,41 @@ export default function OrderPage() {
         setError(null);
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        const response = await fetch(`${apiUrl}/api/menu`);
+        console.log('API URL:', apiUrl);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        // Fetch menu data (which includes price_per_person from buffet_versions)
+        console.log('Fetching from:', `${apiUrl}/api/menu`);
+        const menuResponse = await fetch(`${apiUrl}/api/menu`);
+        console.log('Response status:', menuResponse.status);
+
+        if (!menuResponse.ok) {
+          throw new Error(`HTTP error! status: ${menuResponse.status}`);
         }
+        const menuData = await menuResponse.json();
+        console.log('Full menu data response:', menuData);
 
-        const data = await response.json();
-
-        if (data.return_code === 'SUCCESS') {
-          const sections = data.data || [];
+        if (menuData.return_code === 'SUCCESS') {
+          const sections = menuData.data || [];
+          console.log('Sections count:', sections.length);
           setMenuSections(sections);
 
-          // Extract price per person from the first section
-          if (sections.length > 0 && sections[0].price_per_person) {
-            const price = parseFloat(sections[0].price_per_person);
-            setPricePerPerson(price);
+          // Extract price per person from the first menu section
+          // The menu API already includes price_per_person from the buffet_versions table
+          if (sections.length > 0) {
+            const priceValue = sections[0].price_per_person;
+            console.log('Menu section data:', sections[0]);
+            console.log('Price per person from menu API:', priceValue);
+            console.log('Price type:', typeof priceValue);
+            if (priceValue !== null && priceValue !== undefined && priceValue !== '') {
+              const price = parseFloat(priceValue);
+              console.log('Parsed price:', price);
+              console.log('Setting pricePerPerson to:', price);
+              setPricePerPerson(price);
+            } else {
+              console.warn('No price_per_person found in menu section');
+            }
+          } else {
+            console.warn('No menu sections found');
           }
 
           // Initialize all items as selected, except Bread items (which start unselected)
@@ -121,12 +140,13 @@ export default function OrderPage() {
           setSelectedItems(initialSelected);
         } else {
           // Handle API-level errors without throwing - let caller decide what to do
-          setError(data.message || 'Failed to load menu data');
+          console.error('API returned error:', menuData);
+          setError(menuData.message || 'Failed to load data');
         }
       } catch (err) {
         // Only network/connection errors reach here
-        console.error('Error fetching menu data:', err);
-        setError('Failed to load menu data. Please check your connection and try again.');
+        console.error('Error fetching data:', err);
+        setError('Failed to load data. Please check your connection and try again.');
       } finally {
         setLoading(false);
       }

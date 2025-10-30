@@ -44,7 +44,10 @@ export default function MoreInfoPage() {
     if (priceParam) {
       const price = parseFloat(priceParam);
       console.log('Setting price per person to:', price);
+      console.log('Raw priceParam:', priceParam);
       setPricePerPerson(price);
+    } else {
+      console.warn('No pricePerPerson param in URL');
     }
   }, [searchParams]);
 

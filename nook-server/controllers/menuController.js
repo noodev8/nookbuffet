@@ -6,8 +6,13 @@ const menuModel = require('../models/menuModel');
 // Get all menu sections (like "Sandwiches", "Salads", etc.)
 const getAllMenuSections = async (req, res) => {
   try {
+    console.log('getAllMenuSections called');
     // Get menu data from database
     const sections = await menuModel.getAllMenuSections();
+    console.log('Menu sections retrieved:', sections.length, 'sections');
+    if (sections.length > 0) {
+      console.log('First section price_per_person:', sections[0].price_per_person);
+    }
 
     // Send the menu data back to the website
     res.json({
@@ -19,6 +24,7 @@ const getAllMenuSections = async (req, res) => {
 
   } catch (error) {
     // If something goes wrong, tell the website
+    console.error('Error getting menu sections:', error);
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Could not get menu data'
