@@ -10,17 +10,13 @@ export default function CheckoutPage() {
   
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fulfillmentType, setFulfillmentType] = useState('collection');
-  const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [cardExpiry, setCardExpiry] = useState('');
   const [cardCVC, setCardCVC] = useState('');
 
-  // Get orders and fulfillment type from URL params
+  // Get orders from URL params
   useEffect(() => {
     const ordersParam = searchParams.get('orders');
-    const fulfillmentParam = searchParams.get('fulfillmentType');
 
     if (ordersParam) {
       try {
@@ -31,21 +27,21 @@ export default function CheckoutPage() {
         console.error('Error parsing orders:', e);
       }
     }
-
-    if (fulfillmentParam) {
-      setFulfillmentType(fulfillmentParam);
-    }
   }, [searchParams]);
 
-  const handleAddToBasket = async () => {
+  const handleConfirmOrder = async () => {
     setLoading(true);
     try {
+      // Validate payment details
+      if (!cardNumber.trim() || !cardExpiry.trim() || !cardCVC.trim()) {
+        alert('Please enter all payment details');
+        setLoading(false);
+        return;
+      }
+
       // Here you would send the order data to your backend
       const orderData = {
         orders,
-        fulfillmentType,
-        email,
-        address,
         cardNumber,
         cardExpiry,
         cardCVC,
@@ -102,33 +98,42 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          {/* Contact Information Section */}
-          <div className="checkout-section">
-            <h2 className="checkout-section-title">Contact Information</h2>
-
-            <div className="form-group">
-              <label htmlFor="email">Email Address:</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="your.email@example.com"
-                className="checkout-input"
-              />
+          {/* Business Details Section */}
+          {orders.length > 0 && orders[0].businessName && (
+            <div className="checkout-section">
+              <h2 className="checkout-section-title">Business Details</h2>
+              <div className="checkout-details-display">
+                <div className="detail-row">
+                  <span className="detail-label">Business:</span>
+                  <span className="detail-value">{orders[0].businessName}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Address:</span>
+                  <span className="detail-value">{orders[0].address}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Email:</span>
+                  <span className="detail-value">{orders[0].email}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Phone:</span>
+                  <span className="detail-value">{orders[0].phone}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Type:</span>
+                  <span className="detail-value">{orders[0].fulfillmentType === 'delivery' ? 'Delivery' : 'Collection'}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Date:</span>
+                  <span className="detail-value">{orders[0].deliveryDate}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="detail-label">Time:</span>
+                  <span className="detail-value">{orders[0].deliveryTime}</span>
+                </div>
+              </div>
             </div>
-
-            <div className="form-group">
-              <label htmlFor="address">Delivery Address:</label>
-              <textarea
-                id="address"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Enter your full delivery address..."
-                className="checkout-textarea"
-              />
-            </div>
-          </div>
+          )}
 
           {/* Payment Information Section */}
           <div className="checkout-section">
@@ -187,7 +192,7 @@ export default function CheckoutPage() {
             </button>
             <button
               className="checkout-submit-button"
-              onClick={handleAddToBasket}
+              onClick={handleConfirmOrder}
               disabled={loading}
             >
               {loading ? 'Processing...' : 'Confirm Order'}

@@ -51,6 +51,43 @@ export default function BasketPage() {
         <div className="basket-content-wrapper">
           <h1 className="basket-title">Your Basket</h1>
 
+          {/* Business Details Section */}
+          {orders.length > 0 && orders[0].businessName && (
+            <div className="basket-section">
+              <h2 className="basket-section-title">Business Details</h2>
+              <div className="business-details">
+                <div className="detail-item">
+                  <span>Business:</span>
+                  <span className="detail-value">{orders[0].businessName}</span>
+                </div>
+                <div className="detail-item">
+                  <span>Address:</span>
+                  <span className="detail-value">{orders[0].address}</span>
+                </div>
+                <div className="detail-item">
+                  <span>Email:</span>
+                  <span className="detail-value">{orders[0].email}</span>
+                </div>
+                <div className="detail-item">
+                  <span>Phone:</span>
+                  <span className="detail-value">{orders[0].phone}</span>
+                </div>
+                <div className="detail-item">
+                  <span>Type:</span>
+                  <span className="detail-value">{orders[0].fulfillmentType === 'delivery' ? 'Delivery' : 'Collection'}</span>
+                </div>
+                <div className="detail-item">
+                  <span>Date:</span>
+                  <span className="detail-value">{orders[0].deliveryDate}</span>
+                </div>
+                <div className="detail-item">
+                  <span>Time:</span>
+                  <span className="detail-value">{orders[0].deliveryTime}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Orders Summary Section */}
           <div className="basket-section">
             <h2 className="basket-section-title">Orders in Basket ({orders.length})</h2>
@@ -90,7 +127,7 @@ export default function BasketPage() {
             </div>
           </div>
 
-       
+
 
           {/* Fulfillment Type Section */}
           <div className="fulfillment-section-card">

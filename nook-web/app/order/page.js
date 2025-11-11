@@ -16,6 +16,22 @@ export default function OrderPage() {
   const [showModal, setShowModal] = useState(false);
   const [pricePerPerson, setPricePerPerson] = useState(0);
 
+  // Business details state
+  const [businessName, setBusinessName] = useState('');
+  const [address, setAddress] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+
+  // Fulfillment state
+  const [fulfillmentType, setFulfillmentType] = useState('collection');
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [deliveryTime, setDeliveryTime] = useState('');
+
+  // Additional info state
+  const [notes, setNotes] = useState('');
+  const [dietaryInfo, setDietaryInfo] = useState('');
+  const [allergens, setAllergens] = useState('');
+
   const toggleItemSelection = (itemId) => {
     setSelectedItems(prev => ({
       ...prev,
@@ -34,6 +50,40 @@ export default function OrderPage() {
   };
 
   const validateSelections = () => {
+    // Validate business details
+    if (!businessName.trim()) {
+      setModalMessage('Please enter a business name');
+      setShowModal(true);
+      return false;
+    }
+    if (!address.trim()) {
+      setModalMessage('Please enter an address');
+      setShowModal(true);
+      return false;
+    }
+    if (!email.trim()) {
+      setModalMessage('Please enter an email address');
+      setShowModal(true);
+      return false;
+    }
+    if (!phone.trim()) {
+      setModalMessage('Please enter a phone number');
+      setShowModal(true);
+      return false;
+    }
+
+    // Validate fulfillment details
+    if (!deliveryDate) {
+      setModalMessage('Please select a date');
+      setShowModal(true);
+      return false;
+    }
+    if (!deliveryTime) {
+      setModalMessage('Please select a time');
+      setShowModal(true);
+      return false;
+    }
+
     // Check if all required sections have at least one item selected
     for (const section of menuSections) {
       if (section.is_required && section.items && section.items.length > 0) {
@@ -159,7 +209,7 @@ export default function OrderPage() {
     <div className="welcome-page-option3">
       <div className="order-page-container">
         <div className="order-content-wrapper">
-         
+          <h1 className="order-page-title">Start Your Order</h1>
 
           {loading && (
             <div className="loading-state">
@@ -176,7 +226,126 @@ export default function OrderPage() {
             </div>
           )}
 
-          {!loading && !error && menuSections.map((section) => (
+          {!loading && !error && (
+            <>
+              {/* Business Details Section */}
+              <div className="form-section">
+                <h2 className="form-section-title">Business Details</h2>
+                <div className="form-group">
+                  <label htmlFor="business-name">Business Name *</label>
+                  <input
+                    id="business-name"
+                    type="text"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    placeholder="Enter your business name"
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="address">Address *</label>
+                  <input
+                    id="address"
+                    type="text"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Enter delivery/collection address"
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="email">Email *</label>
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter email address"
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="phone">Phone *</label>
+                    <input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Enter phone number"
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="order-people">How Many People Is This For? *</label>
+                  <input
+                    id="order-people"
+                    type="number"
+                    min="1"
+                    //max="100"
+                    value={numPeople}
+                    onChange={(e) => setNumPeople(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              {/* Fulfillment Section */}
+              <div className="form-section">
+                <h2 className="form-section-title">Delivery or Collection</h2>
+                <div className="fulfillment-options">
+                  <label className="fulfillment-option">
+                    <input
+                      type="radio"
+                      name="fulfillment"
+                      value="collection"
+                      checked={fulfillmentType === 'collection'}
+                      onChange={(e) => setFulfillmentType(e.target.value)}
+                    />
+                    <span>Collection</span>
+                  </label>
+                  <label className="fulfillment-option">
+                    <input
+                      type="radio"
+                      name="fulfillment"
+                      value="delivery"
+                      checked={fulfillmentType === 'delivery'}
+                      onChange={(e) => setFulfillmentType(e.target.value)}
+                    />
+                    <span>Delivery</span>
+                  </label>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="delivery-date">Date *</label>
+                    <input
+                      id="delivery-date"
+                      type="date"
+                      value={deliveryDate}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="delivery-time">Time *</label>
+                    <input
+                      id="delivery-time"
+                      type="time"
+                      value={deliveryTime}
+                      onChange={(e) => setDeliveryTime(e.target.value)}
+                      className="form-input"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Menu Section Header */}
+              <div className="menu-section-header">
+                <h2 className="menu-section-title">Choose Your Buffet</h2>
+              </div>
+
+              {menuSections.map((section) => (
             <div key={section.id}>
               {/* Regular section with images */}
               {section.name !== 'Bread' && (
@@ -309,43 +478,108 @@ export default function OrderPage() {
             </div>
           ))}
 
-          {!loading && !error && menuSections.length === 0 && (
-            <div className="no-data-state">
-              <p>No menu sections found. Please add some categories to your database.</p>
-            </div>
-          )}
-
-          {!loading && !error && menuSections.length > 0 && (
-            <div className="people-count-section">
-              <div className="people-count-wrapper">
-                <label htmlFor="order-people">How many people?</label>
-                <input
-                  id="order-people"
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={numPeople}
-                  onChange={(e) => setNumPeople(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="people-count-input-order"
+            {/* Additional Information Section */}
+            <div className="form-section">
+              <h2 className="form-section-title">Additional Information</h2>
+              <div className="form-group">
+                <label htmlFor="notes">Special Requests</label>
+                <textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Any special requests or preferences..."
+                  className="form-textarea"
                 />
               </div>
-              <button
-                className="next-step-button"
-                onClick={() => {
-                  // Validate required sections and item count
-                  if (!validateSelections()) {
-                    return;
-                  }
-                  // Pass selected items, people count, buffet version, and price to more info page via URL params
-                  const selectedItemIds = Object.keys(selectedItems).filter(id => selectedItems[id]);
-                  // Get the buffet version ID from the first section (they should all be the same)
-                  const buffetVersionId = menuSections[0]?.buffet_version_id || '';
-                  router.push(`/more-info?items=${selectedItemIds.join(',')}&people=${numPeople}&buffetVersionId=${buffetVersionId}&pricePerPerson=${pricePerPerson}`);
-                }}
-              >
-                Next Step
-              </button>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="dietary">Dietary Requirements</label>
+                  <input
+                    id="dietary"
+                    type="text"
+                    value={dietaryInfo}
+                    onChange={(e) => setDietaryInfo(e.target.value)}
+                    placeholder="e.g., Vegetarian, Vegan, Gluten-free..."
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="allergens">Allergens</label>
+                  <input
+                    id="allergens"
+                    type="text"
+                    value={allergens}
+                    onChange={(e) => setAllergens(e.target.value)}
+                    placeholder="e.g., Nuts, Dairy, Shellfish..."
+                    className="form-input"
+                  />
+                </div>
+              </div>
             </div>
+
+              {menuSections.length === 0 && (
+                <div className="no-data-state">
+                  <p>No menu sections found. Please add some categories to your database.</p>
+                </div>
+              )}
+
+              {menuSections.length > 0 && (
+                <button
+                  className="add-to-basket-button"
+                  onClick={() => {
+                    // Validate all details
+                    if (!validateSelections()) {
+                      return;
+                    }
+
+                    // Create order object with all details
+                    const selectedItemIds = Object.keys(selectedItems).filter(id => selectedItems[id]);
+                    const buffetVersionId = menuSections[0]?.buffet_version_id || '';
+
+                    const newOrder = {
+                      items: selectedItemIds.map(id => parseInt(id)),
+                      numPeople,
+                      notes,
+                      dietaryInfo,
+                      allergens,
+                      buffetVersionId,
+                      pricePerPerson,
+                      totalPrice: pricePerPerson * numPeople,
+                      businessName,
+                      address,
+                      email,
+                      phone,
+                      fulfillmentType,
+                      deliveryDate,
+                      deliveryTime,
+                      timestamp: new Date().toISOString()
+                    };
+
+                    // Get existing basket or create new one
+                    const existingBasket = localStorage.getItem('basketData');
+                    let basket = [];
+
+                    if (existingBasket) {
+                      try {
+                        const parsed = JSON.parse(existingBasket);
+                        basket = Array.isArray(parsed) ? parsed : [parsed];
+                      } catch (e) {
+                        basket = [];
+                      }
+                    }
+
+                    // Add new order to basket
+                    basket.push(newOrder);
+                    localStorage.setItem('basketData', JSON.stringify(basket));
+
+                    // Navigate to basket page
+                    router.push('/basket');
+                  }}
+                >
+                  Add to Basket
+                </button>
+              )}
+            </>
           )}
 
 

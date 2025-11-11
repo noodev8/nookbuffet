@@ -13,6 +13,193 @@
   padding: 2rem;
 }
 
+/* ===== PAGE TITLE ===== */
+.order-page-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 3rem;
+  color: white;
+  text-align: center;
+  margin-bottom: 3rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+  border-bottom: 2px solid #333;
+  padding-bottom: 1rem;
+}
+
+/* ===== FORM SECTIONS ===== */
+.form-section {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  transition: all 0.3s ease;
+}
+
+.form-section:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #555;
+}
+
+
+
+.form-section-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  border-bottom: 1px solid #444;
+  padding-bottom: 1rem;
+}
+
+/* ===== FORM GROUPS ===== */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  font-family: 'Source Sans Pro', sans-serif;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+/* ===== FORM ROW (for side-by-side fields) ===== */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+/* ===== FULFILLMENT OPTIONS ===== */
+.fulfillment-options {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.fulfillment-option {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: pointer;
+  color: white;
+  font-weight: 600;
+}
+
+.fulfillment-option input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: rgb(0, 0, 0);
+}
+
+.fulfillment-option span {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== PEOPLE COUNT INPUT (LARGE) ===== */
+.people-count-input-large {
+  width: 100px;
+  padding: 0.8rem;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.people-count-input-large:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  border-color: white;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* ===== ADD TO BASKET BUTTON ===== */
+.add-to-basket-button {
+  width: 100%;
+  background: white;
+  color: #1a1a1a;
+  border: 2px solid white;
+  padding: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 700;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-family: 'Oswald', sans-serif;
+  margin-top: 2rem;
+}
+
+.add-to-basket-button:hover {
+  background: transparent;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+}
+
+/* ===== MENU SECTION HEADER ===== */
+.menu-section-header {
+  border-top: 2px solid #444;
+  padding-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.menu-section-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2rem;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+  margin: 0;
+}
+
 /* ===== SECTION CARD ===== */
 .section-card {
   background: rgba(255, 255, 255, 0.05);
@@ -733,6 +920,10 @@
     grid-template-columns: repeat(1, 1fr);
     gap: 0.8rem;
   }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 768px) {
@@ -750,6 +941,25 @@
 
   .section-image-item {
     height: 150px;
+  }
+
+  .order-page-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .form-section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .form-section-title {
+    font-size: 1.2rem;
+  }
+
+  .fulfillment-options {
+    flex-direction: column;
+    gap: 1rem;
   }
 }
 
