@@ -55,6 +55,33 @@ export default function MoreInfoPage() {
 
   const handleContinue = () => {
     setLoading(true);
+
+    // Get existing basket to check if we have business details
+    const existingBasket = localStorage.getItem('basketData');
+    let basket = [];
+    let businessDetails = {};
+
+    if (existingBasket) {
+      try {
+        const parsed = JSON.parse(existingBasket);
+        basket = Array.isArray(parsed) ? parsed : [parsed];
+        // Get business details from first order if it exists
+        if (basket.length > 0 && basket[0].businessName) {
+          businessDetails = {
+            businessName: basket[0].businessName,
+            address: basket[0].address,
+            email: basket[0].email,
+            phone: basket[0].phone,
+            fulfillmentType: basket[0].fulfillmentType,
+            deliveryDate: basket[0].deliveryDate,
+            deliveryTime: basket[0].deliveryTime
+          };
+        }
+      } catch (e) {
+        basket = [];
+      }
+    }
+
     // Add this order to the basket (support multiple buffets)
     const newOrder = {
       items: selectedItems,
@@ -65,21 +92,9 @@ export default function MoreInfoPage() {
       buffetVersionId,
       pricePerPerson,
       totalPrice: pricePerPerson * numPeople,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      ...businessDetails
     };
-
-    // Get existing basket or create new one
-    const existingBasket = localStorage.getItem('basketData');
-    let basket = [];
-
-    if (existingBasket) {
-      try {
-        const parsed = JSON.parse(existingBasket);
-        basket = Array.isArray(parsed) ? parsed : [parsed];
-      } catch (e) {
-        basket = [];
-      }
-    }
 
     // Add new order to basket
     basket.push(newOrder);

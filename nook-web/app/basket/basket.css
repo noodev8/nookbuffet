@@ -94,6 +94,37 @@
   border-bottom: none;
 }
 
+/* ===== COMPACT BUSINESS DETAILS ===== */
+.basket-section.compact-business {
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.basket-section.compact-business .basket-section-title {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.business-details-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.business-details-compact .detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: none;
+  font-size: 0.95rem;
+}
+
+.detail-label {
+  color: #aaa;
+  font-weight: 500;
+}
+
 /* ===== ORDERS LIST ===== */
 .orders-list {
   display: flex;

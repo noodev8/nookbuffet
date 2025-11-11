@@ -8,8 +8,18 @@ export default function BasketPage() {
   const router = useRouter();
 
   const [orders, setOrders] = useState([]);
-  const [fulfillmentType, setFulfillmentType] = useState('collection');
   const [loading, setLoading] = useState(false);
+
+  // Business details state
+  const [businessName, setBusinessName] = useState('');
+  const [address, setAddress] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+
+  // Fulfillment state
+  const [fulfillmentType, setFulfillmentType] = useState('collection');
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [deliveryTime, setDeliveryTime] = useState('');
 
   // Get basket data from localStorage
   useEffect(() => {
@@ -18,15 +28,54 @@ export default function BasketPage() {
       const parsed = JSON.parse(data);
       // Handle both array and single object formats
       const ordersList = Array.isArray(parsed) ? parsed : [parsed];
+      console.log('Loaded orders from localStorage:', ordersList);
       setOrders(ordersList);
     }
   }, []);
 
   const handleProceedToCheckout = () => {
+    // Validate business details
+    if (!businessName.trim()) {
+      alert('Please enter a business name');
+      return;
+    }
+    if (!address.trim()) {
+      alert('Please enter an address');
+      return;
+    }
+    if (!email.trim()) {
+      alert('Please enter an email address');
+      return;
+    }
+    if (!phone.trim()) {
+      alert('Please enter a phone number');
+      return;
+    }
+    if (!deliveryDate) {
+      alert('Please select a date');
+      return;
+    }
+    if (!deliveryTime) {
+      alert('Please select a time');
+      return;
+    }
+
     setLoading(true);
-    // Pass all orders and fulfillment type to checkout page
-    const ordersData = encodeURIComponent(JSON.stringify(orders));
-    router.push(`/checkout?orders=${ordersData}&fulfillmentType=${fulfillmentType}`);
+    // Add business details and fulfillment to all orders
+    const updatedOrders = orders.map(order => ({
+      ...order,
+      businessName,
+      address,
+      email,
+      phone,
+      fulfillmentType,
+      deliveryDate,
+      deliveryTime
+    }));
+
+    // Pass all orders to checkout page
+    const ordersData = encodeURIComponent(JSON.stringify(updatedOrders));
+    router.push(`/checkout?orders=${ordersData}`);
   };
 
   const handleClearBasket = () => {
@@ -51,46 +100,9 @@ export default function BasketPage() {
         <div className="basket-content-wrapper">
           <h1 className="basket-title">Your Basket</h1>
 
-          {/* Business Details Section */}
-          {orders.length > 0 && orders[0].businessName && (
-            <div className="basket-section">
-              <h2 className="basket-section-title">Business Details</h2>
-              <div className="business-details">
-                <div className="detail-item">
-                  <span>Business:</span>
-                  <span className="detail-value">{orders[0].businessName}</span>
-                </div>
-                <div className="detail-item">
-                  <span>Address:</span>
-                  <span className="detail-value">{orders[0].address}</span>
-                </div>
-                <div className="detail-item">
-                  <span>Email:</span>
-                  <span className="detail-value">{orders[0].email}</span>
-                </div>
-                <div className="detail-item">
-                  <span>Phone:</span>
-                  <span className="detail-value">{orders[0].phone}</span>
-                </div>
-                <div className="detail-item">
-                  <span>Type:</span>
-                  <span className="detail-value">{orders[0].fulfillmentType === 'delivery' ? 'Delivery' : 'Collection'}</span>
-                </div>
-                <div className="detail-item">
-                  <span>Date:</span>
-                  <span className="detail-value">{orders[0].deliveryDate}</span>
-                </div>
-                <div className="detail-item">
-                  <span>Time:</span>
-                  <span className="detail-value">{orders[0].deliveryTime}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Orders Summary Section */}
           <div className="basket-section">
-            <h2 className="basket-section-title">Orders in Basket ({orders.length})</h2>
+            <h2 className="basket-section-title">Your Buffets ({orders.length})</h2>
             <div className="orders-list">
               {orders.map((order, index) => (
                 <div key={index} className="order-card">
@@ -105,19 +117,23 @@ export default function BasketPage() {
                     </button>
                   </div>
                   <div className="order-details">
-                    <div className="detail-item">
-                      <span>People:</span>
-                      <span className="detail-value">{order.numPeople}</span>
-                    </div>
                     {order.notes && (
                       <div className="detail-item">
-                        <span>Notes:</span>
+                        <span className="detail-label">Menu:</span>
                         <span className="detail-value">{order.notes}</span>
                       </div>
                     )}
+                    <div className="detail-item">
+                      <span className="detail-label">People:</span>
+                      <span className="detail-value">{order.numPeople}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Type:</span>
+                      <span className="detail-value">{order.fulfillmentType === 'delivery' ? 'Delivery' : 'Collection'}</span>
+                    </div>
                     {order.totalPrice !== undefined && (
                       <div className="detail-item price-item">
-                        <span>Price:</span>
+                        <span className="detail-label">Price:</span>
                         <span className="detail-value price-value">£{order.totalPrice.toFixed(2)}</span>
                       </div>
                     )}
@@ -128,53 +144,117 @@ export default function BasketPage() {
           </div>
 
 
-
-          {/* Fulfillment Type Section */}
-          <div className="fulfillment-section-card">
-            <div className="fulfillment-section-header">
-              <div className="fulfillment-title-wrapper">
-                <h3 className="fulfillment-section-title">Fulfillment Type</h3>
-              </div>
-            </div>
-            <div className="fulfillment-items-container">
-              <ul>
-                <li
-                  className={`fulfillment-item ${fulfillmentType === 'collection' ? 'selected' : ''}`}
-                  onClick={() => setFulfillmentType('collection')}
-                >
-                  <input
-                    type="radio"
-                    name="fulfillment-selection"
-                    checked={fulfillmentType === 'collection'}
-                    onChange={() => {}}
-                    className="fulfillment-item-radio"
-                  />
-                  <span className="fulfillment-item-name">Collection</span>
-                </li>
-                <li
-                  className={`fulfillment-item ${fulfillmentType === 'delivery' ? 'selected' : ''}`}
-                  onClick={() => setFulfillmentType('delivery')}
-                >
-                  <input
-                    type="radio"
-                    name="fulfillment-selection"
-                    checked={fulfillmentType === 'delivery'}
-                    onChange={() => {}}
-                    className="fulfillment-item-radio"
-                  />
-                  <span className="fulfillment-item-name">Delivery</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-             {/* Grand Total Section */}
+          {/* Grand Total Section */}
           {orders.length > 0 && (
             <div className="basket-grand-total">
               <span>Grand Total:</span>
               <span className="grand-total-value">
                 £{orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0).toFixed(2)}
               </span>
+            </div>
+          )}
+
+          {/* Business Details Section */}
+          {orders.length > 0 && (
+            <div className="form-section">
+              <h2 className="form-section-title">Business Details</h2>
+              <div className="form-group">
+                <label htmlFor="business-name">Business Name *</label>
+                <input
+                  id="business-name"
+                  type="text"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  placeholder="Enter your business name"
+                  className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="address">Address *</label>
+                <input
+                  id="address"
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Enter delivery/collection address"
+                  className="form-input"
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="email">Email *</label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter email address"
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="phone">Phone *</label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="Enter phone number"
+                    className="form-input"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Fulfillment Section */}
+          {orders.length > 0 && (
+            <div className="form-section">
+              <h2 className="form-section-title">Delivery or Collection</h2>
+              <div className="fulfillment-options">
+                <label className="fulfillment-option">
+                  <input
+                    type="radio"
+                    name="fulfillment"
+                    value="collection"
+                    checked={fulfillmentType === 'collection'}
+                    onChange={(e) => setFulfillmentType(e.target.value)}
+                  />
+                  <span>Collection</span>
+                </label>
+                <label className="fulfillment-option">
+                  <input
+                    type="radio"
+                    name="fulfillment"
+                    value="delivery"
+                    checked={fulfillmentType === 'delivery'}
+                    onChange={(e) => setFulfillmentType(e.target.value)}
+                  />
+                  <span>Delivery</span>
+                </label>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="delivery-date">Date *</label>
+                  <input
+                    id="delivery-date"
+                    type="date"
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="delivery-time">Time *</label>
+                  <input
+                    id="delivery-time"
+                    type="time"
+                    value={deliveryTime}
+                    onChange={(e) => setDeliveryTime(e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+              </div>
             </div>
           )}
 

@@ -16,17 +16,6 @@ export default function OrderPage() {
   const [showModal, setShowModal] = useState(false);
   const [pricePerPerson, setPricePerPerson] = useState(0);
 
-  // Business details state
-  const [businessName, setBusinessName] = useState('');
-  const [address, setAddress] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-
-  // Fulfillment state
-  const [fulfillmentType, setFulfillmentType] = useState('collection');
-  const [deliveryDate, setDeliveryDate] = useState('');
-  const [deliveryTime, setDeliveryTime] = useState('');
-
   // Additional info state
   const [notes, setNotes] = useState('');
   const [dietaryInfo, setDietaryInfo] = useState('');
@@ -50,40 +39,6 @@ export default function OrderPage() {
   };
 
   const validateSelections = () => {
-    // Validate business details
-    if (!businessName.trim()) {
-      setModalMessage('Please enter a business name');
-      setShowModal(true);
-      return false;
-    }
-    if (!address.trim()) {
-      setModalMessage('Please enter an address');
-      setShowModal(true);
-      return false;
-    }
-    if (!email.trim()) {
-      setModalMessage('Please enter an email address');
-      setShowModal(true);
-      return false;
-    }
-    if (!phone.trim()) {
-      setModalMessage('Please enter a phone number');
-      setShowModal(true);
-      return false;
-    }
-
-    // Validate fulfillment details
-    if (!deliveryDate) {
-      setModalMessage('Please select a date');
-      setShowModal(true);
-      return false;
-    }
-    if (!deliveryTime) {
-      setModalMessage('Please select a time');
-      setShowModal(true);
-      return false;
-    }
-
     // Check if all required sections have at least one item selected
     for (const section of menuSections) {
       if (section.is_required && section.items && section.items.length > 0) {
@@ -228,118 +183,6 @@ export default function OrderPage() {
 
           {!loading && !error && (
             <>
-              {/* Business Details Section */}
-              <div className="form-section">
-                <h2 className="form-section-title">Business Details</h2>
-                <div className="form-group">
-                  <label htmlFor="business-name">Business Name *</label>
-                  <input
-                    id="business-name"
-                    type="text"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="Enter your business name"
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="address">Address *</label>
-                  <input
-                    id="address"
-                    type="text"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Enter delivery/collection address"
-                    className="form-input"
-                  />
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="email">Email *</label>
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter email address"
-                      className="form-input"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="phone">Phone *</label>
-                    <input
-                      id="phone"
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Enter phone number"
-                      className="form-input"
-                    />
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="order-people">How Many People Is This For? *</label>
-                  <input
-                    id="order-people"
-                    type="number"
-                    min="1"
-                    //max="100"
-                    value={numPeople}
-                    onChange={(e) => setNumPeople(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="form-input"
-                  />
-                </div>
-              </div>
-
-              {/* Fulfillment Section */}
-              <div className="form-section">
-                <h2 className="form-section-title">Delivery or Collection</h2>
-                <div className="fulfillment-options">
-                  <label className="fulfillment-option">
-                    <input
-                      type="radio"
-                      name="fulfillment"
-                      value="collection"
-                      checked={fulfillmentType === 'collection'}
-                      onChange={(e) => setFulfillmentType(e.target.value)}
-                    />
-                    <span>Collection</span>
-                  </label>
-                  <label className="fulfillment-option">
-                    <input
-                      type="radio"
-                      name="fulfillment"
-                      value="delivery"
-                      checked={fulfillmentType === 'delivery'}
-                      onChange={(e) => setFulfillmentType(e.target.value)}
-                    />
-                    <span>Delivery</span>
-                  </label>
-                </div>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="delivery-date">Date *</label>
-                    <input
-                      id="delivery-date"
-                      type="date"
-                      value={deliveryDate}
-                      onChange={(e) => setDeliveryDate(e.target.value)}
-                      className="form-input"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="delivery-time">Time *</label>
-                    <input
-                      id="delivery-time"
-                      type="time"
-                      value={deliveryTime}
-                      onChange={(e) => setDeliveryTime(e.target.value)}
-                      className="form-input"
-                    />
-                  </div>
-                </div>
-              </div>
-
               {/* Menu Section Header */}
               <div className="menu-section-header">
                 <h2 className="menu-section-title">Choose Your Buffet</h2>
@@ -478,6 +321,21 @@ export default function OrderPage() {
             </div>
           ))}
 
+            {/* How Many People Section */}
+            <div className="form-section">
+              <h2 className="form-section-title">How Many People?</h2>
+              <div className="form-group">
+                <input
+                  id="order-people"
+                  type="number"
+                  min="1"
+                  value={numPeople}
+                  onChange={(e) => setNumPeople(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="people-count-input-large"
+                />
+              </div>
+            </div>
+
             {/* Additional Information Section */}
             <div className="form-section">
               <h2 className="form-section-title">Additional Information</h2>
@@ -545,13 +403,6 @@ export default function OrderPage() {
                       buffetVersionId,
                       pricePerPerson,
                       totalPrice: pricePerPerson * numPeople,
-                      businessName,
-                      address,
-                      email,
-                      phone,
-                      fulfillmentType,
-                      deliveryDate,
-                      deliveryTime,
                       timestamp: new Date().toISOString()
                     };
 
