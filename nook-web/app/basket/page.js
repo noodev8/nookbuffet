@@ -127,10 +127,12 @@ export default function BasketPage() {
                       <span className="detail-label">People:</span>
                       <span className="detail-value">{order.numPeople}</span>
                     </div>
-                    <div className="detail-item">
-                      <span className="detail-label">Type:</span>
-                      <span className="detail-value">{order.fulfillmentType === 'delivery' ? 'Delivery' : 'Collection'}</span>
-                    </div>
+                    {order.fulfillmentType && (
+                      <div className="detail-item">
+                        <span className="detail-label">Type:</span>
+                        <span className="detail-value">{order.fulfillmentType === 'delivery' ? 'Delivery' : 'Collection'}</span>
+                      </div>
+                    )}
                     {order.totalPrice !== undefined && (
                       <div className="detail-item price-item">
                         <span className="detail-label">Price:</span>
@@ -165,7 +167,7 @@ export default function BasketPage() {
                   type="text"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="Enter your business name"
+                  placeholder="Enter your business or department name"
                   className="form-input"
                 />
               </div>
@@ -176,7 +178,7 @@ export default function BasketPage() {
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Enter delivery/collection address"
+                  placeholder="Enter your address"
                   className="form-input"
                 />
               </div>
