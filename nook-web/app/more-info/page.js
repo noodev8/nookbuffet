@@ -1,10 +1,10 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import './more-info.css';
 
-export default function MoreInfoPage() {
+function MoreInfoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -175,3 +175,20 @@ export default function MoreInfoPage() {
   );
 }
 
+export default function MoreInfoPage() {
+  return (
+    <Suspense fallback={
+      <div className="welcome-page-option3">
+        <div className="more-info-page-container">
+          <div className="more-info-content-wrapper">
+            <div className="loading-state">
+              <p>Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <MoreInfoContent />
+    </Suspense>
+  );
+}
