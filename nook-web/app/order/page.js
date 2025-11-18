@@ -183,6 +183,21 @@ export default function OrderPage() {
 
           {!loading && !error && (
             <>
+              {/* How Many People Section */}
+              <div className="form-section">
+                <h2 className="form-section-title">How Many People?</h2>
+                <div className="form-group">
+                  <input
+                    id="order-people"
+                    type="number"
+                    min="1"
+                    value={numPeople}
+                    onChange={(e) => setNumPeople(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="people-count-input-large"
+                  />
+                </div>
+              </div>
+
               {/* Menu Section Header */}
               <div className="menu-section-header">
                 <h2 className="menu-section-title">Choose Your Buffet</h2>
@@ -214,6 +229,51 @@ export default function OrderPage() {
                       </div>
                       <div className="section-description">
                         {section.description && <p>{section.description}</p>}
+
+                        {/* Show bread options at the top of Sandwiches section */}
+                        {section.name === 'Sandwiches' && (() => {
+                          const breadSection = menuSections.find(s => s.name === 'Bread');
+                          if (breadSection && breadSection.items && breadSection.items.length > 0) {
+                            return (
+                              <div className="bread-inline-section">
+                                <div className="bread-inline-header">
+                                  <strong>{breadSection.name}:</strong>
+                                </div>
+                                <div className="bread-inline-options">
+                                  {breadSection.items.map((item) => {
+                                    const isSelected = selectedItems[item.id] === true;
+                                    return (
+                                      <label
+                                        key={item.id}
+                                        className={`bread-inline-option ${isSelected ? 'selected' : ''}`}
+                                        onClick={() => {
+                                          // Deselect all bread items first
+                                          const updated = { ...selectedItems };
+                                          breadSection.items.forEach(i => {
+                                            updated[i.id] = false;
+                                          });
+                                          // Select only this item
+                                          updated[item.id] = true;
+                                          setSelectedItems(updated);
+                                        }}
+                                      >
+                                        <input
+                                          type="radio"
+                                          name="bread-selection"
+                                          checked={isSelected}
+                                          onChange={() => {}}
+                                          className="bread-inline-radio"
+                                        />
+                                        <span>{item.name}</span>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          }
+                          return null;
+                        })()}
 
                         {section.items && section.items.length > 0 && (
                           <div className="items-list-container">
@@ -265,76 +325,8 @@ export default function OrderPage() {
                   </div>
                 </div>
               )}
-
-              {/* Show bread section right after sandwiches */}
-              {section.name === 'Sandwiches' && menuSections.find(s => s.name === 'Bread') && (
-                (() => {
-                  const breadSection = menuSections.find(s => s.name === 'Bread');
-                  return (
-                    <div className="bread-section-card">
-                      <div className="bread-section-header">
-                        <div className="bread-title-wrapper">
-                          <h3 className="bread-section-title">{breadSection.name}</h3>
-                          {breadSection.is_required && (
-                            <span className="required-badge">Required</span>
-                          )}
-                        </div>
-                      </div>
-                      {breadSection.items && breadSection.items.length > 0 && (
-                        <div className="bread-items-container">
-                          <ul>
-                            {breadSection.items.map((item) => {
-                              const isSelected = selectedItems[item.id] === true;
-                              return (
-                                <li
-                                  key={item.id}
-                                  className={`bread-item ${isSelected ? 'selected' : ''}`}
-                                  onClick={() => {
-                                    // Deselect all bread items first
-                                    const updated = { ...selectedItems };
-                                    breadSection.items.forEach(i => {
-                                      updated[i.id] = false;
-                                    });
-                                    // Select only this item
-                                    updated[item.id] = true;
-                                    setSelectedItems(updated);
-                                  }}
-                                >
-                                  <input
-                                    type="radio"
-                                    name="bread-selection"
-                                    checked={isSelected}
-                                    onChange={() => {}}
-                                    className="bread-item-radio"
-                                  />
-                                  <span className="bread-item-name">{item.name}</span>
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()
-              )}
             </div>
           ))}
-
-            {/* How Many People Section */}
-            <div className="form-section">
-              <h2 className="form-section-title">How Many People?</h2>
-              <div className="form-group">
-                <input
-                  id="order-people"
-                  type="number"
-                  min="1"
-                  value={numPeople}
-                  onChange={(e) => setNumPeople(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="people-count-input-large"
-                />
-              </div>
-            </div>
 
             {/* Additional Information Section */}
             <div className="form-section">
