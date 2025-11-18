@@ -41,7 +41,9 @@ export default function MenuPage() {
         const data = await response.json();
 
         if (data.return_code === 'SUCCESS') {
-          setMenuSections(data.data || []);
+          // Filter out the Bread category from the menu display
+          const filteredSections = (data.data || []).filter(section => section.name !== 'Bread');
+          setMenuSections(filteredSections);
         } else {
           // Handle API-level errors without throwing - let caller decide what to do
           setError(data.message || 'Failed to load menu data');
