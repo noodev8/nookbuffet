@@ -51,7 +51,7 @@ export default function Navigation() {
           <Link href="/" onClick={closeMenu}>
             Home
           </Link>
-          <Link href="/order" onClick={closeMenu}>
+          <Link href="/select-buffet" onClick={closeMenu}>
             Order
           </Link>
           <Link href="/menu" onClick={closeMenu}>

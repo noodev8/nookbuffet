@@ -48,7 +48,27 @@ ENDPOINTS:
    }
    Return Codes: SUCCESS, SERVER_ERROR
 
-3. GET /api/menu/:id
+3. GET /api/menu/buffet-version/:id
+   Purpose: Retrieve menu sections filtered by buffet version ID
+   URL Parameters: id (integer, required) - the buffet version ID
+   Success Response:
+   {
+     "return_code": "SUCCESS",
+     "message": "Got menu sections for buffet version!",
+     "data": [
+       {
+         "id": 1,
+         "name": "Sandwiches",
+         "description": "Fresh sandwiches",
+         "buffet_version_id": 1,
+         "items": [...]
+       }
+     ],
+     "count": 5
+   }
+   Return Codes: SUCCESS, INVALID_ID, SERVER_ERROR
+
+4. GET /api/menu/:id
    Purpose: Retrieve a specific menu section by ID
    URL Parameters: id (integer, required)
    Success Response:
@@ -83,10 +103,15 @@ router.get('/', menuController.getAllMenuSections);
 // (otherwise /formatted would be treated as an ID)
 router.get('/formatted', menuController.getFormattedMenuSections);
 
-// ===== ROUTE 3: GET ONE SPECIFIC MENU SECTION =====
+// ===== ROUTE 3: GET MENU SECTIONS BY BUFFET VERSION =====
+// When someone visits /api/menu/buffet-version/1 (or any number), run the getMenuSectionsByBuffetVersion function
+// NOTE: This must come BEFORE the /:id route so it doesn't get confused
+router.get('/buffet-version/:id', menuController.getMenuSectionsByBuffetVersion);
+
+// ===== ROUTE 4: GET ONE SPECIFIC MENU SECTION =====
 // When someone visits /api/menu/1 (or any number), run the getMenuSectionById function
 // The :id is a parameter - it can be any number
-// NOTE: This must come AFTER /formatted so it doesn't interfere
+// NOTE: This must come AFTER /formatted and /buffet-version so it doesn't interfere
 router.get('/:id', menuController.getMenuSectionById);
 
 // ===== EXPORTS =====

@@ -148,10 +148,57 @@ const getFormattedMenuSections = async (req, res) => {
   }
 };
 
+// ===== GET MENU SECTIONS BY BUFFET VERSION =====
+/**
+ * Get menu sections filtered by buffet version ID
+ * This is called when someone visits /api/menu/buffet-version/:id
+ *
+ * This returns only the menu sections that belong to a specific buffet version.
+ * For example, if you want only the "Standard Buffet" menu items, pass in that buffet version's ID.
+ *
+ * @param {object} req - The request object (contains the buffet version ID in req.params.id)
+ * @param {object} res - The response object (we use this to send data back)
+ */
+const getMenuSectionsByBuffetVersion = async (req, res) => {
+  try {
+    // Get the buffet version ID from the URL
+    // If someone visits /api/menu/buffet-version/1, then req.params.id = 1
+    const buffetVersionId = req.params.id;
+
+    // Check if the ID is valid (must be a number)
+    if (!buffetVersionId || isNaN(buffetVersionId)) {
+      return res.json({
+        return_code: 'INVALID_ID',
+        message: 'Please provide a valid buffet version ID number'
+      });
+    }
+
+    // Ask the model to get menu sections for this buffet version from the database
+    const sections = await menuModel.getMenuSectionsByBuffetVersion(buffetVersionId);
+
+    // Send the menu data back to the website
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Got menu sections for buffet version!',
+      data: sections,
+      count: sections.length
+    });
+
+  } catch (error) {
+    // If something goes wrong, log it and tell the website
+    console.error('Error getting menu sections by buffet version:', error);
+    res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Could not get menu data for this buffet version'
+    });
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the routes file
 module.exports = {
   getAllMenuSections,
   getMenuSectionById,
-  getFormattedMenuSections
+  getFormattedMenuSections,
+  getMenuSectionsByBuffetVersion
 };

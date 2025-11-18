@@ -150,9 +150,43 @@ const getMenuSectionById = async (sectionId) => {
   }
 };
 
+// ===== GET MENU SECTIONS BY BUFFET VERSION =====
+/**
+ * Get menu sections filtered by buffet version ID
+ *
+ * This returns only the menu sections that belong to a specific buffet version.
+ * For example, if you want only the "Standard Buffet" menu items, pass in that buffet version's ID.
+ *
+ * Example: getMenuSectionsByBuffetVersion(1) returns:
+ * [
+ *   { id: 1, name: "Sandwiches", buffet_version_id: 1, items: [...] },
+ *   { id: 2, name: "Wraps", buffet_version_id: 1, items: [...] }
+ * ]
+ *
+ * @param {number} buffetVersionId - The ID of the buffet version you want
+ * @returns {Promise<array>} Array of menu sections for that buffet version
+ */
+const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
+  try {
+    // Build query with a filter for buffet_version_id
+    // "AND c.buffet_version_id = $1" where $1 is the buffetVersionId
+    const { text, params } = getMenuSectionsQuery('AND c.buffet_version_id = $1', [buffetVersionId]);
+
+    // Run the query against the database
+    const result = await query(text, params);
+
+    // Return all rows (each row is one menu section for this buffet version)
+    return result.rows;
+  } catch (error) {
+    console.error('Could not get menu sections for buffet version:', error);
+    throw new Error('Failed to get menu sections for buffet version');
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the controller
 module.exports = {
   getAllMenuSections,
-  getMenuSectionById
+  getMenuSectionById,
+  getMenuSectionsByBuffetVersion
 };

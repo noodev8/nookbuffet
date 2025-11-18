@@ -1,0 +1,230 @@
+/* ===== PAGE CONTAINER ===== */
+.select-buffet-container {
+  font-family: 'Source Sans Pro', sans-serif;
+  color: white;
+  padding-top: 80px;
+  min-height: 100vh;
+  background: #1a1a1a;
+}
+
+.select-buffet-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* ===== PAGE TITLE ===== */
+.select-buffet-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 3rem;
+  color: white;
+  text-align: center;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 600;
+  border-bottom: 2px solid #333;
+  padding-bottom: 1rem;
+}
+
+.select-buffet-subtitle {
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #bbb;
+  font-weight: 400;
+}
+
+/* ===== BETA WARNING BANNER ===== */
+.beta-warning-banner {
+  background: #d32f2f;
+  border: 3px solid #b71c1c;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.3);
+}
+
+.beta-warning-banner strong {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.beta-warning-banner p {
+  margin: 0;
+  font-size: 1rem;
+  color: white;
+  line-height: 1.5;
+}
+
+/* ===== LOADING & ERROR STATES ===== */
+.loading-state,
+.error-state,
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 1.2rem;
+  color: #bbb;
+}
+
+.error-state {
+  color: #ff6b6b;
+}
+
+.retry-button {
+  margin-top: 20px;
+  padding: 12px 30px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid #444;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.retry-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #666;
+}
+
+/* ===== BUFFET VERSIONS GRID ===== */
+.buffet-versions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* ===== BUFFET VERSION CARD ===== */
+.buffet-version-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #444;
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.buffet-version-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #666;
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.buffet-version-header {
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #444;
+  padding-bottom: 1rem;
+}
+
+.buffet-version-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.buffet-version-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #4CAF50;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.price-label {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #bbb;
+  text-transform: lowercase;
+}
+
+.buffet-version-description {
+  color: #ccc;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+  font-size: 1rem;
+}
+
+/* ===== SELECT BUTTON ===== */
+.select-buffet-button {
+  width: 100%;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid #444;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.select-buffet-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #4CAF50;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.select-buffet-button:active {
+  transform: translateY(0);
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .select-buffet-container {
+    padding-top: 70px;
+  }
+
+  .select-buffet-content {
+    padding: 1rem;
+  }
+
+  .select-buffet-title {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .select-buffet-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .buffet-versions-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .buffet-version-card {
+    padding: 1.5rem;
+  }
+
+  .buffet-version-title {
+    font-size: 1.5rem;
+  }
+
+  .buffet-version-price {
+    font-size: 1.6rem;
+  }
+}
+

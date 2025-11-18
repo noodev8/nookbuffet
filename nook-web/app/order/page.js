@@ -1,12 +1,15 @@
 'use client';
 
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import './order.css';
 
 export default function OrderPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const buffetVersionId = searchParams.get('buffetVersionId');
+
   const [menuSections, setMenuSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -89,6 +92,12 @@ export default function OrderPage() {
   };
 
   useEffect(() => {
+    // Redirect to select-buffet if no buffetVersionId is provided
+    if (!buffetVersionId) {
+      router.push('/select-buffet');
+      return;
+    }
+
     const fetchMenuData = async () => {
       try {
         setLoading(true);
@@ -96,10 +105,12 @@ export default function OrderPage() {
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
         console.log('API URL:', apiUrl);
+        console.log('Buffet Version ID:', buffetVersionId);
 
-        // Fetch menu data (which includes price_per_person from buffet_versions)
-        console.log('Fetching from:', `${apiUrl}/api/menu`);
-        const menuResponse = await fetch(`${apiUrl}/api/menu`);
+        // Fetch menu data filtered by buffet version ID
+        const menuUrl = `${apiUrl}/api/menu/buffet-version/${buffetVersionId}`;
+        console.log('Fetching from:', menuUrl);
+        const menuResponse = await fetch(menuUrl);
         console.log('Response status:', menuResponse.status);
 
         if (!menuResponse.ok) {
@@ -158,7 +169,7 @@ export default function OrderPage() {
     };
 
     fetchMenuData();
-  }, []);
+  }, [buffetVersionId, router]);
 
   return (
     <div className="welcome-page-option3">

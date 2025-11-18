@@ -11,7 +11,7 @@ const CONFIG = {
     title: 'THE LITTLE NOOK BUFFET',
     description: 'Crafting exceptional workplace dining experiences with fresh, customizable sandwich buffets',
     ctaText: 'Start Your Order',
-    ctaLink: '/order',
+    ctaLink: '/select-buffet',
     backgroundImage: '/assets/nook.jpg',
   },
   infoCards: [
