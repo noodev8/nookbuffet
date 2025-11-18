@@ -100,6 +100,12 @@ export default function BasketPage() {
         <div className="basket-content-wrapper">
           <h1 className="basket-title">Your Basket</h1>
 
+          {/* Beta Warning Banner */}
+          <div className="beta-warning-banner">
+            <strong>⚠️ BETA VERSION - TESTING ONLY</strong>
+            <p>This is a test version of our ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
+          </div>
+
           {/* Orders Summary Section */}
           <div className="basket-section">
             <h2 className="basket-section-title">Your Buffets ({orders.length})</h2>

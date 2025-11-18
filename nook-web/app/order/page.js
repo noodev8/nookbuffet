@@ -166,6 +166,12 @@ export default function OrderPage() {
         <div className="order-content-wrapper">
           <h1 className="order-page-title">Start Your Order</h1>
 
+          {/* Beta Warning Banner */}
+          <div className="beta-warning-banner">
+            <strong>⚠️ BETA VERSION - TESTING ONLY</strong>
+            <p>This is a test version of our ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
+          </div>
+
           {loading && (
             <div className="loading-state">
               <p>Loading menu sections...</p>

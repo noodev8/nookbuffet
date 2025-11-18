@@ -69,6 +69,12 @@ export default function CheckoutPage() {
         <div className="checkout-content-wrapper">
           <h1 className="checkout-title">Complete Your Order</h1>
 
+          {/* Beta Warning Banner */}
+          <div className="beta-warning-banner">
+            <strong>⚠️ BETA VERSION - TESTING ONLY</strong>
+            <p>This is a test version of our ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
+          </div>
+
           {/* Orders Summary Section */}
           <div className="checkout-section">
             <h2 className="checkout-section-title">Order Summary ({orders.length} buffet{orders.length !== 1 ? 's' : ''})</h2>
