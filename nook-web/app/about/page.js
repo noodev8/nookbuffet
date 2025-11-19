@@ -52,6 +52,62 @@ export default function AboutPage() {
               </p>
             </div>
 
+            <div className="buffet-contents-section">
+              <h3>What&apos;s Included in a Standard Buffet</h3>
+              <p className="buffet-subtitle">Per person - £10.90</p>
+              <p className="buffet-explanation">Each person receives the following items. Order for 10 people? You get 10 times everything below. Order for 100? You get 100 times everything!</p>
+              <div className="buffet-items-grid">
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">1 Sandwich</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">Half a Wrap</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">2 Small Sausage Rolls</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">Quiche</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">Pork Pie</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">Scotch Egg</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">Small Cocktail Sausages</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">Breadsticks/Bruschetta</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">Selection of Dips</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">Veg Sticks/Salad</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">Mixed Fruit</span>
+                </div>
+                <div className="buffet-item">
+                  <span className="item-bullet">•</span>
+                  <span className="item-text">A Piece of Cake</span>
+                </div>
+              </div>
+            </div>
+
             <div className="info-cards-grid">
               <div className="info-card">
                 <h3>Contact Hours</h3>
