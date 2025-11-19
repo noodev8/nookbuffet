@@ -330,6 +330,9 @@ export default function OrderPage() {
             {/* Additional Information Section */}
             <div className="form-section">
               <h2 className="form-section-title">Additional Information</h2>
+              <p className="allergen-info-text">
+                <strong>Important:</strong> If you need a buffet with specific dietary requirements or allergen considerations, please place it as a separate order. This helps us ensure proper preparation and avoid cross-contamination.
+              </p>
               <div className="form-group">
                 <label htmlFor="notes">Special Requests</label>
                 <textarea
