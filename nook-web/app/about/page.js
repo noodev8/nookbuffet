@@ -30,7 +30,7 @@ export default function AboutPage() {
 
           <div className="about-intro">
             <p className="intro-text">
-              Welcome to The Little Nook Buffet, where we specialize in creating exceptional workplace dining experiences with fresh, customizable sandwich buffets. We&apos;re passionate about bringing quality, convenience, and flavor directly to your office or event.
+              Welcome to The Little Nook Buffet, where we specialize in creating exceptional workplace dining experiences with fresh, customisable sandwich buffets. We&apos;re passionate about bringing quality, convenience, and flavor directly to your office or event.
             </p>
 
             <div className="ordering-info">
