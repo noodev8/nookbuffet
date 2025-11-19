@@ -113,43 +113,6 @@ const getAllMenuSections = async () => {
   }
 };
 
-// ===== GET ONE SPECIFIC MENU SECTION =====
-/**
- * Get ONE specific menu section by its ID
- *
- * This returns just one menu section (like only the "Sandwiches" section)
- * along with all the items in that section.
- *
- * Example: getMenuSectionById(5) returns:
- * { id: 5, name: "Sandwiches", items: [...] }
- *
- * @param {number} sectionId - The ID of the section you want (like 5)
- * @returns {Promise<object>} Single menu section with its items
- * @throws {Error} If section not found
- */
-const getMenuSectionById = async (sectionId) => {
-  try {
-    // Build query with a filter: "AND c.id = $1" where $1 is the sectionId
-    // The $1 is a placeholder that gets replaced with the actual ID
-    // This prevents SQL injection attacks
-    const { text, params } = getMenuSectionsQuery('AND c.id = $1', [sectionId]);
-
-    // Run the query against the database
-    const result = await query(text, params);
-
-    // Check if we got any results back
-    if (!result.rows || result.rows.length === 0) {
-      throw new Error('Section not found');
-    }
-
-    // Return just the first (and only) row
-    return result.rows[0];
-  } catch (error) {
-    console.error('Could not get menu section:', error);
-    throw error;
-  }
-};
-
 // ===== GET MENU SECTIONS BY BUFFET VERSION =====
 /**
  * Get menu sections filtered by buffet version ID
@@ -187,6 +150,5 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
 // Make these functions available to the controller
 module.exports = {
   getAllMenuSections,
-  getMenuSectionById,
   getMenuSectionsByBuffetVersion
 };

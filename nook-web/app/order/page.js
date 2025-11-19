@@ -104,43 +104,25 @@ export default function OrderPage() {
         setError(null);
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        console.log('API URL:', apiUrl);
-        console.log('Buffet Version ID:', buffetVersionId);
-
-        // Fetch menu data filtered by buffet version ID
         const menuUrl = `${apiUrl}/api/menu/buffet-version/${buffetVersionId}`;
-        console.log('Fetching from:', menuUrl);
         const menuResponse = await fetch(menuUrl);
-        console.log('Response status:', menuResponse.status);
 
         if (!menuResponse.ok) {
           throw new Error(`HTTP error! status: ${menuResponse.status}`);
         }
         const menuData = await menuResponse.json();
-        console.log('Full menu data response:', menuData);
 
         if (menuData.return_code === 'SUCCESS') {
           const sections = menuData.data || [];
-          console.log('Sections count:', sections.length);
           setMenuSections(sections);
 
           // Extract price per person from the first menu section
-          // The menu API already includes price_per_person from the buffet_versions table
           if (sections.length > 0) {
             const priceValue = sections[0].price_per_person;
-            console.log('Menu section data:', sections[0]);
-            console.log('Price per person from menu API:', priceValue);
-            console.log('Price type:', typeof priceValue);
             if (priceValue !== null && priceValue !== undefined && priceValue !== '') {
               const price = parseFloat(priceValue);
-              console.log('Parsed price:', price);
-              console.log('Setting pricePerPerson to:', price);
               setPricePerPerson(price);
-            } else {
-              console.warn('No price_per_person found in menu section');
             }
-          } else {
-            console.warn('No menu sections found');
           }
 
           // Initialize all items as selected, except Bread items (which start unselected)

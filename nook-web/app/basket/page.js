@@ -28,7 +28,6 @@ export default function BasketPage() {
       const parsed = JSON.parse(data);
       // Handle both array and single object formats
       const ordersList = Array.isArray(parsed) ? parsed : [parsed];
-      console.log('Loaded orders from localStorage:', ordersList);
       setOrders(ordersList);
     }
   }, []);

@@ -40,23 +40,20 @@ function CheckoutContent() {
       }
 
       // Here you would send the order data to your backend
-      const orderData = {
-        orders,
-        cardNumber,
-        cardExpiry,
-        cardCVC,
-        timestamp: new Date().toISOString()
-      };
-
-      console.log('Order data:', orderData);
       // TODO: Send to API endpoint
+      // const orderData = {
+      //   orders,
+      //   cardNumber,
+      //   cardExpiry,
+      //   cardCVC,
+      //   timestamp: new Date().toISOString()
+      // };
 
       // For now, just show success and redirect
       alert('Order confirmed!');
       localStorage.removeItem('basketData');
       router.push('/');
     } catch (error) {
-      console.error('Error confirming order:', error);
       alert('Failed to confirm order');
     } finally {
       setLoading(false);

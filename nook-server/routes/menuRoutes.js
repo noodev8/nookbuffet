@@ -30,25 +30,7 @@ ENDPOINTS:
    }
    Return Codes: SUCCESS, SERVER_ERROR
 
-2. GET /api/menu/formatted
-   Purpose: Retrieve all menu sections in formatted structure for frontend
-   Success Response:
-   {
-     "return_code": "SUCCESS",
-     "message": "Got formatted menu data!",
-     "sections": [
-       {
-         "id": 1,
-         "title": "Sandwiches",
-         "description": "Fresh sandwiches",
-         "image": "url",
-         "items": [...]
-       }
-     ]
-   }
-   Return Codes: SUCCESS, SERVER_ERROR
-
-3. GET /api/menu/buffet-version/:id
+2. GET /api/menu/buffet-version/:id
    Purpose: Retrieve menu sections filtered by buffet version ID
    URL Parameters: id (integer, required) - the buffet version ID
    Success Response:
@@ -68,22 +50,6 @@ ENDPOINTS:
    }
    Return Codes: SUCCESS, INVALID_ID, SERVER_ERROR
 
-4. GET /api/menu/:id
-   Purpose: Retrieve a specific menu section by ID
-   URL Parameters: id (integer, required)
-   Success Response:
-   {
-     "return_code": "SUCCESS",
-     "message": "Found the menu section!",
-     "data": {
-       "id": 1,
-       "name": "Sandwiches",
-       "description": "Fresh sandwiches",
-       "items": [...]
-     }
-   }
-   Return Codes: SUCCESS, INVALID_ID, NOT_FOUND, SERVER_ERROR
-
 =======================================================================================================================================
 */
 
@@ -97,22 +63,9 @@ const menuController = require('../controllers/menuController');
 // When someone visits /api/menu, run the getAllMenuSections function
 router.get('/', menuController.getAllMenuSections);
 
-// ===== ROUTE 2: GET FORMATTED MENU SECTIONS =====
-// When someone visits /api/menu/formatted, run the getFormattedMenuSections function
-// NOTE: This must come BEFORE the /:id route so it doesn't get confused
-// (otherwise /formatted would be treated as an ID)
-router.get('/formatted', menuController.getFormattedMenuSections);
-
-// ===== ROUTE 3: GET MENU SECTIONS BY BUFFET VERSION =====
+// ===== ROUTE 2: GET MENU SECTIONS BY BUFFET VERSION =====
 // When someone visits /api/menu/buffet-version/1 (or any number), run the getMenuSectionsByBuffetVersion function
-// NOTE: This must come BEFORE the /:id route so it doesn't get confused
 router.get('/buffet-version/:id', menuController.getMenuSectionsByBuffetVersion);
-
-// ===== ROUTE 4: GET ONE SPECIFIC MENU SECTION =====
-// When someone visits /api/menu/1 (or any number), run the getMenuSectionById function
-// The :id is a parameter - it can be any number
-// NOTE: This must come AFTER /formatted and /buffet-version so it doesn't interfere
-router.get('/:id', menuController.getMenuSectionById);
 
 // ===== EXPORTS =====
 // Make this router available to server.js
