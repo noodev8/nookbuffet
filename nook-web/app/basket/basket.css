@@ -429,6 +429,17 @@
   transition: all 0.3s ease;
 }
 
+/* Make time select dropdown show more options */
+select.form-input {
+  cursor: pointer;
+}
+
+select.form-input option {
+  background: #2a2a2a;
+  color: white;
+  padding: 0.5rem;
+}
+
 .form-input:focus,
 .form-textarea:focus {
   outline: none;
