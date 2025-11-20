@@ -28,12 +28,13 @@ const createOrder = async (orderData) => {
   try {
     // Start a transaction - this means all queries must succeed or none will
     await client.query('BEGIN');
-    
-    // Generate a unique order number (format: ORD-YYYYMMDD-XXXXX)
-    const date = new Date();
-    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-    const randomNum = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-    const orderNumber = `ORD-${dateStr}-${randomNum}`;
+
+    // Generate a simple sequential order number (format: ORD-001, ORD-002, etc.)
+    // Get the count of existing orders to determine the next number
+    const countQuery = 'SELECT COUNT(*) as count FROM orders';
+    const countResult = await client.query(countQuery);
+    const orderCount = parseInt(countResult.rows[0].count) + 1;
+    const orderNumber = `ORD-${orderCount.toString().padStart(3, '0')}`;
     
     // Insert the main order record
     const orderQuery = `
