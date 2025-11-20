@@ -133,8 +133,68 @@ const createOrder = async (orderData) => {
   }
 };
 
+// ===== GET ALL ORDERS =====
+/**
+ * Gets all orders with all their buffets and items
+ * This is for the admin portal to see all orders
+ *
+ * @returns {array} All orders with complete details
+ */
+const getAllOrders = async () => {
+  const client = await getClient();
+
+  try {
+    // Get all orders sorted by newest first
+    const ordersQuery = `
+      SELECT
+        id, order_number, customer_email, customer_phone,
+        fulfillment_type, fulfillment_address, fulfillment_date, fulfillment_time,
+        total_price, status, payment_status, payment_method, notes,
+        created_at, updated_at
+      FROM orders
+      ORDER BY created_at DESC
+    `;
+
+    const ordersResult = await client.query(ordersQuery);
+    const orders = ordersResult.rows;
+
+    // For each order, get its buffets
+    for (const order of orders) {
+      const buffetsQuery = `
+        SELECT
+          id, buffet_version_id, num_people, price_per_person, subtotal,
+          dietary_info, allergens, notes
+        FROM order_buffets
+        WHERE order_id = $1
+      `;
+
+      const buffetsResult = await client.query(buffetsQuery, [order.id]);
+      order.buffets = buffetsResult.rows;
+
+      // For each buffet, get its items
+      for (const buffet of order.buffets) {
+        const itemsQuery = `
+          SELECT
+            id, menu_item_id, item_name, category_name, quantity
+          FROM order_items
+          WHERE order_buffet_id = $1
+        `;
+
+        const itemsResult = await client.query(itemsQuery, [buffet.id]);
+        buffet.items = itemsResult.rows;
+      }
+    }
+
+    return orders;
+
+  } finally {
+    client.release();
+  }
+};
+
 // Export the functions so other files can use them
 module.exports = {
-  createOrder
+  createOrder,
+  getAllOrders
 };
 

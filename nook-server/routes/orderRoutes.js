@@ -7,7 +7,36 @@ to the right controller to handle.
 
 ENDPOINTS:
 
-1. POST /api/orders
+1. GET /api/orders
+   Purpose: Get all orders with complete details (for admin portal)
+   Success Response:
+   {
+     "return_code": "SUCCESS",
+     "message": "Got all orders!",
+     "data": [
+       {
+         "id": 1,
+         "order_number": "ORD-20240115-12345",
+         "customer_email": "customer@example.com",
+         "customer_phone": "+44 1234 567890",
+         "fulfillment_type": "delivery",
+         "fulfillment_address": "123 Main St, City",
+         "fulfillment_date": "2024-01-15",
+         "fulfillment_time": "12:00",
+         "total_price": 109.00,
+         "status": "pending",
+         "payment_status": "pending",
+         "payment_method": "card",
+         "notes": "Acme Corp",
+         "created_at": "2024-01-15T10:30:00Z",
+         "buffets": [...]
+       }
+     ],
+     "count": 1
+   }
+   Return Codes: SUCCESS, SERVER_ERROR
+
+2. POST /api/orders
    Purpose: Create a new order with buffets and items
    Request Body:
    {
@@ -52,6 +81,11 @@ const router = express.Router();
 
 // Import the order controller
 const orderController = require('../controllers/orderController');
+
+// ===== ROUTE: GET ALL ORDERS =====
+// When someone GETs /api/orders, run the getAllOrders function
+// GET is used because we're just reading data
+router.get('/', orderController.getAllOrders);
 
 // ===== ROUTE: CREATE NEW ORDER =====
 // When someone POSTs to /api/orders, run the createOrder function

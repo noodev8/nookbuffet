@@ -111,8 +111,43 @@ const createOrder = async (req, res) => {
   }
 };
 
+// ===== GET ALL ORDERS =====
+/**
+ * Gets all orders with complete details
+ * This is for the admin portal
+ *
+ * @param {object} req - The request object
+ * @param {object} res - The response object
+ */
+const getAllOrders = async (req, res) => {
+  try {
+    // Ask the model to get all orders from the database
+    const orders = await orderModel.getAllOrders();
+
+    // Send all orders back
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Got all orders!',
+      data: orders,
+      count: orders.length
+    });
+
+  } catch (error) {
+    // Log the error for debugging
+    console.error('Error getting orders:', error);
+
+    // Send error response
+    res.status(500).json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to get orders. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 // Export the functions so routes can use them
 module.exports = {
-  createOrder
+  createOrder,
+  getAllOrders
 };
 
