@@ -831,11 +831,22 @@
     text-transform: uppercase;
   }
 
-  /* Customer section - show business details */
+  /* Customer section - show only business name */
   .customer-section {
-    display: block;
-    padding-bottom: 0.3cm;
-    border-bottom: 1px solid #ddd;
+    display: block !important;
+    padding-bottom: 0.4cm !important;
+    border-bottom: 2px solid #000 !important;
+    margin-bottom: 0.5cm !important;
+  }
+
+  .detail-section h3 {
+    font-size: 12pt;
+    color: #000;
+    margin: 0 0 0.25cm 0;
+    font-weight: 700;
+    border: none;
+    padding: 0;
+    text-transform: uppercase;
   }
 
   .info-cards {
@@ -850,7 +861,13 @@
     border: none;
     padding: 0;
     background: none;
-    margin: 0 0 0.15cm 0;
+    margin: 0;
+    display: none; /* Hide all by default */
+  }
+
+  /* Show only business name */
+  .info-card:first-child {
+    display: block !important;
   }
 
   .info-card:hover {
@@ -863,22 +880,14 @@
   }
 
   .info-label {
-    font-weight: 700;
-    color: #000;
-    font-size: 10pt;
-    display: inline;
-    text-transform: uppercase;
-  }
-
-  .info-label:after {
-    content: ": ";
+    display: none; /* Hide the "BUSINESS:" label */
   }
 
   .info-value {
     color: #000;
-    font-size: 10pt;
-    display: inline;
-    font-weight: normal;
+    font-size: 12pt;
+    display: block;
+    font-weight: 700;
   }
 
   /* Buffet sections */
