@@ -145,9 +145,54 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+// ===== UPDATE ORDER STATUS =====
+/**
+ * Updates the status of an order
+ * This is for marking orders as completed in the admin portal
+ *
+ * @param {object} req - The request object (contains orderId in params and status in body)
+ * @param {object} res - The response object
+ */
+const updateOrderStatus = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const { status } = req.body;
+
+    // Validate status
+    if (!status || !['pending', 'completed', 'cancelled'].includes(status)) {
+      return res.status(400).json({
+        return_code: 'VALIDATION_ERROR',
+        message: 'Valid status is required (pending, completed, or cancelled)'
+      });
+    }
+
+    // Ask the model to update the order status
+    const updatedOrder = await orderModel.updateOrderStatus(orderId, status);
+
+    // Send success response
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Order status updated successfully!',
+      data: updatedOrder
+    });
+
+  } catch (error) {
+    // Log the error for debugging
+    console.error('Error updating order status:', error);
+
+    // Send error response
+    res.status(500).json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to update order status. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 // Export the functions so routes can use them
 module.exports = {
   createOrder,
-  getAllOrders
+  getAllOrders,
+  updateOrderStatus
 };
 

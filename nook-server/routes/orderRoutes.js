@@ -92,6 +92,11 @@ router.get('/', orderController.getAllOrders);
 // POST is used because we're creating new data
 router.post('/', orderController.createOrder);
 
+// ===== ROUTE: UPDATE ORDER STATUS =====
+// When someone PATCHes /api/orders/:id/status, run the updateOrderStatus function
+// PATCH is used because we're updating existing data
+router.patch('/:id/status', orderController.updateOrderStatus);
+
 // Export the router so server.js can use it
 module.exports = router;
 

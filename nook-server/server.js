@@ -32,10 +32,10 @@ const HOST = process.env.SERVER_HOST || 'localhost';
 // Without this, your website couldn't make requests to the server from a different domain
 const corsOrigins = process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['*'];
 app.use(cors({
-  origin: corsOrigins,                                    // Which websites are allowed to talk to us
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Which HTTP methods are allowed
-  allowedHeaders: ['Content-Type', 'Authorization'],     // Which headers are allowed
-  credentials: true                                       // Allow cookies and auth headers
+  origin: corsOrigins,                                           // Which websites are allowed to talk to us
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // Which HTTP methods are allowed
+  allowedHeaders: ['Content-Type', 'Authorization'],             // Which headers are allowed
+  credentials: true                                              // Allow cookies and auth headers
 }));
 
 // ===== MIDDLEWARE SETUP =====

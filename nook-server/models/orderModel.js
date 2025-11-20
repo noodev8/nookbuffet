@@ -144,7 +144,7 @@ const getAllOrders = async () => {
   const client = await getClient();
 
   try {
-    // Get all orders sorted by newest first
+    // Get only pending orders (not completed) sorted by fulfillment date
     const ordersQuery = `
       SELECT
         id, order_number, customer_email, customer_phone,
@@ -152,7 +152,8 @@ const getAllOrders = async () => {
         total_price, status, payment_status, payment_method, notes,
         created_at, updated_at
       FROM orders
-      ORDER BY created_at DESC
+      WHERE status != 'completed'
+      ORDER BY fulfillment_date ASC, created_at DESC
     `;
 
     const ordersResult = await client.query(ordersQuery);
@@ -192,9 +193,42 @@ const getAllOrders = async () => {
   }
 };
 
+// ===== UPDATE ORDER STATUS =====
+/**
+ * Updates the status of an order to 'completed'
+ * This marks the order as done so it won't show in the admin portal
+ *
+ * @param {number} orderId - The ID of the order to update
+ * @returns {object} The updated order
+ */
+const updateOrderStatus = async (orderId, status) => {
+  const client = await getClient();
+
+  try {
+    const query = `
+      UPDATE orders
+      SET status = $1, updated_at = NOW()
+      WHERE id = $2
+      RETURNING id, order_number, status, updated_at
+    `;
+
+    const result = await client.query(query, [status, orderId]);
+
+    if (result.rows.length === 0) {
+      throw new Error('Order not found');
+    }
+
+    return result.rows[0];
+
+  } finally {
+    client.release();
+  }
+};
+
 // Export the functions so other files can use them
 module.exports = {
   createOrder,
-  getAllOrders
+  getAllOrders,
+  updateOrderStatus
 };
 
