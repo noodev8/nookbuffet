@@ -282,6 +282,14 @@
   border-top: 2px solid #e8ecf1;
 }
 
+.order-details.collapsed {
+  display: none;
+}
+
+.order-details.expanded {
+  display: block;
+}
+
 .detail-section {
   margin-bottom: 1.5rem;
   padding: 1.75rem;
@@ -691,6 +699,315 @@
 
   .detail-section h3 {
     font-size: 1.1rem;
+  }
+}
+
+/* ========================================
+   PRINT BUTTON
+   ======================================== */
+.print-button {
+  background: white;
+  color: #667eea;
+  border: 2px solid white;
+  padding: 0.6rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 1rem;
+}
+
+.print-button:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ========================================
+   PRINT STYLES - ONE ORDER PER PAGE
+   ======================================== */
+@media print {
+  /* Hide everything except essential info */
+  .admin-header,
+  .mark-done-btn,
+  .print-button,
+  .expand-icon,
+  .order-badges,
+  .order-header-left,
+  .order-header-right,
+  .order-dates,
+  .fulfillment-section,
+  .buffet-summary {
+    display: none !important;
+  }
+
+  /* Reset page styles */
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  .admin-container {
+    padding: 0;
+    background: white;
+  }
+
+  .orders-list {
+    display: block;
+  }
+
+  /* Each order card gets its own page */
+  .order-card {
+    page-break-after: always;
+    page-break-inside: avoid;
+    margin: 0;
+    padding: 0.8cm;
+    box-shadow: none;
+    border: none;
+    background: white;
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  /* Last order doesn't need page break */
+  .order-card:last-child {
+    page-break-after: auto;
+  }
+
+  /* Force order details to be visible */
+  .order-details {
+    display: block !important;
+    margin-top: 0 !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    border-top: none !important;
+  }
+
+  /* Order header - just show order number */
+  .order-header {
+    border: none;
+    padding: 0;
+    margin-bottom: 0.5cm;
+  }
+
+  .order-header-main {
+    display: block;
+    cursor: default;
+  }
+
+  .order-number-section {
+    margin: 0;
+  }
+
+  .order-number {
+    font-size: 16pt;
+    color: #000;
+    margin: 0 0 0.6cm 0;
+    font-weight: 700;
+  }
+
+  /* All detail sections - no cards */
+  .detail-section {
+    margin-bottom: 0.5cm !important;
+    padding: 0 !important;
+    background: none !important;
+    border: none !important;
+    border-left: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .detail-section h3 {
+    font-size: 12pt;
+    color: #000;
+    margin: 0 0 0.25cm 0;
+    font-weight: 700;
+    border: none;
+    padding: 0;
+    text-transform: uppercase;
+  }
+
+  /* Customer section - show business details */
+  .customer-section {
+    display: block;
+    padding-bottom: 0.3cm;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .info-cards {
+    display: block;
+    margin: 0;
+    padding: 0;
+    grid-template-columns: none;
+    gap: 0;
+  }
+
+  .info-card {
+    border: none;
+    padding: 0;
+    background: none;
+    margin: 0 0 0.15cm 0;
+  }
+
+  .info-card:hover {
+    background: none;
+    border: none;
+  }
+
+  .info-content {
+    display: block;
+  }
+
+  .info-label {
+    font-weight: 700;
+    color: #000;
+    font-size: 10pt;
+    display: inline;
+    text-transform: uppercase;
+  }
+
+  .info-label:after {
+    content: ": ";
+  }
+
+  .info-value {
+    color: #000;
+    font-size: 10pt;
+    display: inline;
+    font-weight: normal;
+  }
+
+  /* Buffet sections */
+  .buffet-section {
+    margin-bottom: 0.5cm;
+    padding-top: 0.3cm;
+  }
+
+  .buffet-section h3 {
+    font-size: 13pt;
+    color: #000;
+    margin: 0 0 0.3cm 0;
+    font-weight: 700;
+  }
+
+  /* Show only allergens and dietary info */
+  .buffet-notes {
+    margin: 0 0 0.4cm 0;
+    padding-bottom: 0.3cm;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .note-item {
+    border: none;
+    padding: 0;
+    margin: 0 0 0.15cm 0;
+    background: none;
+    border-left: none;
+  }
+
+  .note-item div {
+    display: block;
+  }
+
+  .note-label {
+    font-weight: 700;
+    color: #000;
+    font-size: 10pt;
+    display: inline;
+    text-transform: uppercase;
+  }
+
+  .note-label:after {
+    content: ": ";
+  }
+
+  .note-value {
+    color: #000;
+    font-size: 10pt;
+    display: inline;
+    font-weight: normal;
+  }
+
+  /* Hide general notes, only show dietary and allergens */
+  .general-note {
+    display: none !important;
+  }
+
+  /* Menu items - simple list */
+  .menu-items {
+    margin-top: 0.3cm;
+    padding: 0;
+    border: none;
+  }
+
+  .menu-items h4 {
+    display: none;
+  }
+
+  .items-by-category {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5cm;
+    column-gap: 0.8cm;
+  }
+
+  .category-group {
+    margin: 0 0 0.3cm 0 !important;
+    page-break-inside: avoid;
+    background: none !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  .category-group:hover {
+    background: none !important;
+    box-shadow: none !important;
+  }
+
+  .category-title {
+    font-size: 10pt;
+    color: #000;
+    font-weight: 700;
+    margin: 0 0 0.15cm 0;
+    text-transform: uppercase;
+  }
+
+  .category-dot {
+    display: none;
+  }
+
+  .items-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0 0.3cm;
+  }
+
+  .items-list li {
+    color: #000;
+    font-size: 9pt;
+    margin: 0 0 0.08cm 0;
+    font-weight: normal;
+    line-height: 1.4;
+    padding: 0 !important;
+    border: none !important;
+    border-bottom: none !important;
+  }
+
+  .items-list li:hover {
+    color: #000 !important;
+    padding-left: 0 !important;
+  }
+
+  .items-list li:before {
+    content: "- ";
+    color: #000;
+    font-weight: normal;
   }
 }
 

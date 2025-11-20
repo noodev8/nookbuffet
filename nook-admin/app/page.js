@@ -139,6 +139,10 @@ export default function AdminPage() {
     }
   };
 
+  const handlePrintOrders = () => {
+    window.print();
+  };
+
   return (
     <div className="admin-container">
       <header className="admin-header">
@@ -154,6 +158,9 @@ export default function AdminPage() {
             <span className="stat-label">Revenue</span>
             <span className="stat-value">£{calculateTotalRevenue().toFixed(2)}</span>
           </div>
+          <button className="print-button" onClick={handlePrintOrders}>
+            Print Orders
+          </button>
         </div>
       </header>
 
@@ -210,8 +217,7 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              {expandedOrders[order.id] && (
-                <div className="order-details">
+              <div className={`order-details ${expandedOrders[order.id] ? 'expanded' : 'collapsed'}`}>
                   {/* Customer Info */}
                   <div className="detail-section customer-section">
                     <h3>Customer Details</h3>
@@ -360,8 +366,7 @@ export default function AdminPage() {
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
           ))
         )}
       </div>
