@@ -247,17 +247,49 @@
 }
 
 /* ========================================
-   MARK AS DONE BUTTON
+   ORDER ACTIONS
    ======================================== */
-.mark-done-btn {
+.order-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Print Single Button */
+.print-single-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%);
+  background: #3b82f6;
   color: white;
   border: none;
   border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.print-single-btn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.print-single-btn:active {
+  transform: translateY(0);
+}
+
+/* Mark as Done Button */
+.mark-done-btn {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
   transition: all 0.2s ease;
   white-space: nowrap;
   box-shadow: 0 2px 4px rgba(46, 125, 50, 0.2);
@@ -734,6 +766,8 @@
   .admin-header,
   .mark-done-btn,
   .print-button,
+  .print-single-btn,
+  .order-actions,
   .expand-icon,
   .order-badges,
   .order-header-left,
@@ -1017,6 +1051,22 @@
     content: "- ";
     color: #000;
     font-weight: normal;
+  }
+
+}
+
+/* ========================================
+   SINGLE ORDER PRINT
+   ======================================== */
+@media print {
+  /* When printing a single order, hide all orders by default */
+  body.print-single-order .order-card {
+    display: none !important;
+  }
+
+  /* Show only the order marked for printing */
+  body.print-single-order .order-card.print-this-order {
+    display: block !important;
   }
 }
 

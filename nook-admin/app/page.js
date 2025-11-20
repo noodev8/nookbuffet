@@ -143,6 +143,27 @@ export default function AdminPage() {
     window.print();
   };
 
+  const handlePrintSingleOrder = (orderId) => {
+    // Add a class to the body to indicate single order print
+    document.body.classList.add('print-single-order');
+
+    // Add a class to the specific order card to show it
+    const orderCard = document.querySelector(`[data-order-id="${orderId}"]`);
+    if (orderCard) {
+      orderCard.classList.add('print-this-order');
+    }
+
+    window.print();
+
+    // Remove the classes after printing
+    setTimeout(() => {
+      document.body.classList.remove('print-single-order');
+      if (orderCard) {
+        orderCard.classList.remove('print-this-order');
+      }
+    }, 100);
+  };
+
   return (
     <div className="admin-container">
       <header className="admin-header">
@@ -171,7 +192,7 @@ export default function AdminPage() {
           </div>
         ) : (
           orders.map((order) => (
-            <div key={order.id} className="order-card">
+            <div key={order.id} className="order-card" data-order-id={order.id}>
               <div className="order-header">
                 <div className="order-header-main" onClick={() => toggleOrder(order.id)}>
                   <div className="order-header-left">
@@ -206,15 +227,26 @@ export default function AdminPage() {
                     </span>
                   </div>
                 </div>
-                <button
-                  className="mark-done-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    markOrderAsDone(order.id);
-                  }}
-                >
-                  Mark as Done
-                </button>
+                <div className="order-actions">
+                  <button
+                    className="print-single-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrintSingleOrder(order.id);
+                    }}
+                  >
+                    Print
+                  </button>
+                  <button
+                    className="mark-done-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      markOrderAsDone(order.id);
+                    }}
+                  >
+                    Mark as Done
+                  </button>
+                </div>
               </div>
 
               <div className={`order-details ${expandedOrders[order.id] ? 'expanded' : 'collapsed'}`}>
