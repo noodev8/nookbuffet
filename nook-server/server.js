@@ -16,6 +16,7 @@ require('dotenv').config();          // Load environment variables from .env fil
 const menuRoutes = require('./routes/menuRoutes');              // Routes for menu data
 const contactRoutes = require('./routes/contactRoutes');        // Routes for contact form emails
 const buffetVersionRoutes = require('./routes/buffetVersionRoutes'); // Routes for buffet pricing/versions
+const orderRoutes = require('./routes/orderRoutes');            // Routes for order creation
 
 // Create the Express app - this is the main server object
 const app = express();
@@ -51,6 +52,7 @@ app.use(express.urlencoded({ extended: true })); // Parse form data from HTML fo
 app.use('/api/menu', menuRoutes);                    // Menu endpoints
 app.use('/api/contact', contactRoutes);              // Contact form endpoints
 app.use('/api/buffet-versions', buffetVersionRoutes); // Buffet version endpoints
+app.use('/api/orders', orderRoutes);                 // Order endpoints
 
 // ===== HEALTH CHECK ENDPOINT =====
 // This is a simple endpoint that just tells you the server is running

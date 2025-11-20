@@ -39,22 +39,50 @@ function CheckoutContent() {
         return;
       }
 
-      // Here you would send the order data to your backend
-      // TODO: Send to API endpoint
-      // const orderData = {
-      //   orders,
-      //   cardNumber,
-      //   cardExpiry,
-      //   cardCVC,
-      //   timestamp: new Date().toISOString()
-      // };
+      // Prepare order data for API
+      const orderData = {
+        email: orders[0]?.email || '',
+        phone: orders[0]?.phone || '',
+        businessName: orders[0]?.businessName || '',
+        address: orders[0]?.address || '',
+        fulfillmentType: orders[0]?.fulfillmentType || 'delivery',
+        deliveryDate: orders[0]?.deliveryDate || '',
+        deliveryTime: orders[0]?.deliveryTime || '',
+        totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
+        buffets: orders.map(order => ({
+          buffetVersionId: order.buffetVersionId,
+          numPeople: order.numPeople,
+          pricePerPerson: order.pricePerPerson,
+          totalPrice: order.totalPrice,
+          items: order.items,
+          notes: order.notes || '',
+          dietaryInfo: order.dietaryInfo || '',
+          allergens: order.allergens || ''
+        }))
+      };
 
-      // For now, just show success and redirect
-      alert('Order confirmed!');
-      localStorage.removeItem('basketData');
-      router.push('/');
+      // Send order to API
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      const response = await fetch(`${apiUrl}/api/orders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+
+      if (result.return_code === 'SUCCESS') {
+        alert(`Order confirmed! Your order number is ${result.data.orderNumber}`);
+        localStorage.removeItem('basketData');
+        router.push('/');
+      } else {
+        alert(`Failed to create order: ${result.message}`);
+      }
     } catch (error) {
-      alert('Failed to confirm order');
+      console.error('Error creating order:', error);
+      alert('Failed to confirm order. Please try again.');
     } finally {
       setLoading(false);
     }

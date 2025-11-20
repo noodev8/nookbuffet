@@ -1,0 +1,140 @@
+/*
+=======================================================================================================================================
+ORDER MODEL - Database queries for orders
+=======================================================================================================================================
+Models are like the "database talkers" - they know how to ask the database for information and save stuff.
+This model handles all order-related database operations.
+
+The order structure has 3 tables:
+1. orders - Main order info (customer, fulfillment, total price)
+2. order_buffets - Each buffet in the order (people count, dietary info, etc.)
+3. order_items - Individual menu items selected for each buffet
+=======================================================================================================================================
+*/
+
+const { getClient } = require('../database');
+
+// ===== CREATE A NEW ORDER =====
+/**
+ * Creates a complete order with all buffets and items
+ * This is a transaction - either everything saves or nothing does (keeps data consistent)
+ * 
+ * @param {object} orderData - The complete order data
+ * @returns {object} The created order with its ID
+ */
+const createOrder = async (orderData) => {
+  const client = await getClient();
+  
+  try {
+    // Start a transaction - this means all queries must succeed or none will
+    await client.query('BEGIN');
+    
+    // Generate a unique order number (format: ORD-YYYYMMDD-XXXXX)
+    const date = new Date();
+    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+    const randomNum = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+    const orderNumber = `ORD-${dateStr}-${randomNum}`;
+    
+    // Insert the main order record
+    const orderQuery = `
+      INSERT INTO orders (
+        order_number, customer_email, customer_phone,
+        fulfillment_type, fulfillment_address, fulfillment_date, fulfillment_time,
+        total_price, status, payment_status, payment_method, notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING id, order_number, created_at
+    `;
+
+    const orderValues = [
+      orderNumber,
+      orderData.email,
+      orderData.phone,
+      orderData.fulfillmentType,
+      orderData.address,
+      orderData.deliveryDate || null,
+      orderData.deliveryTime || null,
+      orderData.totalPrice,
+      'pending',
+      'pending',
+      'card', // For now, always card
+      orderData.businessName || null
+    ];
+    
+    const orderResult = await client.query(orderQuery, orderValues);
+    const orderId = orderResult.rows[0].id;
+    
+    // Now insert each buffet in the order
+    for (const buffet of orderData.buffets) {
+      const buffetQuery = `
+        INSERT INTO order_buffets (
+          order_id, buffet_version_id, num_people, 
+          price_per_person, subtotal, dietary_info, allergens, notes
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id
+      `;
+      
+      const buffetValues = [
+        orderId,
+        buffet.buffetVersionId,
+        buffet.numPeople,
+        buffet.pricePerPerson,
+        buffet.totalPrice,
+        buffet.dietaryInfo || null,
+        buffet.allergens || null,
+        buffet.notes || null
+      ];
+      
+      const buffetResult = await client.query(buffetQuery, buffetValues);
+      const buffetId = buffetResult.rows[0].id;
+      
+      // Now insert each menu item for this buffet
+      for (const itemId of buffet.items) {
+        // Get item details from menu_items table
+        const itemDetailsQuery = `
+          SELECT mi.name, c.name as category_name
+          FROM menu_items mi
+          JOIN categories c ON mi.category_id = c.id
+          WHERE mi.id = $1
+        `;
+        const itemDetails = await client.query(itemDetailsQuery, [itemId]);
+        
+        if (itemDetails.rows.length > 0) {
+          const itemQuery = `
+            INSERT INTO order_items (
+              order_buffet_id, menu_item_id, item_name, category_name, quantity
+            ) VALUES ($1, $2, $3, $4, $5)
+          `;
+          
+          const itemValues = [
+            buffetId,
+            itemId,
+            itemDetails.rows[0].name,
+            itemDetails.rows[0].category_name,
+            1
+          ];
+          
+          await client.query(itemQuery, itemValues);
+        }
+      }
+    }
+    
+    // Commit the transaction - save everything
+    await client.query('COMMIT');
+    
+    return orderResult.rows[0];
+    
+  } catch (error) {
+    // If anything goes wrong, rollback - undo everything
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    // Always release the database connection back to the pool
+    client.release();
+  }
+};
+
+// Export the functions so other files can use them
+module.exports = {
+  createOrder
+};
+
