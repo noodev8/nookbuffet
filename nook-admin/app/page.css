@@ -208,18 +208,18 @@
 }
 
 .badge-delivery {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #e8eaf6;
+  color: #5e35b1;
 }
 
 .badge-collection {
-  background: #f3e5f5;
-  color: #7b1fa2;
+  background: #e8eaf6;
+  color: #5e35b1;
 }
 
 .badge-people {
-  background: #fff3e0;
-  color: #e65100;
+  background: #e8eaf6;
+  color: #5e35b1;
 }
 
 .order-header-right {
@@ -231,7 +231,7 @@
 .order-total {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #2e7d32;
+  color: #5e35b1;
   font-family: 'Oswald', sans-serif;
 }
 
@@ -258,7 +258,7 @@
 /* Print Single Button */
 .print-single-btn {
   padding: 0.75rem 1.5rem;
-  background: #3b82f6;
+  background: #7e57c2;
   color: white;
   border: none;
   border-radius: 8px;
@@ -267,13 +267,13 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 2px 4px rgba(126, 87, 194, 0.2);
 }
 
 .print-single-btn:hover {
-  background: #2563eb;
+  background: #673ab7;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 8px rgba(126, 87, 194, 0.3);
 }
 
 .print-single-btn:active {
@@ -283,22 +283,22 @@
 /* Mark as Done Button */
 .mark-done-btn {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #2e7d32 0%, #388e3c 100%);
+  background: #2e7d32;
   color: white;
   border: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   font-size: 0.95rem;
   transition: all 0.2s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(46, 125, 50, 0.2);
+  box-shadow: 0 2px 4px rgba(46, 125, 50, 0.3);
 }
 
 .mark-done-btn:hover {
-  background: linear-gradient(135deg, #388e3c 0%, #43a047 100%);
+  background: #1b5e20;
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 4px 8px rgba(46, 125, 50, 0.4);
 }
 
 .mark-done-btn:active {
