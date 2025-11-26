@@ -194,10 +194,14 @@ export default function AdminPage() {
     router.push('/login');
   };
 
+  const goToMenuManagement = () => {
+    router.push('/menu');
+  };
+
   return (
     <div className="admin-container">
       <header className="admin-header">
-        <div className="header-content">
+        <div className="header-top">
           <h1>the little nook buffet</h1>
           {user && (
             <div className="user-info">
@@ -206,20 +210,32 @@ export default function AdminPage() {
             </div>
           )}
         </div>
-        <div className="header-stats">
+
+        <nav className="main-nav">
+          <button className="nav-item active">Orders</button>
+          {user && (user.role === 'admin' || user.role === 'manager') && (
+            <button className="nav-item" onClick={goToMenuManagement}>Menu Items</button>
+          )}
+        </nav>
+      </header>
+
+      <div className="page-header">
+        <div className="page-stats">
           <div className="stat-item">
-            <span className="stat-label">Orders</span>
+            <span className="stat-label">Total Orders</span>
             <span className="stat-value">{orders.length}</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">Revenue</span>
             <span className="stat-value">£{calculateTotalRevenue().toFixed(2)}</span>
           </div>
-          <button className="print-button" onClick={handlePrintOrders}>
+        </div>
+        <div className="page-actions">
+          <button className="action-button" onClick={handlePrintOrders}>
             Print Orders
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="orders-list">
         {orders.length === 0 ? (

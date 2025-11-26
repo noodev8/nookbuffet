@@ -12,17 +12,21 @@
    ======================================== */
 .admin-header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 1.25rem 2rem;
+  padding: 2rem 2rem 0 2rem;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
   margin-bottom: 2rem;
   color: white;
+}
+
+.header-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 2rem;
 }
 
-.header-content h1 {
+.header-top h1 {
   font-family: 'Oswald', sans-serif;
   font-size: 1.5rem;
   font-weight: 600;
@@ -34,7 +38,6 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  margin-top: 0.5rem;
   font-size: 0.9rem;
   opacity: 0.95;
 }
@@ -48,21 +51,73 @@
   font-style: italic;
 }
 
-.header-stats {
+/* ========================================
+   MAIN NAVIGATION
+   ======================================== */
+.main-nav {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-item {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.nav-item:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item.active {
+  color: white;
+  border-bottom-color: white;
+}
+
+/* ========================================
+   PAGE HEADER (SUB-NAVIGATION AREA)
+   ======================================== */
+.page-header {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-stats {
   display: flex;
   gap: 2rem;
+  align-items: center;
+}
+
+.page-actions {
+  display: flex;
+  gap: 1rem;
   align-items: center;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .stat-label {
   font-size: 0.85rem;
-  opacity: 0.9;
+  color: #666;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -73,6 +128,7 @@
   font-weight: 700;
   font-family: 'Oswald', sans-serif;
   margin-top: 0.25rem;
+  color: #333;
 }
 
 /* ========================================
@@ -646,19 +702,49 @@
   }
 
   .admin-header {
-    padding: 1rem;
+    padding: 1rem 1rem 0 1rem;
+  }
+
+  .header-top {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+    margin-bottom: 1.5rem;
   }
 
-  .header-content h1 {
+  .header-top h1 {
     font-size: 1.25rem;
   }
 
-  .header-stats {
+  .main-nav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-item {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+    padding: 1rem;
+  }
+
+  .page-stats {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .page-actions {
+    width: 100%;
+  }
+
+  .action-button {
+    width: 100%;
   }
 
   .stat-item {
@@ -761,13 +847,13 @@
 }
 
 /* ========================================
-   PRINT BUTTON
+   ACTION BUTTONS
    ======================================== */
-.print-button {
-  background: white;
-  color: #667eea;
-  border: 2px solid white;
-  padding: 0.6rem 1.5rem;
+.action-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.95rem;
@@ -775,13 +861,11 @@
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-left: 1rem;
 }
 
-.print-button:hover {
-  background: rgba(255, 255, 255, 0.9);
+.action-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 /* ========================================
@@ -821,8 +905,9 @@
 @media print {
   /* Hide everything except essential info */
   .admin-header,
+  .page-header,
   .mark-done-btn,
-  .print-button,
+  .action-button,
   .logout-button-bottom,
   .print-single-btn,
   .order-actions,

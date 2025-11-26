@@ -95,9 +95,102 @@ const getMenuSectionsByBuffetVersion = async (req, res) => {
   }
 };
 
+// ===== GET ALL MENU ITEMS FOR MANAGEMENT =====
+/**
+ * Get all menu items for admin management
+ * This is called when someone visits /api/menu/manage
+ *
+ * Returns all menu items with their stock status for the admin panel.
+ * Only accessible by admin and manager roles.
+ *
+ * @param {object} req - The request object
+ * @param {object} res - The response object
+ */
+const getAllMenuItemsForManagement = async (req, res) => {
+  try {
+    // Get all menu items from the database
+    const items = await menuModel.getAllMenuItemsForManagement();
+
+    // Send the data back
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Got all menu items for management',
+      data: items,
+      count: items.length
+    });
+
+  } catch (error) {
+    console.error('Error getting menu items for management:', error);
+    res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Could not get menu items for management'
+    });
+  }
+};
+
+// ===== UPDATE MENU ITEM STOCK STATUS =====
+/**
+ * Update the stock status of a menu item
+ * This is called when someone makes a PATCH request to /api/menu/manage/:id
+ *
+ * Updates whether an item is in stock or out of stock.
+ * Only accessible by admin and manager roles.
+ *
+ * @param {object} req - The request object (contains item ID and new status)
+ * @param {object} res - The response object
+ */
+const updateMenuItemStockStatus = async (req, res) => {
+  try {
+    const itemId = req.params.id;
+    const { is_active } = req.body;
+
+    // Validate input
+    if (!itemId || isNaN(itemId)) {
+      return res.json({
+        return_code: 'INVALID_ID',
+        message: 'Please provide a valid menu item ID'
+      });
+    }
+
+    if (typeof is_active !== 'boolean') {
+      return res.json({
+        return_code: 'INVALID_DATA',
+        message: 'is_active must be a boolean value'
+      });
+    }
+
+    // Update the item in the database
+    const updatedItem = await menuModel.updateMenuItemStockStatus(itemId, is_active);
+
+    // Send success response
+    res.json({
+      return_code: 'SUCCESS',
+      message: `Menu item ${is_active ? 'marked as in stock' : 'marked as out of stock'}`,
+      data: updatedItem
+    });
+
+  } catch (error) {
+    console.error('Error updating menu item stock status:', error);
+
+    if (error.message === 'Menu item not found') {
+      return res.json({
+        return_code: 'NOT_FOUND',
+        message: 'Menu item not found'
+      });
+    }
+
+    res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Could not update menu item stock status'
+    });
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the routes file
 module.exports = {
   getAllMenuSections,
-  getMenuSectionsByBuffetVersion
+  getMenuSectionsByBuffetVersion,
+  getAllMenuItemsForManagement,
+  updateMenuItemStockStatus
 };

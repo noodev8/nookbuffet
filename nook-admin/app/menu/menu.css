@@ -1,0 +1,365 @@
+/* ========================================
+   MENU MANAGEMENT PAGE
+   ======================================== */
+
+.menu-management-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  padding: 2rem;
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+.menu-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem 2rem 0 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  margin-bottom: 2rem;
+  color: white;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.header-top h1 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  text-transform: lowercase;
+}
+
+.user-info {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+
+.user-name {
+  font-weight: 600;
+}
+
+.user-role {
+  opacity: 0.85;
+  font-style: italic;
+}
+
+/* ========================================
+   MAIN NAVIGATION
+   ======================================== */
+.main-nav {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-item {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.nav-item:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item.active {
+  color: white;
+  border-bottom-color: white;
+}
+
+/* ========================================
+   PAGE HEADER
+   ======================================== */
+.page-header {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   FILTER SECTION
+   ======================================== */
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter-section label {
+  font-weight: 600;
+  color: #333;
+}
+
+.category-filter {
+  padding: 0.6rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.category-filter:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* ========================================
+   MENU ITEMS GRID
+   ======================================== */
+.menu-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.menu-item-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 3px solid transparent;
+}
+
+.menu-item-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.menu-item-card.out-of-stock {
+  border-color: #ff6b6b;
+  opacity: 0.85;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.item-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+  flex: 1;
+}
+
+.category-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.item-description {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.item-dietary {
+  color: #4caf50;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0.5rem 0;
+}
+
+.item-allergens {
+  color: #ff9800;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin: 0.5rem 0;
+}
+
+/* ========================================
+   ITEM ACTIONS
+   ======================================== */
+.item-actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.stock-toggle {
+  width: 100%;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stock-toggle.in-stock {
+  background: #4caf50;
+  color: white;
+}
+
+.stock-toggle.in-stock:hover {
+  background: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.stock-toggle.out-of-stock {
+  background: #ff6b6b;
+  color: white;
+}
+
+.stock-toggle.out-of-stock:hover {
+  background: #ff5252;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+/* ========================================
+   LOADING & ERROR STATES
+   ======================================== */
+.loading,
+.error,
+.empty-state {
+  background: white;
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.loading {
+  color: #667eea;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.error {
+  color: #ff6b6b;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.empty-state {
+  color: #999;
+  font-size: 1.1rem;
+}
+
+/* ========================================
+   LOGOUT BUTTON
+   ======================================== */
+.logout-button-bottom {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  z-index: 1000;
+}
+
+.logout-button-bottom:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+}
+
+.logout-button-bottom:active {
+  transform: translateY(-1px);
+}
+
+/* ========================================
+   RESPONSIVE DESIGN
+   ======================================== */
+@media (max-width: 768px) {
+  .menu-management-container {
+    padding: 1rem;
+  }
+
+  .menu-header {
+    padding: 1rem 1rem 0 1rem;
+  }
+
+  .header-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .header-top h1 {
+    font-size: 1.25rem;
+  }
+
+  .main-nav {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .nav-item {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .page-header {
+    padding: 1rem;
+  }
+
+  .filter-section {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .category-filter {
+    width: 100%;
+  }
+
+  .menu-items-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .logout-button-bottom {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}
+

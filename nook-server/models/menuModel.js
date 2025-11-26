@@ -146,9 +146,73 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
   }
 };
 
+// ===== GET ALL MENU ITEMS FOR MANAGEMENT =====
+/**
+ * Get ALL menu items across all categories for admin management
+ *
+ * This returns every menu item with its category info, regardless of is_active status.
+ * Used by the admin panel to manage stock status.
+ *
+ * @returns {Promise<array>} Array of all menu items with category info
+ */
+const getAllMenuItemsForManagement = async () => {
+  try {
+    const result = await query(`
+      SELECT
+        mi.id,
+        mi.name,
+        mi.description,
+        mi.is_active,
+        mi.allergens,
+        mi.dietary_info,
+        c.id as category_id,
+        c.name as category_name
+      FROM menu_items mi
+      JOIN categories c ON mi.category_id = c.id
+      ORDER BY c.position, c.name, mi.name
+    `);
+
+    return result.rows;
+  } catch (error) {
+    console.error('Could not get menu items for management:', error);
+    throw new Error('Failed to get menu items for management');
+  }
+};
+
+// ===== UPDATE MENU ITEM STOCK STATUS =====
+/**
+ * Update the is_active (stock status) of a menu item
+ *
+ * @param {number} itemId - The menu item ID to update
+ * @param {boolean} isActive - The new stock status (true = in stock, false = out of stock)
+ * @returns {Promise<object>} The updated menu item
+ */
+const updateMenuItemStockStatus = async (itemId, isActive) => {
+  try {
+    const result = await query(
+      `UPDATE menu_items
+       SET is_active = $1
+       WHERE id = $2
+       RETURNING id, name, is_active`,
+      [isActive, itemId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Menu item not found');
+    }
+
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not update menu item stock status:', error);
+    throw error;
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the controller
 module.exports = {
   getAllMenuSections,
-  getMenuSectionsByBuffetVersion
+  getMenuSectionsByBuffetVersion,
+  getAllMenuItemsForManagement,
+  updateMenuItemStockStatus
 };
