@@ -257,6 +257,51 @@ export default function OrderPage() {
                         )}
                       </div>
 
+                      {/* Show bread options at the top of Sandwiches section for kids buffet */}
+                      {section.name === 'Sandwiches' && (() => {
+                        const breadSection = menuSections.find(s => s.name === 'Bread');
+                        if (breadSection && breadSection.items && breadSection.items.length > 0) {
+                          return (
+                            <div className="bread-inline-section">
+                              <div className="bread-inline-header">
+                                <strong>{breadSection.name}:</strong>
+                              </div>
+                              <div className="bread-inline-options">
+                                {breadSection.items.map((item) => {
+                                  const isSelected = selectedItems[item.id] === true;
+                                  return (
+                                    <label
+                                      key={item.id}
+                                      className={`bread-inline-option ${isSelected ? 'selected' : ''}`}
+                                      onClick={() => {
+                                        // Deselect all bread items first
+                                        const updated = { ...selectedItems };
+                                        breadSection.items.forEach(i => {
+                                          updated[i.id] = false;
+                                        });
+                                        // Select only this item
+                                        updated[item.id] = true;
+                                        setSelectedItems(updated);
+                                      }}
+                                    >
+                                      <input
+                                        type="radio"
+                                        name="bread-selection"
+                                        checked={isSelected}
+                                        onChange={() => {}}
+                                        className="bread-inline-radio"
+                                      />
+                                      <span>{item.name}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+
                       <div className="section-content-with-image">
                         <div className="section-image-left">
                           <Image
