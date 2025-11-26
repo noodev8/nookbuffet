@@ -277,14 +277,11 @@
    LOGOUT BUTTON
    ======================================== */
 .logout-button-bottom {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
   padding: 1rem 2rem;
-  border-radius: 50px;
+  border-radius: 8px;
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
@@ -292,12 +289,17 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
-  z-index: 1000;
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 300px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .logout-button-bottom:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
 }
 
 .logout-button-bottom:active {
@@ -356,10 +358,9 @@
   }
 
   .logout-button-bottom {
-    bottom: 1rem;
-    right: 1rem;
     padding: 0.875rem 1.5rem;
     font-size: 0.9rem;
+    max-width: 100%;
   }
 }
 
