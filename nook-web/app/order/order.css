@@ -55,6 +55,58 @@
   line-height: 1.5;
 }
 
+/* ===== BUFFET SELECTION BANNER ===== */
+.buffet-selection-banner {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.buffet-selection-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.buffet-selection-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.5rem;
+  color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.buffet-selection-price {
+  font-size: 1.3rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .buffet-selection-banner {
+    padding: 1.5rem;
+  }
+
+  .buffet-selection-title {
+    font-size: 1.8rem;
+  }
+
+  .buffet-selection-price {
+    font-size: 1.1rem;
+  }
+}
+
 /* ===== FORM SECTIONS ===== */
 .form-section {
   background: rgba(255, 255, 255, 0.05);
@@ -266,7 +318,7 @@
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
-/* ===== SECTION LAYOUT ===== */
+/* ===== SECTION LAYOUT (ADULT BUFFET) ===== */
 .section-layout {
   display: flex;
   flex-direction: column;
@@ -282,6 +334,52 @@
   order: 1;
   width: 100%;
   flex-shrink: 0;
+}
+
+/* ===== SECTION LAYOUT (KIDS BUFFET) ===== */
+.section-layout-kids {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.section-content-with-image {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #444;
+}
+
+.section-image-left {
+  flex: 0 0 250px;
+  width: 250px;
+}
+
+.section-single-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.section-content-right {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Mobile layout for kids buffet */
+@media (max-width: 968px) {
+  .section-content-with-image {
+    flex-direction: column;
+  }
+
+  .section-image-left {
+    flex: 0 0 auto;
+    width: 100%;
+  }
 }
 
 /* ===== SECTION HEADER ===== */
@@ -376,6 +474,13 @@
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid #444;
+}
+
+/* Remove border for kids buffet since it's on parent */
+.section-layout-kids .items-list-container {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 
 .items-list-container ul {
