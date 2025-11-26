@@ -177,7 +177,15 @@ export default function OrderPage() {
     <div className="welcome-page-option3">
       <div className="order-page-container">
         <div className="order-content-wrapper">
-          <h1 className="order-page-title">{buffetTitle || 'Start Your Order'}</h1>
+          <div className="order-page-header">
+            <button
+              className="back-to-buffet-button"
+              onClick={() => router.push('/select-buffet')}
+            >
+              ← Change Buffet
+            </button>
+            <h1 className="order-page-title">{buffetTitle || 'Start Your Order'}</h1>
+          </div>
 
           {/* Beta Warning Banner */}
           <div className="beta-warning-banner">
