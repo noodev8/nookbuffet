@@ -1,0 +1,121 @@
+/*
+=======================================================================================================================================
+AUTH CONTROLLER - Handles admin user login
+=======================================================================================================================================
+This controller handles authentication for admin users. It checks their credentials,
+verifies their password, and returns a JWT token if everything is valid.
+
+The flow:
+1. User submits email/username and password
+2. We look up the user in the database
+3. We compare the password with the stored hash using bcrypt
+4. If valid, we create a JWT token and send it back
+5. The frontend stores this token and sends it with future requests
+=======================================================================================================================================
+*/
+
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const authModel = require('../models/authModel');
+
+// ===== LOGIN FUNCTION =====
+// Authenticates an admin user and returns a JWT token
+const login = async (req, res) => {
+  try {
+    // Get the email/username and password from the request
+    const { email, password } = req.body;
+
+    // ===== VALIDATION =====
+    // Make sure both fields are provided
+    if (!email || !password) {
+      return res.json({
+        return_code: 'MISSING_FIELDS',
+        message: 'Email and password are required'
+      });
+    }
+
+    // ===== FIND USER =====
+    // Try to find the user by email first, then by username
+    // This allows users to log in with either
+    let user = await authModel.findUserByEmail(email);
+    
+    if (!user) {
+      // If not found by email, try username
+      user = await authModel.findUserByUsername(email);
+    }
+
+    // If still no user found, return error
+    if (!user) {
+      return res.json({
+        return_code: 'INVALID_CREDENTIALS',
+        message: 'Invalid email or password'
+      });
+    }
+
+    // ===== CHECK IF USER IS ACTIVE =====
+    // Don't allow login if the user account is disabled
+    if (!user.is_active) {
+      return res.json({
+        return_code: 'ACCOUNT_DISABLED',
+        message: 'Your account has been disabled. Please contact an administrator.'
+      });
+    }
+
+    // ===== VERIFY PASSWORD =====
+    // Compare the provided password with the stored hash
+    // bcrypt.compare handles all the hashing and comparison securely
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
+    if (!isPasswordValid) {
+      return res.json({
+        return_code: 'INVALID_CREDENTIALS',
+        message: 'Invalid email or password'
+      });
+    }
+
+    // ===== UPDATE LAST LOGIN =====
+    // Record when this user last logged in
+    await authModel.updateLastLogin(user.id);
+
+    // ===== CREATE JWT TOKEN =====
+    // Create a token that contains the user's ID and role
+    // This token will be sent with future requests to prove they're logged in
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role
+      },
+      process.env.JWT_SECRET || 'your-secret-key-change-this', // Secret key from .env
+      { expiresIn: '24h' } // Token expires in 24 hours
+    );
+
+    // ===== SUCCESS RESPONSE =====
+    // Send back the token and user info (but NOT the password hash!)
+    return res.json({
+      return_code: 'SUCCESS',
+      token: token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role
+      }
+    });
+
+  } catch (error) {
+    // If anything goes wrong, log it and return an error
+    console.error('Login error:', error);
+    return res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'An error occurred during login'
+    });
+  }
+};
+
+// Export the login function
+module.exports = {
+  login
+};
+

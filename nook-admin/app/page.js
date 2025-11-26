@@ -1,16 +1,37 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import './page.css';
 
 export default function AdminPage() {
+  const router = useRouter();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedOrders, setExpandedOrders] = useState({});
   const [filterStatus, setFilterStatus] = useState('all');
+  const [user, setUser] = useState(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token');
+    const userData = localStorage.getItem('admin_user');
+
+    if (!token || !userData) {
+      // Not logged in, redirect to login page
+      router.push('/login');
+      return;
+    }
+
+    // Set user data
+    setUser(JSON.parse(userData));
+  }, [router]);
 
   useEffect(() => {
+    // Don't fetch orders if not authenticated
+    if (!user) return;
+
     const fetchOrders = async () => {
       try {
         setLoading(true);
@@ -45,7 +66,7 @@ export default function AdminPage() {
     };
 
     fetchOrders();
-  }, []);
+  }, [user]);
 
   const toggleOrder = (orderId) => {
     setExpandedOrders(prev => ({
@@ -164,11 +185,26 @@ export default function AdminPage() {
     }, 100);
   };
 
+  const handleLogout = () => {
+    // Clear authentication data
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+
+    // Redirect to login page
+    router.push('/login');
+  };
+
   return (
     <div className="admin-container">
       <header className="admin-header">
         <div className="header-content">
           <h1>the little nook buffet</h1>
+          {user && (
+            <div className="user-info">
+              <span className="user-name">{user.full_name || user.username}</span>
+              <span className="user-role">({user.role})</span>
+            </div>
+          )}
         </div>
         <div className="header-stats">
           <div className="stat-item">
@@ -402,6 +438,10 @@ export default function AdminPage() {
           ))
         )}
       </div>
+
+      <button className="logout-button-bottom" onClick={handleLogout}>
+        Logout
+      </button>
     </div>
   );
 }

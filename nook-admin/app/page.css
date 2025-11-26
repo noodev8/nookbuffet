@@ -30,9 +30,28 @@
   text-transform: lowercase;
 }
 
+.user-info {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+
+.user-name {
+  font-weight: 600;
+}
+
+.user-role {
+  opacity: 0.85;
+  font-style: italic;
+}
+
 .header-stats {
   display: flex;
   gap: 2rem;
+  align-items: center;
 }
 
 .stat-item {
@@ -732,6 +751,13 @@
   .detail-section h3 {
     font-size: 1.1rem;
   }
+
+  .logout-button-bottom {
+    bottom: 1rem;
+    right: 1rem;
+    padding: 0.875rem 1.5rem;
+    font-size: 0.9rem;
+  }
 }
 
 /* ========================================
@@ -759,6 +785,37 @@
 }
 
 /* ========================================
+   LOGOUT BUTTON (BOTTOM)
+   ======================================== */
+.logout-button-bottom {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  z-index: 1000;
+}
+
+.logout-button-bottom:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(102, 126, 234, 0.6);
+}
+
+.logout-button-bottom:active {
+  transform: translateY(-1px);
+}
+
+/* ========================================
    PRINT STYLES - ONE ORDER PER PAGE
    ======================================== */
 @media print {
@@ -766,6 +823,7 @@
   .admin-header,
   .mark-done-btn,
   .print-button,
+  .logout-button-bottom,
   .print-single-btn,
   .order-actions,
   .expand-icon,
