@@ -115,6 +115,93 @@ const usernameExists = async (username) => {
   return result.rows.length > 0;
 };
 
+// ===== GET USER BY ID =====
+// Get a single user by their ID
+// Used when updating or deleting a user
+const getUserById = async (userId) => {
+  const sql = `
+    SELECT id, username, email, full_name, role, is_active, last_login, created_at
+    FROM admin_users
+    WHERE id = $1
+  `;
+
+  const result = await query(sql, [userId]);
+  return result.rows[0];
+};
+
+// ===== UPDATE USER =====
+// Update user details (can update username, email, full_name, role, is_active)
+// Password is optional - only update if provided
+const updateUser = async (userId, userData) => {
+  // Build the SQL dynamically based on what fields are provided
+  const fields = [];
+  const values = [];
+  let paramCount = 1;
+
+  if (userData.username !== undefined) {
+    fields.push(`username = $${paramCount}`);
+    values.push(userData.username);
+    paramCount++;
+  }
+
+  if (userData.email !== undefined) {
+    fields.push(`email = $${paramCount}`);
+    values.push(userData.email);
+    paramCount++;
+  }
+
+  if (userData.full_name !== undefined) {
+    fields.push(`full_name = $${paramCount}`);
+    values.push(userData.full_name);
+    paramCount++;
+  }
+
+  if (userData.role !== undefined) {
+    fields.push(`role = $${paramCount}`);
+    values.push(userData.role);
+    paramCount++;
+  }
+
+  if (userData.is_active !== undefined) {
+    fields.push(`is_active = $${paramCount}`);
+    values.push(userData.is_active);
+    paramCount++;
+  }
+
+  if (userData.password_hash !== undefined) {
+    fields.push(`password_hash = $${paramCount}`);
+    values.push(userData.password_hash);
+    paramCount++;
+  }
+
+  // Add the user ID as the last parameter
+  values.push(userId);
+
+  const sql = `
+    UPDATE admin_users
+    SET ${fields.join(', ')}
+    WHERE id = $${paramCount}
+    RETURNING id, username, email, full_name, role, is_active, last_login, created_at
+  `;
+
+  const result = await query(sql, values);
+  return result.rows[0];
+};
+
+// ===== DELETE USER =====
+// Delete a user from the database
+// Managers can delete staff members
+const deleteUser = async (userId) => {
+  const sql = `
+    DELETE FROM admin_users
+    WHERE id = $1
+    RETURNING id, username, email
+  `;
+
+  const result = await query(sql, [userId]);
+  return result.rows[0];
+};
+
 // Export all the functions so they can be used in the controller
 module.exports = {
   findUserByEmail,
@@ -123,6 +210,9 @@ module.exports = {
   getAllUsers,
   createUser,
   emailExists,
-  usernameExists
+  usernameExists,
+  getUserById,
+  updateUser,
+  deleteUser
 };
 

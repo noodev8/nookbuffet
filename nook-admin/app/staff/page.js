@@ -11,6 +11,8 @@ export default function StaffManagementPage() {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -156,6 +158,104 @@ export default function StaffManagementPage() {
     router.push('/login');
   };
 
+  const handleEditUser = (staffUser) => {
+    setEditingUser(staffUser);
+    setFormData({
+      username: staffUser.username,
+      email: staffUser.email,
+      password: '', // Leave password empty - only update if filled
+      full_name: staffUser.full_name,
+      role: staffUser.role
+    });
+    setFormError('');
+    setShowEditForm(true);
+  };
+
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError('');
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+
+      // Prepare update data - only include password if it's filled
+      const updateData = {
+        username: formData.username,
+        email: formData.email,
+        full_name: formData.full_name,
+        role: formData.role
+      };
+
+      if (formData.password) {
+        updateData.password = formData.password;
+      }
+
+      const response = await fetch(`${apiUrl}/api/auth/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+      });
+
+      const data = await response.json();
+
+      if (data.return_code === 'SUCCESS') {
+        // Update the user in the list
+        setUsers(users.map(u => u.id === editingUser.id ? data.data : u));
+        setShowEditForm(false);
+        setEditingUser(null);
+        setFormData({
+          username: '',
+          email: '',
+          password: '',
+          full_name: '',
+          role: 'staff'
+        });
+      } else {
+        setFormError(data.message || 'Failed to update user');
+      }
+    } catch (err) {
+      console.error('Error updating user:', err);
+      setFormError('Failed to update user. Please try again.');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (staffUser) => {
+    if (!confirm(`Are you sure you want to delete ${staffUser.full_name}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+
+      const response = await fetch(`${apiUrl}/api/auth/users/${staffUser.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.return_code === 'SUCCESS') {
+        // Remove the user from the list
+        setUsers(users.filter(u => u.id !== staffUser.id));
+      } else {
+        alert(data.message || 'Failed to delete user');
+      }
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      alert('Failed to delete user. Please try again.');
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Never';
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -246,6 +346,20 @@ export default function StaffManagementPage() {
                   <span className="detail-label">Created:</span>
                   <span className="detail-value">{formatDate(staffUser.created_at)}</span>
                 </div>
+              </div>
+              <div className="user-actions">
+                <button
+                  className="edit-button"
+                  onClick={() => handleEditUser(staffUser)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="delete-button"
+                  onClick={() => handleDeleteUser(staffUser)}
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))
@@ -344,6 +458,105 @@ export default function StaffManagementPage() {
                   disabled={formLoading}
                 >
                   {formLoading ? 'Creating...' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditForm && editingUser && (
+        <div className="modal-overlay" onClick={() => setShowEditForm(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Staff Member</h2>
+              <button className="close-button" onClick={() => setShowEditForm(false)}>×</button>
+            </div>
+
+            <form onSubmit={handleUpdateUser} className="add-user-form">
+              {formError && (
+                <div className="form-error">{formError}</div>
+              )}
+
+              <div className="form-group">
+                <label htmlFor="edit_full_name">Full Name</label>
+                <input
+                  type="text"
+                  id="edit_full_name"
+                  name="full_name"
+                  value={formData.full_name}
+                  onChange={handleFormChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="edit_username">Username</label>
+                <input
+                  type="text"
+                  id="edit_username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleFormChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="edit_email">Email</label>
+                <input
+                  type="email"
+                  id="edit_email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleFormChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="edit_password">Password (leave blank to keep current)</label>
+                <input
+                  type="password"
+                  id="edit_password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleFormChange}
+                  minLength="6"
+                  placeholder="Leave blank to keep current password"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="edit_role">Role</label>
+                <select
+                  id="edit_role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleFormChange}
+                  required
+                >
+                  <option value="staff">Staff</option>
+                  <option value="admin">Admin</option>
+                  <option value="manager">Manager</option>
+                </select>
+              </div>
+
+              <div className="form-actions">
+                <button
+                  type="button"
+                  className="cancel-button"
+                  onClick={() => setShowEditForm(false)}
+                  disabled={formLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="submit-button"
+                  disabled={formLoading}
+                >
+                  {formLoading ? 'Updating...' : 'Update User'}
                 </button>
               </div>
             </form>

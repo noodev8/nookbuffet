@@ -8,6 +8,8 @@ Available endpoints:
 - POST /api/auth/login - Login with email/username and password
 - GET /api/auth/users - Get all users (manager only)
 - POST /api/auth/users - Create a new user (manager only)
+- PUT /api/auth/users/:id - Update a user (manager only)
+- DELETE /api/auth/users/:id - Delete a user (manager only)
 =======================================================================================================================================
 */
 
@@ -32,6 +34,16 @@ router.get('/users', verifyToken, checkRole(['manager']), authController.getAllU
 // POST /api/auth/users
 // Creates a new user - only managers can do this
 router.post('/users', verifyToken, checkRole(['manager']), authController.createUser);
+
+// ===== UPDATE USER ROUTE (PROTECTED) =====
+// PUT /api/auth/users/:id
+// Updates an existing user - only managers can do this
+router.put('/users/:id', verifyToken, checkRole(['manager']), authController.updateUser);
+
+// ===== DELETE USER ROUTE (PROTECTED) =====
+// DELETE /api/auth/users/:id
+// Deletes a user - only managers can do this
+router.delete('/users/:id', verifyToken, checkRole(['manager']), authController.deleteUser);
 
 module.exports = router;
 

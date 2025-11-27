@@ -222,10 +222,141 @@ const createUser = async (req, res) => {
   }
 };
 
+// ===== UPDATE USER FUNCTION =====
+// Updates an existing user's details (manager only)
+const updateUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { username, email, full_name, role, is_active, password } = req.body;
+
+    // ===== CHECK IF USER EXISTS =====
+    const existingUser = await authModel.getUserById(userId);
+    if (!existingUser) {
+      return res.json({
+        return_code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      });
+    }
+
+    // ===== VALIDATE ROLE =====
+    if (role && !['staff', 'admin', 'manager'].includes(role)) {
+      return res.json({
+        return_code: 'INVALID_ROLE',
+        message: 'Role must be staff, admin, or manager'
+      });
+    }
+
+    // ===== CHECK FOR DUPLICATE EMAIL =====
+    if (email && email !== existingUser.email) {
+      const emailTaken = await authModel.emailExists(email);
+      if (emailTaken) {
+        return res.json({
+          return_code: 'EMAIL_EXISTS',
+          message: 'Email is already in use'
+        });
+      }
+    }
+
+    // ===== CHECK FOR DUPLICATE USERNAME =====
+    if (username && username !== existingUser.username) {
+      const usernameTaken = await authModel.usernameExists(username);
+      if (usernameTaken) {
+        return res.json({
+          return_code: 'USERNAME_EXISTS',
+          message: 'Username is already in use'
+        });
+      }
+    }
+
+    // ===== PREPARE UPDATE DATA =====
+    const updateData = {};
+    if (username !== undefined) updateData.username = username;
+    if (email !== undefined) updateData.email = email;
+    if (full_name !== undefined) updateData.full_name = full_name;
+    if (role !== undefined) updateData.role = role;
+    if (is_active !== undefined) updateData.is_active = is_active;
+
+    // ===== HASH PASSWORD IF PROVIDED =====
+    if (password) {
+      updateData.password_hash = await bcrypt.hash(password, 10);
+    }
+
+    // ===== UPDATE USER =====
+    const updatedUser = await authModel.updateUser(userId, updateData);
+
+    // ===== SUCCESS RESPONSE =====
+    return res.json({
+      return_code: 'SUCCESS',
+      message: 'User updated successfully',
+      data: {
+        id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        full_name: updatedUser.full_name,
+        role: updatedUser.role,
+        is_active: updatedUser.is_active,
+        last_login: updatedUser.last_login,
+        created_at: updatedUser.created_at
+      }
+    });
+
+  } catch (error) {
+    console.error('Update user error:', error);
+    return res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to update user'
+    });
+  }
+};
+
+// ===== DELETE USER FUNCTION =====
+// Deletes a user from the system (manager only)
+const deleteUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+
+    // ===== CHECK IF USER EXISTS =====
+    const existingUser = await authModel.getUserById(userId);
+    if (!existingUser) {
+      return res.json({
+        return_code: 'USER_NOT_FOUND',
+        message: 'User not found'
+      });
+    }
+
+    // ===== PREVENT SELF-DELETION =====
+    // Don't let managers delete themselves
+    if (req.user.id === parseInt(userId)) {
+      return res.json({
+        return_code: 'CANNOT_DELETE_SELF',
+        message: 'You cannot delete your own account'
+      });
+    }
+
+    // ===== DELETE USER =====
+    await authModel.deleteUser(userId);
+
+    // ===== SUCCESS RESPONSE =====
+    return res.json({
+      return_code: 'SUCCESS',
+      message: 'User deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Delete user error:', error);
+    return res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to delete user'
+    });
+  }
+};
+
 // Export all the functions
 module.exports = {
   login,
   getAllUsers,
-  createUser
+  createUser,
+  updateUser,
+  deleteUser
 };
 
