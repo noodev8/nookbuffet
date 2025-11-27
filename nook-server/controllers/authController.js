@@ -114,8 +114,118 @@ const login = async (req, res) => {
   }
 };
 
-// Export the login function
+// ===== GET ALL USERS =====
+// Get all users for the staff management page
+// Only managers should be able to access this
+const getAllUsers = async (req, res) => {
+  try {
+    // Get all users from the database
+    const users = await authModel.getAllUsers();
+
+    // Send back the user list
+    return res.json({
+      return_code: 'SUCCESS',
+      message: 'Got all users',
+      data: users,
+      count: users.length
+    });
+
+  } catch (error) {
+    console.error('Get all users error:', error);
+    return res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to retrieve users'
+    });
+  }
+};
+
+// ===== CREATE USER =====
+// Create a new staff member
+// Only managers should be able to do this
+const createUser = async (req, res) => {
+  try {
+    // Get the user data from the request
+    const { username, email, password, full_name, role } = req.body;
+
+    // ===== VALIDATION =====
+    // Make sure all required fields are provided
+    if (!username || !email || !password || !full_name || !role) {
+      return res.json({
+        return_code: 'MISSING_FIELDS',
+        message: 'All fields are required (username, email, password, full_name, role)'
+      });
+    }
+
+    // Validate role - only allow staff, admin, or manager
+    if (!['staff', 'admin', 'manager'].includes(role)) {
+      return res.json({
+        return_code: 'INVALID_ROLE',
+        message: 'Role must be staff, admin, or manager'
+      });
+    }
+
+    // Check if email already exists
+    const emailInUse = await authModel.emailExists(email);
+    if (emailInUse) {
+      return res.json({
+        return_code: 'EMAIL_EXISTS',
+        message: 'This email is already in use'
+      });
+    }
+
+    // Check if username already exists
+    const usernameInUse = await authModel.usernameExists(username);
+    if (usernameInUse) {
+      return res.json({
+        return_code: 'USERNAME_EXISTS',
+        message: 'This username is already in use'
+      });
+    }
+
+    // ===== HASH PASSWORD =====
+    // Hash the password before storing it
+    // 10 is the salt rounds - higher is more secure but slower
+    const password_hash = await bcrypt.hash(password, 10);
+
+    // ===== CREATE USER =====
+    // Create the user in the database
+    const newUser = await authModel.createUser({
+      username,
+      email,
+      password_hash,
+      full_name,
+      role
+    });
+
+    // ===== SUCCESS RESPONSE =====
+    // Send back the new user info (but NOT the password hash!)
+    return res.json({
+      return_code: 'SUCCESS',
+      message: 'User created successfully',
+      data: {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        full_name: newUser.full_name,
+        role: newUser.role,
+        is_active: newUser.is_active,
+        created_at: newUser.created_at
+      }
+    });
+
+  } catch (error) {
+    console.error('Create user error:', error);
+    return res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to create user'
+    });
+  }
+};
+
+// Export all the functions
 module.exports = {
-  login
+  login,
+  getAllUsers,
+  createUser
 };
 

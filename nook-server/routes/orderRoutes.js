@@ -82,20 +82,25 @@ const router = express.Router();
 // Import the order controller
 const orderController = require('../controllers/orderController');
 
-// ===== ROUTE: GET ALL ORDERS =====
+// Import auth middleware for protected routes
+const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+
+// ===== ROUTE: GET ALL ORDERS (PROTECTED) =====
 // When someone GETs /api/orders, run the getAllOrders function
 // GET is used because we're just reading data
-router.get('/', orderController.getAllOrders);
+// All authenticated users (staff, admin, manager) can view orders
+router.get('/', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.getAllOrders);
 
 // ===== ROUTE: CREATE NEW ORDER =====
 // When someone POSTs to /api/orders, run the createOrder function
 // POST is used because we're creating new data
 router.post('/', orderController.createOrder);
 
-// ===== ROUTE: UPDATE ORDER STATUS =====
+// ===== ROUTE: UPDATE ORDER STATUS (PROTECTED) =====
 // When someone PATCHes /api/orders/:id/status, run the updateOrderStatus function
 // PATCH is used because we're updating existing data
-router.patch('/:id/status', orderController.updateOrderStatus);
+// All authenticated users (staff, admin, manager) can update order status
+router.patch('/:id/status', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.updateOrderStatus);
 
 // Export the router so server.js can use it
 module.exports = router;

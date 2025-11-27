@@ -52,14 +52,77 @@ const updateLastLogin = async (userId) => {
     SET last_login = CURRENT_TIMESTAMP
     WHERE id = $1
   `;
-  
+
   await query(sql, [userId]);
+};
+
+// ===== GET ALL USERS =====
+// Get all admin users (for staff management page)
+// Returns user info without password hashes
+const getAllUsers = async () => {
+  const sql = `
+    SELECT id, username, email, full_name, role, is_active, last_login, created_at
+    FROM admin_users
+    ORDER BY created_at DESC
+  `;
+
+  const result = await query(sql);
+  return result.rows;
+};
+
+// ===== CREATE USER =====
+// Create a new admin user
+// Takes username, email, password_hash, full_name, and role
+const createUser = async (userData) => {
+  const sql = `
+    INSERT INTO admin_users (username, email, password_hash, full_name, role, is_active)
+    VALUES ($1, $2, $3, $4, $5, true)
+    RETURNING id, username, email, full_name, role, is_active, created_at
+  `;
+
+  const result = await query(sql, [
+    userData.username,
+    userData.email,
+    userData.password_hash,
+    userData.full_name,
+    userData.role
+  ]);
+
+  return result.rows[0];
+};
+
+// ===== CHECK IF EMAIL EXISTS =====
+// Check if an email is already in use
+// Used before creating a new user to prevent duplicates
+const emailExists = async (email) => {
+  const sql = `
+    SELECT id FROM admin_users WHERE email = $1
+  `;
+
+  const result = await query(sql, [email]);
+  return result.rows.length > 0;
+};
+
+// ===== CHECK IF USERNAME EXISTS =====
+// Check if a username is already in use
+// Used before creating a new user to prevent duplicates
+const usernameExists = async (username) => {
+  const sql = `
+    SELECT id FROM admin_users WHERE username = $1
+  `;
+
+  const result = await query(sql, [username]);
+  return result.rows.length > 0;
 };
 
 // Export all the functions so they can be used in the controller
 module.exports = {
   findUserByEmail,
   findUserByUsername,
-  updateLastLogin
+  updateLastLogin,
+  getAllUsers,
+  createUser,
+  emailExists,
+  usernameExists
 };
 

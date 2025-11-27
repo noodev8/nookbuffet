@@ -60,11 +60,14 @@ export default function MenuManagementPage() {
 
         if (data.return_code === 'SUCCESS') {
           setMenuItems(data.data || []);
-          
+
           // Extract unique categories
           const uniqueCategories = [...new Set(data.data.map(item => item.category_name))];
           setCategories(uniqueCategories);
         } else if (data.return_code === 'UNAUTHORIZED' || data.return_code === 'FORBIDDEN') {
+          // Clear invalid token and redirect to login
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
           router.push('/login');
         } else {
           setError(data.message || 'Failed to load menu items');
@@ -119,6 +122,10 @@ export default function MenuManagementPage() {
     router.push('/');
   };
 
+  const goToStaffManagement = () => {
+    router.push('/staff');
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
@@ -162,6 +169,9 @@ export default function MenuManagementPage() {
         <nav className="main-nav">
           <button className="nav-item" onClick={goToOrders}>Orders</button>
           <button className="nav-item active">Menu Items</button>
+          {user && user.role === 'manager' && (
+            <button className="nav-item" onClick={goToStaffManagement}>Staff Management</button>
+          )}
         </nav>
       </header>
 

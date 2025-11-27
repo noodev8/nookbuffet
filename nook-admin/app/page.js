@@ -37,14 +37,28 @@ export default function AdminPage() {
         setLoading(true);
         setError(null);
 
+        const token = localStorage.getItem('admin_token');
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        const response = await fetch(`${apiUrl}/api/orders`);
+        const response = await fetch(`${apiUrl}/api/orders`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
+
+        // Check if token is invalid or expired
+        if (data.return_code === 'UNAUTHORIZED' || data.return_code === 'FORBIDDEN') {
+          // Clear invalid token and redirect to login
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+          router.push('/login');
+          return;
+        }
 
         if (data.return_code === 'SUCCESS') {
           // Sort orders by fulfillment date, closest date first
@@ -133,11 +147,13 @@ export default function AdminPage() {
     }
 
     try {
+      const token = localStorage.getItem('admin_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
       const response = await fetch(`${apiUrl}/api/orders/${orderId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status: 'completed' })
       });
@@ -198,6 +214,10 @@ export default function AdminPage() {
     router.push('/menu');
   };
 
+  const goToStaffManagement = () => {
+    router.push('/staff');
+  };
+
   return (
     <div className="admin-container">
       <header className="admin-header">
@@ -215,6 +235,9 @@ export default function AdminPage() {
           <button className="nav-item active">Orders</button>
           {user && (user.role === 'admin' || user.role === 'manager') && (
             <button className="nav-item" onClick={goToMenuManagement}>Menu Items</button>
+          )}
+          {user && user.role === 'manager' && (
+            <button className="nav-item" onClick={goToStaffManagement}>Staff Management</button>
           )}
         </nav>
       </header>
