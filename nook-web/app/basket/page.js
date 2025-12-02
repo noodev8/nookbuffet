@@ -37,6 +37,13 @@ export default function BasketPage() {
     }
   }, []);
 
+  // Auto-validate address when delivery is selected and address is filled
+  useEffect(() => {
+    if (fulfillmentType === 'delivery' && address.trim() && !addressValidated) {
+      validateDeliveryArea();
+    }
+  }, [fulfillmentType, address]);
+
   // Validate delivery area and get branch ID
   const validateDeliveryArea = async () => {
     if (!address.trim()) {
@@ -108,7 +115,7 @@ export default function BasketPage() {
 
     // Check if delivery area has been validated for delivery orders
     if (fulfillmentType === 'delivery' && !addressValidated) {
-      alert('Please validate your delivery address first by clicking "Validate Address"');
+      alert('Please wait for address validation to complete, or check that your address is within our delivery area');
       return;
     }
 
@@ -232,41 +239,23 @@ export default function BasketPage() {
               </div>
               <div className="form-group">
                 <label htmlFor="address">Address *</label>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                  <input
-                    id="address"
-                    type="text"
-                    value={address}
-                    onChange={(e) => {
-                      setAddress(e.target.value);
-                      setAddressValidated(false); // Reset validation when address changes
-                      setBranchId(null);
-                    }}
-                    placeholder="Enter your address"
-                    className="form-input"
-                    style={{ flex: 1 }}
-                  />
-                  {fulfillmentType === 'delivery' && (
-                    <button
-                      type="button"
-                      onClick={validateDeliveryArea}
-                      disabled={validatingAddress || !address.trim()}
-                      className="validate-address-button"
-                      style={{
-                        padding: '10px 20px',
-                        backgroundColor: addressValidated ? '#28a745' : '#007bff',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: validatingAddress || !address.trim() ? 'not-allowed' : 'pointer',
-                        whiteSpace: 'nowrap',
-                        opacity: validatingAddress || !address.trim() ? 0.6 : 1
-                      }}
-                    >
-                      {validatingAddress ? 'Validating...' : addressValidated ? '✓ Validated' : 'Validate Address'}
-                    </button>
-                  )}
-                </div>
+                <input
+                  id="address"
+                  type="text"
+                  value={address}
+                  onChange={(e) => {
+                    setAddress(e.target.value);
+                    setAddressValidated(false); // Reset validation when address changes
+                    setBranchId(null);
+                  }}
+                  placeholder="Enter your address"
+                  className="form-input"
+                />
+                {fulfillmentType === 'delivery' && validatingAddress && (
+                  <div style={{ marginTop: '5px', color: '#007bff', fontSize: '14px' }}>
+                    🔄 Validating delivery address...
+                  </div>
+                )}
                 {fulfillmentType === 'delivery' && addressValidated && (
                   <div style={{ marginTop: '5px', color: '#28a745', fontSize: '14px' }}>
                     ✓ Address validated and within delivery range
