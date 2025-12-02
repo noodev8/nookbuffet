@@ -60,6 +60,7 @@ function CheckoutContent() {
         fulfillmentType: orders[0]?.fulfillmentType || 'delivery', // Either 'delivery' or 'collection'
         deliveryDate: orders[0]?.deliveryDate || '',
         deliveryTime: orders[0]?.deliveryTime || '',
+        branchId: orders[0]?.branchId || null, // Include the branch ID from delivery validation
         // Add up all the order prices to get the grand total
         totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
         // Convert each order into the format the server expects

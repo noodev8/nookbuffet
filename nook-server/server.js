@@ -18,6 +18,7 @@ const contactRoutes = require('./routes/contactRoutes');        // Routes for co
 const buffetVersionRoutes = require('./routes/buffetVersionRoutes'); // Routes for buffet pricing/versions
 const orderRoutes = require('./routes/orderRoutes');            // Routes for order creation
 const authRoutes = require('./routes/authRoutes');              // Routes for admin authentication
+const deliveryRoutes = require('./routes/deliveryRoutes');      // Routes for delivery services
 
 // Create the Express app - this is the main server object
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api/contact', contactRoutes);              // Contact form endpoints
 app.use('/api/buffet-versions', buffetVersionRoutes); // Buffet version endpoints
 app.use('/api/orders', orderRoutes);                 // Order endpoints
 app.use('/api/auth', authRoutes);                    // Admin authentication endpoints
+app.use('/api/delivery', deliveryRoutes);            // Delivery endpoints
 
 // ===== HEALTH CHECK ENDPOINT =====
 // This is a simple endpoint that just tells you the server is running
@@ -75,3 +77,4 @@ app.listen(PORT, HOST, () => {
 
 // Export the app so it can be used in tests or other files
 module.exports = app;
+

@@ -21,6 +21,11 @@ export default function BasketPage() {
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryTime, setDeliveryTime] = useState('');
 
+  // Branch validation state
+  const [branchId, setBranchId] = useState(null);
+  const [validatingAddress, setValidatingAddress] = useState(false);
+  const [addressValidated, setAddressValidated] = useState(false);
+
   // Get basket data from localStorage
   useEffect(() => {
     const data = localStorage.getItem('basketData');
@@ -31,6 +36,48 @@ export default function BasketPage() {
       setOrders(ordersList);
     }
   }, []);
+
+  // Validate delivery area and get branch ID
+  const validateDeliveryArea = async () => {
+    if (!address.trim()) {
+      alert('Please enter an address first');
+      return;
+    }
+
+    setValidatingAddress(true);
+    setAddressValidated(false);
+    setBranchId(null);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      const response = await fetch(`${apiUrl}/api/delivery/validate-area`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address })
+      });
+
+      const result = await response.json();
+
+      if (result.return_code === 'SUCCESS') {
+        if (result.data.isWithinRange) {
+          setBranchId(result.data.branch.id);
+          setAddressValidated(true);
+          alert(`✓ Address validated! Your nearest branch is ${result.data.branch.name} (${result.data.distanceMiles.toFixed(1)} miles away)`);
+        } else {
+          alert(`Sorry, this address is outside our delivery area. The nearest branch is ${result.data.distanceMiles.toFixed(1)} miles away (maximum: ${result.data.deliveryRadius} miles).`);
+        }
+      } else {
+        alert(`Address validation failed: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error validating address:', error);
+      alert('Failed to validate address. Please try again.');
+    } finally {
+      setValidatingAddress(false);
+    }
+  };
 
   const handleProceedToCheckout = () => {
     // Validate business details
@@ -59,6 +106,12 @@ export default function BasketPage() {
       return;
     }
 
+    // Check if delivery area has been validated for delivery orders
+    if (fulfillmentType === 'delivery' && !addressValidated) {
+      alert('Please validate your delivery address first by clicking "Validate Address"');
+      return;
+    }
+
     setLoading(true);
     // Add business details and fulfillment to all orders
     const updatedOrders = orders.map(order => ({
@@ -69,7 +122,8 @@ export default function BasketPage() {
       phone,
       fulfillmentType,
       deliveryDate,
-      deliveryTime
+      deliveryTime,
+      branchId: fulfillmentType === 'delivery' ? branchId : null // Include branchId for delivery orders
     }));
 
     // Pass all orders to checkout page
@@ -178,14 +232,46 @@ export default function BasketPage() {
               </div>
               <div className="form-group">
                 <label htmlFor="address">Address *</label>
-                <input
-                  id="address"
-                  type="text"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Enter your address"
-                  className="form-input"
-                />
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                  <input
+                    id="address"
+                    type="text"
+                    value={address}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setAddressValidated(false); // Reset validation when address changes
+                      setBranchId(null);
+                    }}
+                    placeholder="Enter your address"
+                    className="form-input"
+                    style={{ flex: 1 }}
+                  />
+                  {fulfillmentType === 'delivery' && (
+                    <button
+                      type="button"
+                      onClick={validateDeliveryArea}
+                      disabled={validatingAddress || !address.trim()}
+                      className="validate-address-button"
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: addressValidated ? '#28a745' : '#007bff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: validatingAddress || !address.trim() ? 'not-allowed' : 'pointer',
+                        whiteSpace: 'nowrap',
+                        opacity: validatingAddress || !address.trim() ? 0.6 : 1
+                      }}
+                    >
+                      {validatingAddress ? 'Validating...' : addressValidated ? '✓ Validated' : 'Validate Address'}
+                    </button>
+                  )}
+                </div>
+                {fulfillmentType === 'delivery' && addressValidated && (
+                  <div style={{ marginTop: '5px', color: '#28a745', fontSize: '14px' }}>
+                    ✓ Address validated and within delivery range
+                  </div>
+                )}
               </div>
               <div className="form-row">
                 <div className="form-group">

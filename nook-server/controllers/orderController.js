@@ -83,6 +83,26 @@ const createOrder = async (req, res) => {
         });
       }
     }
+
+    // Validate branch ID for delivery orders
+    if (orderData.fulfillmentType === 'delivery') {
+      if (!orderData.branchId) {
+        return res.json({
+          return_code: 'MISSING_FIELDS',
+          message: 'Branch ID is required. Please validate delivery area first.'
+        });
+      }
+
+      // Verify branch exists and is active
+      const branchModel = require('../models/branchModel');
+      const branch = await branchModel.getBranchById(orderData.branchId);
+      if (!branch) {
+        return res.json({
+          return_code: 'INVALID_BRANCH',
+          message: 'Selected branch is not available'
+        });
+      }
+    }
     
     // Ask the model to create the order in the database
     const createdOrder = await orderModel.createOrder(orderData);
@@ -195,4 +215,5 @@ module.exports = {
   getAllOrders,
   updateOrderStatus
 };
+
 
