@@ -41,7 +41,7 @@ export default function BasketPage() {
     }
   }, []);
 
-  // Fetch branches for collection when page loads
+  // Fetch branches for collection dropdown when page loads
   useEffect(() => {
     const fetchBranches = async () => {
       try {
@@ -50,10 +50,6 @@ export default function BasketPage() {
         const data = await response.json();
         if (data.return_code === 'SUCCESS') {
           setBranches(data.data || []);
-          // Auto-select first branch if only one
-          if (data.data && data.data.length === 1) {
-            setCollectionBranchId(data.data[0].id.toString());
-          }
         }
       } catch (err) {
         console.error('Error fetching branches:', err);
@@ -68,6 +64,35 @@ export default function BasketPage() {
       validateDeliveryArea();
     }
   }, [fulfillmentType, address]);
+
+  // Auto-select nearest branch when collection is selected and address is filled
+  useEffect(() => {
+    if (fulfillmentType === 'collection' && address.trim()) {
+      findNearestBranchForCollection();
+    }
+  }, [fulfillmentType, address]);
+
+  // Find nearest branch for collection orders
+  const findNearestBranchForCollection = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      const response = await fetch(`${apiUrl}/api/branches/nearest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address })
+      });
+
+      const result = await response.json();
+
+      if (result.return_code === 'SUCCESS' && result.data) {
+        setCollectionBranchId(result.data.id.toString());
+      }
+    } catch (error) {
+      console.error('Error finding nearest branch:', error);
+    }
+  };
 
   // Validate delivery area and get branch ID
   const validateDeliveryArea = async () => {

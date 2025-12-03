@@ -11,11 +11,12 @@ Controllers are the middle person between routes and models. They:
 */
 
 const branchModel = require('../models/branchModel');
+const { geocodeAddress } = require('../utils/distanceCalculator');
 
 // ===== GET ALL ACTIVE BRANCHES =====
 /**
  * Gets all active branches for display (e.g., collection point selection)
- * 
+ *
  * @param {object} req - The request object
  * @param {object} res - The response object
  */
@@ -45,8 +46,72 @@ const getAllBranches = async (req, res) => {
   }
 };
 
+// ===== FIND NEAREST BRANCH =====
+/**
+ * Finds the nearest branch to a given address
+ * Used for auto-selecting collection branch
+ *
+ * @param {object} req - The request object (contains address in req.body)
+ * @param {object} res - The response object
+ */
+const findNearestBranch = async (req, res) => {
+  try {
+    const { address } = req.body;
+
+    // Check we have an address
+    if (!address || !address.trim()) {
+      return res.json({
+        return_code: 'MISSING_FIELDS',
+        message: 'Address is required'
+      });
+    }
+
+    // Geocode the customer's address to get coordinates
+    const customerCoords = await geocodeAddress(address);
+    if (!customerCoords) {
+      return res.json({
+        return_code: 'INVALID_ADDRESS',
+        message: 'Could not find the provided address'
+      });
+    }
+
+    // Find the nearest branch
+    const nearestBranch = await branchModel.findNearestBranch(
+      customerCoords.lat,
+      customerCoords.lng
+    );
+
+    if (!nearestBranch) {
+      return res.json({
+        return_code: 'NO_BRANCHES',
+        message: 'No branches found'
+      });
+    }
+
+    // Send back the nearest branch
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Found nearest branch!',
+      data: {
+        id: nearestBranch.id,
+        name: nearestBranch.name,
+        address: nearestBranch.address
+      }
+    });
+
+  } catch (error) {
+    console.error('Error finding nearest branch:', error);
+    res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to find nearest branch. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 // Export the functions so routes can use them
 module.exports = {
-  getAllBranches
+  getAllBranches,
+  findNearestBranch
 };
 

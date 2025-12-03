@@ -28,6 +28,24 @@ ENDPOINTS:
    }
    Return Codes: SUCCESS, SERVER_ERROR
 
+2. POST /api/branches/nearest
+   Purpose: Find the nearest branch to a given address (for auto-selecting collection branch)
+   Request Body:
+   {
+     "address": "123 Main St, London"              // string, required - customer's address
+   }
+   Success Response:
+   {
+     "return_code": "SUCCESS",
+     "message": "Found nearest branch!",
+     "data": {
+       "id": 1,                                    // integer, branch ID
+       "name": "Main Branch",                      // string, branch name
+       "address": "123 High Street, London"        // string, branch address
+     }
+   }
+   Return Codes: SUCCESS, MISSING_FIELDS, INVALID_ADDRESS, NO_BRANCHES, SERVER_ERROR
+
 =======================================================================================================================================
 */
 
@@ -39,6 +57,10 @@ const branchController = require('../controllers/branchController');
 // ===== ROUTE: GET ALL BRANCHES =====
 // When someone visits /api/branches, return all active branches
 router.get('/', branchController.getAllBranches);
+
+// ===== ROUTE: FIND NEAREST BRANCH =====
+// When someone POSTs to /api/branches/nearest with an address, find the nearest branch
+router.post('/nearest', branchController.findNearestBranch);
 
 module.exports = router;
 
