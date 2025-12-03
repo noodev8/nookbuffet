@@ -41,8 +41,8 @@ const createOrder = async (orderData) => {
       INSERT INTO orders (
         order_number, customer_email, customer_phone,
         fulfillment_type, fulfillment_address, fulfillment_date, fulfillment_time,
-        total_price, status, payment_status, payment_method, notes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        total_price, status, payment_status, payment_method, notes, branch_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING id, order_number, created_at
     `;
 
@@ -58,7 +58,8 @@ const createOrder = async (orderData) => {
       'pending',
       'pending',
       'card', // For now, always card
-      orderData.businessName || null
+      orderData.businessName || null,
+      orderData.branchId || null  // Branch ID for delivery orders
     ];
     
     const orderResult = await client.query(orderQuery, orderValues);

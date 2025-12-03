@@ -21,10 +21,14 @@ export default function BasketPage() {
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryTime, setDeliveryTime] = useState('');
 
-  // Branch validation state
+  // Branch validation state (for delivery)
   const [branchId, setBranchId] = useState(null);
   const [validatingAddress, setValidatingAddress] = useState(false);
   const [addressValidated, setAddressValidated] = useState(false);
+
+  // Branch selection state (for collection)
+  const [branches, setBranches] = useState([]);
+  const [collectionBranchId, setCollectionBranchId] = useState('');
 
   // Get basket data from localStorage
   useEffect(() => {
@@ -35,6 +39,27 @@ export default function BasketPage() {
       const ordersList = Array.isArray(parsed) ? parsed : [parsed];
       setOrders(ordersList);
     }
+  }, []);
+
+  // Fetch branches for collection when page loads
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+        const response = await fetch(`${apiUrl}/api/branches`);
+        const data = await response.json();
+        if (data.return_code === 'SUCCESS') {
+          setBranches(data.data || []);
+          // Auto-select first branch if only one
+          if (data.data && data.data.length === 1) {
+            setCollectionBranchId(data.data[0].id.toString());
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching branches:', err);
+      }
+    };
+    fetchBranches();
   }, []);
 
   // Auto-validate address when delivery is selected and address is filled
@@ -119,8 +144,16 @@ export default function BasketPage() {
       return;
     }
 
+    // Check if collection branch has been selected for collection orders
+    if (fulfillmentType === 'collection' && !collectionBranchId) {
+      alert('Please select a collection branch');
+      return;
+    }
+
     setLoading(true);
     // Add business details and fulfillment to all orders
+    // Use branchId from delivery validation or collectionBranchId from dropdown
+    const selectedBranchId = fulfillmentType === 'delivery' ? branchId : parseInt(collectionBranchId);
     const updatedOrders = orders.map(order => ({
       ...order,
       businessName,
@@ -130,7 +163,7 @@ export default function BasketPage() {
       fulfillmentType,
       deliveryDate,
       deliveryTime,
-      branchId: fulfillmentType === 'delivery' ? branchId : null // Include branchId for delivery orders
+      branchId: selectedBranchId
     }));
 
     // Pass all orders to checkout page
@@ -315,6 +348,26 @@ export default function BasketPage() {
                   <span>Delivery</span>
                 </label>
               </div>
+
+              {/* Branch selection for collection orders */}
+              {fulfillmentType === 'collection' && (
+                <div className="form-group">
+                  <label htmlFor="collection-branch">Collection Branch *</label>
+                  <select
+                    id="collection-branch"
+                    value={collectionBranchId}
+                    onChange={(e) => setCollectionBranchId(e.target.value)}
+                    className="form-input"
+                  >
+                    <option value="">Select a branch</option>
+                    {branches.map((branch) => (
+                      <option key={branch.id} value={branch.id}>
+                        {branch.name} - {branch.address}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="delivery-date">Date *</label>
