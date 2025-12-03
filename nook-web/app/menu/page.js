@@ -32,7 +32,8 @@ export default function MenuPage() {
         setError(null);
 
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        const response = await fetch(`${apiUrl}/api/menu`);
+        // Fetch only Standard Buffet menu (buffet version ID 1)
+        const response = await fetch(`${apiUrl}/api/menu/buffet-version/1`);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
