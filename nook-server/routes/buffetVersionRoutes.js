@@ -5,42 +5,47 @@ BUFFET VERSION ROUTES - API endpoints for buffet version data
 Routes are like the "front desk" of your API. They receive requests from the website and send them
 to the right controller to handle.
 
+This route handles buffet versions - these are the different buffet packages customers can choose from
+(like "Standard Buffet", "Premium Buffet", etc.) with their pricing information.
+
 ENDPOINTS:
 
 1. GET /api/buffet-versions
    Purpose: Retrieve all active buffet versions
+   Request Body: None
    Success Response:
    {
      "return_code": "SUCCESS",
      "message": "Got all buffet versions!",
      "data": [
        {
-         "id": 1,
-         "title": "Standard Buffet",
-         "description": "Our standard buffet offering",
-         "price_per_person": 15.99,
-         "is_active": true,
-         "created_at": "2024-01-01T00:00:00Z"
+         "id": 1,                                    // integer, unique buffet version ID
+         "title": "Standard Buffet",                 // string, buffet version name
+         "description": "Our standard buffet offering", // string, description
+         "price_per_person": 15.99,                  // decimal, price per person in GBP
+         "is_active": true,                          // boolean, whether version is active
+         "created_at": "2024-01-01T00:00:00Z"        // timestamp, when created
        }
      ],
-     "count": 1
+     "count": 1                                      // integer, number of versions returned
    }
    Return Codes: SUCCESS, SERVER_ERROR
 
 2. GET /api/buffet-versions/:id
    Purpose: Retrieve a specific buffet version by ID
-   URL Parameters: id (integer, required)
+   URL Parameters: id (integer, required) - the buffet version ID
+   Request Body: None
    Success Response:
    {
      "return_code": "SUCCESS",
      "message": "Found the buffet version!",
      "data": {
-       "id": 1,
-       "title": "Standard Buffet",
-       "description": "Our standard buffet offering",
-       "price_per_person": 15.99,
-       "is_active": true,
-       "created_at": "2024-01-01T00:00:00Z"
+       "id": 1,                                    // integer, unique buffet version ID
+       "title": "Standard Buffet",                 // string, buffet version name
+       "description": "Our standard buffet offering", // string, description
+       "price_per_person": 15.99,                  // decimal, price per person in GBP
+       "is_active": true,                          // boolean, whether version is active
+       "created_at": "2024-01-01T00:00:00Z"        // timestamp, when created
      }
    }
    Return Codes: SUCCESS, INVALID_ID, NOT_FOUND, SERVER_ERROR
