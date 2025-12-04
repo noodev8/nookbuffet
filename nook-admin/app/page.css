@@ -694,6 +694,81 @@
 }
 
 /* ========================================
+   UPGRADES SECTION
+   ======================================== */
+.upgrades-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid #e8ecf1;
+}
+
+.upgrades-section h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.upgrade-card {
+  background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+  border: 1px solid #9ae6b4;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.upgrade-card:last-child {
+  margin-bottom: 0;
+}
+
+.upgrade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.upgrade-name {
+  font-weight: 600;
+  color: #276749;
+  font-size: 1rem;
+}
+
+.upgrade-price {
+  color: #38a169;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.upgrade-items {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #9ae6b4;
+}
+
+.upgrade-category-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.upgrade-category-group:last-child {
+  margin-bottom: 0;
+}
+
+.upgrade-category-name {
+  font-weight: 600;
+  color: #276749;
+}
+
+.upgrade-category-items {
+  color: #2d3748;
+}
+
+/* ========================================
    RESPONSIVE DESIGN
    ======================================== */
 @media (max-width: 768px) {
@@ -1195,6 +1270,56 @@
     content: "- ";
     color: #000;
     font-weight: normal;
+  }
+
+  /* Upgrades for print */
+  .upgrades-section {
+    margin-top: 0.3cm;
+    padding-top: 0.3cm;
+    border-top: 1px solid #000;
+  }
+
+  .upgrades-section h4 {
+    font-size: 10pt;
+    font-weight: 700;
+    margin-bottom: 0.2cm;
+  }
+
+  .upgrade-card {
+    background: none;
+    border: none;
+    padding: 0.15cm 0;
+    margin: 0;
+  }
+
+  .upgrade-header {
+    font-size: 10pt;
+  }
+
+  .upgrade-name {
+    color: #000;
+    font-weight: 600;
+  }
+
+  .upgrade-price {
+    color: #000;
+    font-size: 9pt;
+  }
+
+  .upgrade-items {
+    margin-top: 0.1cm;
+    padding-top: 0.1cm;
+    border: none;
+  }
+
+  .upgrade-category-group {
+    font-size: 9pt;
+    margin-bottom: 0.1cm;
+  }
+
+  .upgrade-category-name,
+  .upgrade-category-items {
+    color: #000;
   }
 
 }

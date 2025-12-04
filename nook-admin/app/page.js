@@ -470,6 +470,46 @@ export default function AdminPage() {
                           </div>
                         </div>
                       )}
+
+                      {/* Upgrades */}
+                      {buffet.upgrades && buffet.upgrades.length > 0 && (
+                        <div className="upgrades-section">
+                          <h4>Upgrades</h4>
+                          {buffet.upgrades.map((upgrade) => (
+                            <div key={upgrade.id} className="upgrade-card">
+                              <div className="upgrade-header">
+                                <span className="upgrade-name">{upgrade.upgrade_name}</span>
+                                <span className="upgrade-price">
+                                  £{parseFloat(upgrade.price_per_person).toFixed(2)}/person × {upgrade.num_people} = £{parseFloat(upgrade.subtotal).toFixed(2)}
+                                </span>
+                              </div>
+                              {upgrade.selectedItems && upgrade.selectedItems.length > 0 && (
+                                <div className="upgrade-items">
+                                  {(() => {
+                                    // Group selected items by category
+                                    const itemsByCategory = {};
+                                    upgrade.selectedItems.forEach(item => {
+                                      if (!itemsByCategory[item.category_name]) {
+                                        itemsByCategory[item.category_name] = [];
+                                      }
+                                      itemsByCategory[item.category_name].push(item);
+                                    });
+
+                                    return Object.entries(itemsByCategory).map(([category, items]) => (
+                                      <div key={category} className="upgrade-category-group">
+                                        <span className="upgrade-category-name">{category}:</span>
+                                        <span className="upgrade-category-items">
+                                          {items.map(item => item.item_name).join(', ')}
+                                        </span>
+                                      </div>
+                                    ));
+                                  })()}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
