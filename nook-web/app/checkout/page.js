@@ -68,11 +68,16 @@ function CheckoutContent() {
           buffetVersionId: order.buffetVersionId, // Which buffet menu they chose
           numPeople: order.numPeople, // How many people
           pricePerPerson: order.pricePerPerson, // Price per head
-          totalPrice: order.totalPrice, // Total for this buffet
+          totalPrice: order.totalPrice, // Total for this buffet (including upgrades)
           items: order.items, // All the food items they selected
           notes: order.notes || '', // Any special requests
           dietaryInfo: order.dietaryInfo || '', // Dietary requirements
-          allergens: order.allergens || '' // Allergy info
+          allergens: order.allergens || '', // Allergy info
+          // Include selected upgrades with their item selections
+          upgrades: (order.upgrades || []).map(upgrade => ({
+            upgradeId: upgrade.upgradeId,
+            selectedItems: upgrade.selectedItems || []
+          }))
         }))
       };
 
@@ -139,9 +144,23 @@ function CheckoutContent() {
                   <div className="checkout-order-details">
                     {/* Only show notes if they actually wrote something */}
                     {order.notes && <span>Notes: {order.notes}</span>}
-                    {/* Show the price with 2 decimal places (like £25.00) */}
+                    {/* Show buffet base price */}
+                    <span className="checkout-order-buffet-price">
+                      Buffet: £{(order.pricePerPerson * order.numPeople).toFixed(2)}
+                    </span>
+                    {/* Show upgrades if any */}
+                    {order.upgrades && order.upgrades.length > 0 && (
+                      <div className="checkout-order-upgrades">
+                        {order.upgrades.map((upgrade, idx) => (
+                          <span key={idx} className="checkout-upgrade-item">
+                            + {upgrade.upgradeName}: £{upgrade.subtotal.toFixed(2)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {/* Show the total price with 2 decimal places (like £25.00) */}
                     {order.totalPrice !== undefined && (
-                      <span className="checkout-order-price">£{order.totalPrice.toFixed(2)}</span>
+                      <span className="checkout-order-price">Total: £{order.totalPrice.toFixed(2)}</span>
                     )}
                   </div>
                 </div>

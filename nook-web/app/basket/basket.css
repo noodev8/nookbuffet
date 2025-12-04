@@ -242,6 +242,39 @@
   font-size: 1.1rem;
 }
 
+/* ===== ORDER UPGRADES ===== */
+.order-upgrades {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.order-upgrades .detail-label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.upgrade-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0.8rem;
+  margin-bottom: 0.3rem;
+  background: rgba(76, 175, 80, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid #4caf50;
+}
+
+.upgrade-name {
+  color: white;
+  font-size: 0.9rem;
+}
+
+.upgrade-subtotal {
+  color: #4caf50;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 /* ===== GRAND TOTAL ===== */
 .basket-grand-total {
   display: flex;

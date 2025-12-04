@@ -353,9 +353,26 @@ export default function BasketPage() {
                         <span className="detail-value">{order.fulfillmentType === 'delivery' ? 'Delivery' : 'Collection'}</span>
                       </div>
                     )}
+                    {/* Buffet subtotal */}
+                    <div className="detail-item">
+                      <span className="detail-label">Buffet:</span>
+                      <span className="detail-value">£{(order.pricePerPerson * order.numPeople).toFixed(2)}</span>
+                    </div>
+                    {/* Display upgrades if any */}
+                    {order.upgrades && order.upgrades.length > 0 && (
+                      <div className="order-upgrades">
+                        <span className="detail-label">Upgrades:</span>
+                        {order.upgrades.map((upgrade, idx) => (
+                          <div key={idx} className="upgrade-detail">
+                            <span className="upgrade-name">{upgrade.upgradeName}</span>
+                            <span className="upgrade-subtotal">+ £{upgrade.subtotal.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {order.totalPrice !== undefined && (
                       <div className="detail-item price-item">
-                        <span className="detail-label">Price:</span>
+                        <span className="detail-label">Total:</span>
                         <span className="detail-value price-value">£{order.totalPrice.toFixed(2)}</span>
                       </div>
                     )}

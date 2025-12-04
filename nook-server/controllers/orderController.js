@@ -83,6 +83,14 @@ const createOrder = async (req, res) => {
           message: 'Each buffet must have at least one menu item selected'
         });
       }
+
+      // Validate upgrades if provided (upgrades are optional)
+      if (buffet.upgrades && !Array.isArray(buffet.upgrades)) {
+        return res.json({
+          return_code: 'VALIDATION_ERROR',
+          message: 'Upgrades must be an array of upgrade IDs'
+        });
+      }
     }
 
     // Validate branch ID for all orders (delivery and collection)

@@ -161,6 +161,7 @@ export default function OrderPage() {
           console.error('API returned error:', menuData);
           setError(menuData.message || 'Failed to load data');
         }
+
       } catch (err) {
         // Only network/connection errors reach here
         console.error('Error fetching data:', err);
@@ -530,6 +531,7 @@ export default function OrderPage() {
                     // Create order object with all details
                     const selectedItemIds = Object.keys(selectedItems).filter(id => selectedItems[id]);
                     const buffetVersionId = menuSections[0]?.buffet_version_id || '';
+                    const buffetSubtotal = pricePerPerson * numPeople;
 
                     const newOrder = {
                       items: selectedItemIds.map(id => parseInt(id)),
@@ -539,32 +541,18 @@ export default function OrderPage() {
                       allergens,
                       buffetVersionId,
                       pricePerPerson,
-                      totalPrice: pricePerPerson * numPeople,
+                      totalPrice: buffetSubtotal,
                       timestamp: new Date().toISOString()
                     };
 
-                    // Get existing basket or create new one
-                    const existingBasket = localStorage.getItem('basketData');
-                    let basket = [];
+                    // Save as pending order - upgrade page will check for available upgrades
+                    localStorage.setItem('pendingOrder', JSON.stringify(newOrder));
 
-                    if (existingBasket) {
-                      try {
-                        const parsed = JSON.parse(existingBasket);
-                        basket = Array.isArray(parsed) ? parsed : [parsed];
-                      } catch (e) {
-                        basket = [];
-                      }
-                    }
-
-                    // Add new order to basket
-                    basket.push(newOrder);
-                    localStorage.setItem('basketData', JSON.stringify(basket));
-
-                    // Navigate to basket page
-                    router.push('/basket');
+                    // Navigate to upgrade page (will redirect to basket if no upgrades)
+                    router.push('/upgrade');
                   }}
                 >
-                  Add to Basket
+                  Continue
                 </button>
               )}
             </>

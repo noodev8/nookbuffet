@@ -99,14 +99,14 @@ const createOrder = async (orderData) => {
           WHERE mi.id = $1
         `;
         const itemDetails = await client.query(itemDetailsQuery, [itemId]);
-        
+
         if (itemDetails.rows.length > 0) {
           const itemQuery = `
             INSERT INTO order_items (
               order_buffet_id, menu_item_id, item_name, category_name, quantity
             ) VALUES ($1, $2, $3, $4, $5)
           `;
-          
+
           const itemValues = [
             buffetId,
             itemId,
@@ -114,8 +114,78 @@ const createOrder = async (orderData) => {
             itemDetails.rows[0].category_name,
             1
           ];
-          
+
           await client.query(itemQuery, itemValues);
+        }
+      }
+
+      // Insert upgrades for this buffet (if any)
+      // Each upgrade has: { upgradeId, selectedItems: [itemId1, itemId2, ...] }
+      if (buffet.upgrades && buffet.upgrades.length > 0) {
+        for (const upgradeData of buffet.upgrades) {
+          const upgradeId = upgradeData.upgradeId;
+          const selectedItems = upgradeData.selectedItems || [];
+
+          // Get upgrade details
+          const upgradeDetailsQuery = `
+            SELECT id, name, price_per_person
+            FROM upgrades
+            WHERE id = $1 AND is_active = true
+          `;
+          const upgradeDetails = await client.query(upgradeDetailsQuery, [upgradeId]);
+
+          if (upgradeDetails.rows.length > 0) {
+            const upgrade = upgradeDetails.rows[0];
+            const upgradeSubtotal = parseFloat(upgrade.price_per_person) * buffet.numPeople;
+
+            const upgradeQuery = `
+              INSERT INTO order_buffet_upgrades (
+                order_buffet_id, upgrade_id, upgrade_name,
+                price_per_person, num_people, subtotal
+              ) VALUES ($1, $2, $3, $4, $5, $6)
+              RETURNING id
+            `;
+
+            const upgradeValues = [
+              buffetId,
+              upgrade.id,
+              upgrade.name,
+              upgrade.price_per_person,
+              buffet.numPeople,
+              upgradeSubtotal
+            ];
+
+            const upgradeResult = await client.query(upgradeQuery, upgradeValues);
+            const orderBuffetUpgradeId = upgradeResult.rows[0].id;
+
+            // Insert selected items for this upgrade
+            for (const itemId of selectedItems) {
+              const itemDetailsQuery = `
+                SELECT ui.id, ui.name, uc.name as category_name
+                FROM upgrade_items ui
+                JOIN upgrade_categories uc ON ui.upgrade_category_id = uc.id
+                WHERE ui.id = $1
+              `;
+              const itemDetails = await client.query(itemDetailsQuery, [itemId]);
+
+              if (itemDetails.rows.length > 0) {
+                const itemQuery = `
+                  INSERT INTO order_buffet_upgrade_items (
+                    order_buffet_upgrade_id, upgrade_item_id, item_name, category_name
+                  ) VALUES ($1, $2, $3, $4)
+                `;
+
+                const itemValues = [
+                  orderBuffetUpgradeId,
+                  itemId,
+                  itemDetails.rows[0].name,
+                  itemDetails.rows[0].category_name
+                ];
+
+                await client.query(itemQuery, itemValues);
+              }
+            }
+          }
         }
       }
     }
@@ -174,7 +244,7 @@ const getAllOrders = async () => {
       const buffetsResult = await client.query(buffetsQuery, [order.id]);
       order.buffets = buffetsResult.rows;
 
-      // For each buffet, get its items
+      // For each buffet, get its items and upgrades
       for (const buffet of order.buffets) {
         const itemsQuery = `
           SELECT
@@ -185,6 +255,30 @@ const getAllOrders = async () => {
 
         const itemsResult = await client.query(itemsQuery, [buffet.id]);
         buffet.items = itemsResult.rows;
+
+        // Get upgrades for this buffet
+        const upgradesQuery = `
+          SELECT
+            id, upgrade_id, upgrade_name, price_per_person, num_people, subtotal
+          FROM order_buffet_upgrades
+          WHERE order_buffet_id = $1
+        `;
+
+        const upgradesResult = await client.query(upgradesQuery, [buffet.id]);
+        buffet.upgrades = upgradesResult.rows;
+
+        // Get selected items for each upgrade
+        for (const upgrade of buffet.upgrades) {
+          const upgradeItemsQuery = `
+            SELECT
+              id, upgrade_item_id, item_name, category_name
+            FROM order_buffet_upgrade_items
+            WHERE order_buffet_upgrade_id = $1
+          `;
+
+          const upgradeItemsResult = await client.query(upgradeItemsQuery, [upgrade.id]);
+          upgrade.selectedItems = upgradeItemsResult.rows;
+        }
       }
     }
 
