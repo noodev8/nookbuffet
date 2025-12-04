@@ -11,6 +11,7 @@ Controllers are the middle person between routes and models. They:
 */
 
 const orderModel = require('../models/orderModel');
+const { calculateEarliestOrderDate } = require('../utils/orderDateCalculator');
 
 // ===== CREATE A NEW ORDER =====
 /**
@@ -99,6 +100,30 @@ const createOrder = async (req, res) => {
       return res.json({
         return_code: 'INVALID_BRANCH',
         message: 'Selected branch is not available'
+      });
+    }
+
+    // Validate delivery/collection date against cutoff rules
+    const dateValidation = await calculateEarliestOrderDate();
+    if (!dateValidation.success) {
+      return res.json({
+        return_code: 'SERVER_ERROR',
+        message: 'Unable to validate order date'
+      });
+    }
+
+    const requestedDate = new Date(orderData.deliveryDate);
+    const earliestDate = new Date(dateValidation.earliestDate);
+
+    if (requestedDate < earliestDate) {
+      return res.json({
+        return_code: 'INVALID_DATE',
+        message: `Orders must be placed for ${dateValidation.earliestDate} or later. Current cutoff time is ${dateValidation.cutoffTime}.`,
+        data: {
+          earliestDate: dateValidation.earliestDate,
+          cutoffTime: dateValidation.cutoffTime,
+          isAfterCutoff: dateValidation.isAfterCutoff
+        }
       });
     }
 
@@ -207,11 +232,43 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
+const getEarliestOrderDate = async (req, res) => {
+  try {
+    const result = await calculateEarliestOrderDate();
+    
+    if (!result.success) {
+      return res.json({
+        return_code: 'SERVER_ERROR',
+        message: 'Unable to calculate earliest order date'
+      });
+    }
+
+    res.json({
+      return_code: 'SUCCESS',
+      data: {
+        earliestDate: result.earliestDate,
+        cutoffTime: result.cutoffTime,
+        isAfterCutoff: result.isAfterCutoff
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting earliest order date:', error);
+    res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Unable to get earliest order date'
+    });
+  }
+};
+
 // Export the functions so routes can use them
 module.exports = {
   createOrder,
   getAllOrders,
-  updateOrderStatus
+  updateOrderStatus,
+  getEarliestOrderDate
 };
+
+
 
 

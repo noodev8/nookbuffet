@@ -9,6 +9,9 @@ export default function BasketPage() {
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [minDate, setMinDate] = useState('');
+  const [cutoffInfo, setCutoffInfo] = useState(null);
+  const [loadingDateInfo, setLoadingDateInfo] = useState(true);
 
   // Business details state
   const [businessName, setBusinessName] = useState('');
@@ -47,6 +50,10 @@ export default function BasketPage() {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
         const response = await fetch(`${apiUrl}/api/branches`);
+        if (!response.ok) {
+          console.error('Failed to fetch branches:', response.status);
+          return;
+        }
         const data = await response.json();
         if (data.return_code === 'SUCCESS') {
           setBranches(data.data || []);
@@ -84,6 +91,11 @@ export default function BasketPage() {
         body: JSON.stringify({ address })
       });
 
+      if (!response.ok) {
+        console.error('Failed to find nearest branch:', response.status);
+        return;
+      }
+
       const result = await response.json();
 
       if (result.return_code === 'SUCCESS' && result.data) {
@@ -115,6 +127,12 @@ export default function BasketPage() {
         body: JSON.stringify({ address })
       });
 
+      if (!response.ok) {
+        console.error('Failed to validate address:', response.status);
+        alert('Failed to validate address. Please try again.');
+        return;
+      }
+
       const result = await response.json();
 
       if (result.return_code === 'SUCCESS') {
@@ -135,6 +153,63 @@ export default function BasketPage() {
       setValidatingAddress(false);
     }
   };
+
+  // Calculate fallback minimum date (tomorrow) in case API fails
+  const calculateFallbackMinDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0]; // YYYY-MM-DD format
+  };
+
+  useEffect(() => {
+    const fetchEarliestDate = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+        const response = await fetch(`${apiUrl}/api/orders/earliest-date`);
+
+        if (!response.ok) {
+          console.error('Failed to fetch earliest date:', response.status);
+          const fallback = calculateFallbackMinDate();
+          setMinDate(fallback);
+          if (!deliveryDate) {
+            setDeliveryDate(fallback);
+          }
+          return;
+        }
+
+        const result = await response.json();
+
+        if (result.return_code === 'SUCCESS') {
+          setMinDate(result.data.earliestDate);
+          setCutoffInfo(result.data);
+
+          // Auto-set delivery date to earliest available if not already set
+          if (!deliveryDate) {
+            setDeliveryDate(result.data.earliestDate);
+          }
+        } else {
+          // API returned an error, use fallback
+          const fallback = calculateFallbackMinDate();
+          setMinDate(fallback);
+          if (!deliveryDate) {
+            setDeliveryDate(fallback);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching earliest date:', error);
+        // Use fallback minimum date if API fails
+        const fallback = calculateFallbackMinDate();
+        setMinDate(fallback);
+        if (!deliveryDate) {
+          setDeliveryDate(fallback);
+        }
+      } finally {
+        setLoadingDateInfo(false);
+      }
+    };
+
+    fetchEarliestDate();
+  }, []);
 
   const handleProceedToCheckout = () => {
     // Validate business details
@@ -160,6 +235,12 @@ export default function BasketPage() {
     }
     if (!deliveryTime) {
       alert('Please select a time');
+      return;
+    }
+
+    // Validate selected date is not before minimum date
+    if (minDate && deliveryDate < minDate) {
+      alert(`Please select a date from ${new Date(minDate).toLocaleDateString('en-GB')} onwards`);
       return;
     }
 
@@ -210,6 +291,21 @@ export default function BasketPage() {
       setOrders(updatedOrders);
       localStorage.setItem('basketData', JSON.stringify(updatedOrders));
     }
+  };
+
+  // Add this function to handle date changes with validation
+  const handleDateChange = (e) => {
+    const selectedDate = e.target.value;
+    
+    // Check if selected date is before minimum allowed date
+    if (minDate && selectedDate < minDate) {
+      alert(`Please select a date from ${new Date(minDate).toLocaleDateString('en-GB')} onwards. Selected date is too early.`);
+      // Reset to minimum date or clear the field
+      setDeliveryDate(minDate);
+      return;
+    }
+    
+    setDeliveryDate(selectedDate);
   };
 
   return (
@@ -396,13 +492,38 @@ export default function BasketPage() {
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="delivery-date">Date *</label>
-                  <input
-                    id="delivery-date"
-                    type="date"
-                    value={deliveryDate}
-                    onChange={(e) => setDeliveryDate(e.target.value)}
-                    className="form-input"
-                  />
+                  {loadingDateInfo ? (
+                    <div style={{ padding: '10px', color: '#666' }}>Loading available dates...</div>
+                  ) : (
+                    <>
+                      <input
+                        id="delivery-date"
+                        type="date"
+                        value={deliveryDate}
+                        min={minDate || undefined}
+                        onChange={handleDateChange}
+                        className="form-input"
+                      />
+                      {minDate && (
+                        <div style={{ marginTop: '5px', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                          Earliest available: {new Date(minDate + 'T00:00:00').toLocaleDateString('en-GB')}
+                        </div>
+                      )}
+                      {cutoffInfo && (
+                        <div style={{ marginTop: '5px', fontSize: '14px', color: '#666' }}>
+                          {cutoffInfo.isAfterCutoff ? (
+                            <span style={{ color: '#ff6b35' }}>
+                              ⏰ After {cutoffInfo.cutoffTime} cutoff - earliest delivery: {new Date(cutoffInfo.earliestDate + 'T00:00:00').toLocaleDateString('en-GB')}
+                            </span>
+                          ) : (
+                            <span style={{ color: '#28a745' }}>
+                              ✓ Order by {cutoffInfo.cutoffTime} for next-day delivery
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
                 <div className="form-group">
                   <label htmlFor="delivery-time">Time *</label>

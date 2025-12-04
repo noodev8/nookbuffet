@@ -85,6 +85,11 @@ const orderController = require('../controllers/orderController');
 // Import auth middleware for protected routes
 const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
+// ===== ROUTE: GET EARLIEST ORDER DATE =====
+// When someone GETs /api/orders/earliest-date, run the getEarliestOrderDate function
+// NOTE: This must come BEFORE any parameterized routes like /:id
+router.get('/earliest-date', orderController.getEarliestOrderDate);
+
 // ===== ROUTE: GET ALL ORDERS (PROTECTED) =====
 // When someone GETs /api/orders, run the getAllOrders function
 // GET is used because we're just reading data
@@ -104,4 +109,5 @@ router.patch('/:id/status', verifyToken, checkRole(['staff', 'admin', 'manager']
 
 // Export the router so server.js can use it
 module.exports = router;
+
 
