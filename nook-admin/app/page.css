@@ -109,6 +109,32 @@
   align-items: center;
 }
 
+.branch-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.branch-filter label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.branch-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.branch-select:focus {
+  outline: none;
+  border-color: #4a5568;
+}
+
 .stat-item {
   display: flex;
   flex-direction: column;

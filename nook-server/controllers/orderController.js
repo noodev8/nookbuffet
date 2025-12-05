@@ -166,14 +166,20 @@ const createOrder = async (req, res) => {
 /**
  * Gets all orders with complete details
  * This is for the admin portal
+ * Supports optional branch_id query param to filter by branch
  *
- * @param {object} req - The request object
+ * @param {object} req - The request object (can have ?branch_id=X query param)
  * @param {object} res - The response object
  */
 const getAllOrders = async (req, res) => {
   try {
-    // Ask the model to get all orders from the database
-    const orders = await orderModel.getAllOrders();
+    // Get branch_id from query params if provided
+    // If branch_id is 'all' or not provided, show all orders
+    const branchId = req.query.branch_id;
+    const filterBranchId = branchId && branchId !== 'all' ? parseInt(branchId) : null;
+
+    // Ask the model to get orders (optionally filtered by branch)
+    const orders = await orderModel.getAllOrders(filterBranchId);
 
     // Send all orders back
     res.json({

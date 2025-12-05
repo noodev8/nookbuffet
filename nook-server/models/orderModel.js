@@ -209,26 +209,39 @@ const createOrder = async (orderData) => {
 /**
  * Gets all orders with all their buffets and items
  * This is for the admin portal to see all orders
+ * Can filter by branch_id if provided
  *
  * Uses query() instead of getClient() since this is read-only
  * and doesn't need transaction support - more efficient for pooling
  *
+ * @param {number|null} branchId - Optional branch ID to filter by (null = all branches)
  * @returns {array} All orders with complete details
  */
-const getAllOrders = async () => {
+const getAllOrders = async (branchId = null) => {
   // Get only pending orders (not completed) sorted by fulfillment date
-  const ordersSQL = `
+  // Optionally filter by branch if branchId is provided
+  let ordersSQL = `
     SELECT
-      id, order_number, customer_email, customer_phone,
-      fulfillment_type, fulfillment_address, fulfillment_date, fulfillment_time,
-      total_price, status, payment_status, payment_method, notes,
-      created_at, updated_at
-    FROM orders
-    WHERE status != 'completed'
-    ORDER BY fulfillment_date ASC, created_at DESC
+      o.id, o.order_number, o.customer_email, o.customer_phone,
+      o.fulfillment_type, o.fulfillment_address, o.fulfillment_date, o.fulfillment_time,
+      o.total_price, o.status, o.payment_status, o.payment_method, o.notes,
+      o.created_at, o.updated_at, o.branch_id, b.name as branch_name
+    FROM orders o
+    LEFT JOIN branches b ON o.branch_id = b.id
+    WHERE o.status != 'completed'
   `;
 
-  const ordersResult = await query(ordersSQL);
+  const params = [];
+
+  // If branchId is provided, filter by it
+  if (branchId !== null) {
+    ordersSQL += ` AND o.branch_id = $1`;
+    params.push(branchId);
+  }
+
+  ordersSQL += ` ORDER BY o.fulfillment_date ASC, o.created_at DESC`;
+
+  const ordersResult = await query(ordersSQL, params);
   const orders = ordersResult.rows;
 
   // For each order, get its buffets

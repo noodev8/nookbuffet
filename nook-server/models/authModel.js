@@ -20,11 +20,11 @@ const { query } = require('../database');
 // Used during login to check if the user exists
 const findUserByEmail = async (email) => {
   const sql = `
-    SELECT id, username, email, password_hash, full_name, role, is_active, last_login
+    SELECT id, username, email, password_hash, full_name, role, is_active, last_login, branch_id
     FROM admin_users
     WHERE email = $1
   `;
-  
+
   const result = await query(sql, [email]);
   return result.rows[0]; // Return the first user found, or undefined if none
 };
@@ -34,11 +34,11 @@ const findUserByEmail = async (email) => {
 // Used during login if they enter username instead of email
 const findUserByUsername = async (username) => {
   const sql = `
-    SELECT id, username, email, password_hash, full_name, role, is_active, last_login
+    SELECT id, username, email, password_hash, full_name, role, is_active, last_login, branch_id
     FROM admin_users
     WHERE username = $1
   `;
-  
+
   const result = await query(sql, [username]);
   return result.rows[0];
 };
@@ -59,11 +59,14 @@ const updateLastLogin = async (userId) => {
 // ===== GET ALL USERS =====
 // Get all admin users (for staff management page)
 // Returns user info without password hashes
+// Includes branch name via join for display purposes
 const getAllUsers = async () => {
   const sql = `
-    SELECT id, username, email, full_name, role, is_active, last_login, created_at
-    FROM admin_users
-    ORDER BY created_at DESC
+    SELECT au.id, au.username, au.email, au.full_name, au.role, au.is_active,
+           au.last_login, au.created_at, au.branch_id, b.name as branch_name
+    FROM admin_users au
+    LEFT JOIN branches b ON au.branch_id = b.id
+    ORDER BY au.created_at DESC
   `;
 
   const result = await query(sql);
@@ -72,12 +75,12 @@ const getAllUsers = async () => {
 
 // ===== CREATE USER =====
 // Create a new admin user
-// Takes username, email, password_hash, full_name, and role
+// Takes username, email, password_hash, full_name, role, and optionally branch_id
 const createUser = async (userData) => {
   const sql = `
-    INSERT INTO admin_users (username, email, password_hash, full_name, role, is_active)
-    VALUES ($1, $2, $3, $4, $5, true)
-    RETURNING id, username, email, full_name, role, is_active, created_at
+    INSERT INTO admin_users (username, email, password_hash, full_name, role, branch_id, is_active)
+    VALUES ($1, $2, $3, $4, $5, $6, true)
+    RETURNING id, username, email, full_name, role, branch_id, is_active, created_at
   `;
 
   const result = await query(sql, [
@@ -85,7 +88,8 @@ const createUser = async (userData) => {
     userData.email,
     userData.password_hash,
     userData.full_name,
-    userData.role
+    userData.role,
+    userData.branch_id || null
   ]);
 
   return result.rows[0];
@@ -120,7 +124,7 @@ const usernameExists = async (username) => {
 // Used when updating or deleting a user
 const getUserById = async (userId) => {
   const sql = `
-    SELECT id, username, email, full_name, role, is_active, last_login, created_at
+    SELECT id, username, email, full_name, role, is_active, last_login, created_at, branch_id
     FROM admin_users
     WHERE id = $1
   `;
@@ -130,7 +134,7 @@ const getUserById = async (userId) => {
 };
 
 // ===== UPDATE USER =====
-// Update user details (can update username, email, full_name, role, is_active)
+// Update user details (can update username, email, full_name, role, is_active, branch_id)
 // Password is optional - only update if provided
 const updateUser = async (userId, userData) => {
   // Build the SQL dynamically based on what fields are provided
@@ -174,6 +178,13 @@ const updateUser = async (userId, userData) => {
     paramCount++;
   }
 
+  // branch_id can be set to null (to remove branch assignment) or a number
+  if (userData.branch_id !== undefined) {
+    fields.push(`branch_id = $${paramCount}`);
+    values.push(userData.branch_id);
+    paramCount++;
+  }
+
   // Add the user ID as the last parameter
   values.push(userId);
 
@@ -181,7 +192,7 @@ const updateUser = async (userId, userData) => {
     UPDATE admin_users
     SET ${fields.join(', ')}
     WHERE id = $${paramCount}
-    RETURNING id, username, email, full_name, role, is_active, last_login, created_at
+    RETURNING id, username, email, full_name, role, is_active, last_login, created_at, branch_id
   `;
 
   const result = await query(sql, values);

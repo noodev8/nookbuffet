@@ -12,6 +12,8 @@ export default function AdminPage() {
   const [expandedOrders, setExpandedOrders] = useState({});
   const [filterStatus, setFilterStatus] = useState('all');
   const [user, setUser] = useState(null);
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState(null); // null means loading, 'all' means all branches
 
   // Check authentication on mount
   useEffect(() => {
@@ -24,13 +26,36 @@ export default function AdminPage() {
       return;
     }
 
-    // Set user data
-    setUser(JSON.parse(userData));
+    // Set user data and default branch filter
+    const parsedUser = JSON.parse(userData);
+    setUser(parsedUser);
+
+    // Default to user's branch if they have one, otherwise 'all'
+    setSelectedBranch(parsedUser.branch_id ? String(parsedUser.branch_id) : 'all');
   }, [router]);
 
+  // Fetch branches on mount
   useEffect(() => {
-    // Don't fetch orders if not authenticated
-    if (!user) return;
+    const fetchBranches = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+        const response = await fetch(`${apiUrl}/api/branches`);
+        const data = await response.json();
+
+        if (data.return_code === 'SUCCESS') {
+          setBranches(data.data || []);
+        }
+      } catch (err) {
+        console.error('Error fetching branches:', err);
+      }
+    };
+
+    fetchBranches();
+  }, []);
+
+  useEffect(() => {
+    // Don't fetch orders if not authenticated or branch not yet determined
+    if (!user || selectedBranch === null) return;
 
     const fetchOrders = async () => {
       try {
@@ -39,7 +64,13 @@ export default function AdminPage() {
 
         const token = localStorage.getItem('admin_token');
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        const response = await fetch(`${apiUrl}/api/orders`, {
+
+        // Add branch filter to the API call
+        const url = selectedBranch === 'all'
+          ? `${apiUrl}/api/orders`
+          : `${apiUrl}/api/orders?branch_id=${selectedBranch}`;
+
+        const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -80,7 +111,7 @@ export default function AdminPage() {
     };
 
     fetchOrders();
-  }, [user]);
+  }, [user, selectedBranch]);
 
   const toggleOrder = (orderId) => {
     setExpandedOrders(prev => ({
@@ -254,6 +285,22 @@ export default function AdminPage() {
           </div>
         </div>
         <div className="page-actions">
+          <div className="branch-filter">
+            <label htmlFor="branch-select">Branch:</label>
+            <select
+              id="branch-select"
+              value={selectedBranch || ''}
+              onChange={(e) => setSelectedBranch(e.target.value)}
+              className="branch-select"
+            >
+              <option value="all">All Branches</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+          </div>
           <button className="action-button" onClick={handlePrintOrders}>
             Print Orders
           </button>
