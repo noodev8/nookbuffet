@@ -212,6 +212,13 @@ export default function BasketPage() {
   }, []);
 
   const handleProceedToCheckout = () => {
+    // Validate minimum 5 people total across all buffets
+    const totalPeople = orders.reduce((sum, order) => sum + (order.numPeople || 0), 0);
+    if (totalPeople < 5) {
+      alert(`Minimum order is 5 people. Your current total is ${totalPeople} ${totalPeople === 1 ? 'person' : 'people'}.`);
+      return;
+    }
+
     // Validate business details
     if (!businessName.trim()) {
       alert('Please enter a business name');
@@ -390,6 +397,13 @@ export default function BasketPage() {
               <span className="grand-total-value">
                 £{orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0).toFixed(2)}
               </span>
+            </div>
+          )}
+
+          {/* Minimum People Warning */}
+          {orders.length > 0 && orders.reduce((sum, order) => sum + (order.numPeople || 0), 0) < 5 && (
+            <div className="minimum-people-warning">
+              ⚠️ Minimum order is 5 people. Current total: {orders.reduce((sum, order) => sum + (order.numPeople || 0), 0)} {orders.reduce((sum, order) => sum + (order.numPeople || 0), 0) === 1 ? 'person' : 'people'}.
             </div>
           )}
 

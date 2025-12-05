@@ -296,6 +296,20 @@
   font-weight: 700;
 }
 
+/* ===== MINIMUM PEOPLE WARNING ===== */
+.minimum-people-warning {
+  background: rgba(255, 152, 0, 0.15);
+  border: 2px solid #ff9800;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  color: #ffb74d;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: center;
+}
+
 /* ===== FULFILLMENT TYPE SECTION ===== */
 .fulfillment-section-card {
   background: rgba(255, 255, 255, 0.05);
