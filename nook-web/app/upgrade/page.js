@@ -2,11 +2,13 @@
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './upgrade.css';
 
 export default function UpgradePage() {
   const router = useRouter();
+  const hasFetched = useRef(false);
+  const hasAddedToBasket = useRef(false);
 
   const [pendingOrder, setPendingOrder] = useState(null);
   const [upgrade, setUpgrade] = useState(null);
@@ -36,6 +38,9 @@ export default function UpgradePage() {
 
   // Load pending order and fetch upgrade details
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true; // Set immediately to prevent double execution
+
     const pending = localStorage.getItem('pendingOrder');
     if (!pending) {
       router.push('/select-buffet');
@@ -81,6 +86,9 @@ export default function UpgradePage() {
 
   // Add order to basket and go to basket page
   const addToBasketAndRedirect = (order, upgradeData) => {
+    if (hasAddedToBasket.current) return;
+    hasAddedToBasket.current = true;
+
     const finalOrder = { ...order };
 
     if (upgradeData) {
