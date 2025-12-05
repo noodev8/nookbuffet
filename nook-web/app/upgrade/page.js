@@ -86,7 +86,16 @@ export default function UpgradePage() {
 
   // Add order to basket and go to basket page
   const addToBasketAndRedirect = (order, upgradeData) => {
+    // Guard against double execution
     if (hasAddedToBasket.current) return;
+
+    // Double-check pendingOrder still exists (hasn't been cleared already)
+    const pendingCheck = localStorage.getItem('pendingOrder');
+    if (!pendingCheck) {
+      console.log('pendingOrder already cleared - skipping duplicate add');
+      return;
+    }
+
     hasAddedToBasket.current = true;
 
     const finalOrder = { ...order };
@@ -110,6 +119,9 @@ export default function UpgradePage() {
       finalOrder.totalPrice = order.totalPrice + upgradeSubtotal;
     }
 
+    // Clear pendingOrder FIRST to prevent any race conditions
+    localStorage.removeItem('pendingOrder');
+
     // Get existing basket
     const existingBasket = localStorage.getItem('basketData');
     let basket = [];
@@ -124,7 +136,6 @@ export default function UpgradePage() {
 
     basket.push(finalOrder);
     localStorage.setItem('basketData', JSON.stringify(basket));
-    localStorage.removeItem('pendingOrder');
     router.push('/basket');
   };
 

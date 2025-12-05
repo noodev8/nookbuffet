@@ -12,7 +12,7 @@ The order structure has 3 tables:
 =======================================================================================================================================
 */
 
-const { getClient } = require('../database');
+const { query, getClient } = require('../database');
 
 // ===== CREATE A NEW ORDER =====
 /**
@@ -210,83 +210,79 @@ const createOrder = async (orderData) => {
  * Gets all orders with all their buffets and items
  * This is for the admin portal to see all orders
  *
+ * Uses query() instead of getClient() since this is read-only
+ * and doesn't need transaction support - more efficient for pooling
+ *
  * @returns {array} All orders with complete details
  */
 const getAllOrders = async () => {
-  const client = await getClient();
+  // Get only pending orders (not completed) sorted by fulfillment date
+  const ordersSQL = `
+    SELECT
+      id, order_number, customer_email, customer_phone,
+      fulfillment_type, fulfillment_address, fulfillment_date, fulfillment_time,
+      total_price, status, payment_status, payment_method, notes,
+      created_at, updated_at
+    FROM orders
+    WHERE status != 'completed'
+    ORDER BY fulfillment_date ASC, created_at DESC
+  `;
 
-  try {
-    // Get only pending orders (not completed) sorted by fulfillment date
-    const ordersQuery = `
+  const ordersResult = await query(ordersSQL);
+  const orders = ordersResult.rows;
+
+  // For each order, get its buffets
+  for (const order of orders) {
+    const buffetsSQL = `
       SELECT
-        id, order_number, customer_email, customer_phone,
-        fulfillment_type, fulfillment_address, fulfillment_date, fulfillment_time,
-        total_price, status, payment_status, payment_method, notes,
-        created_at, updated_at
-      FROM orders
-      WHERE status != 'completed'
-      ORDER BY fulfillment_date ASC, created_at DESC
+        id, buffet_version_id, num_people, price_per_person, subtotal,
+        dietary_info, allergens, notes
+      FROM order_buffets
+      WHERE order_id = $1
     `;
 
-    const ordersResult = await client.query(ordersQuery);
-    const orders = ordersResult.rows;
+    const buffetsResult = await query(buffetsSQL, [order.id]);
+    order.buffets = buffetsResult.rows;
 
-    // For each order, get its buffets
-    for (const order of orders) {
-      const buffetsQuery = `
+    // For each buffet, get its items and upgrades
+    for (const buffet of order.buffets) {
+      const itemsSQL = `
         SELECT
-          id, buffet_version_id, num_people, price_per_person, subtotal,
-          dietary_info, allergens, notes
-        FROM order_buffets
-        WHERE order_id = $1
+          id, menu_item_id, item_name, category_name, quantity
+        FROM order_items
+        WHERE order_buffet_id = $1
       `;
 
-      const buffetsResult = await client.query(buffetsQuery, [order.id]);
-      order.buffets = buffetsResult.rows;
+      const itemsResult = await query(itemsSQL, [buffet.id]);
+      buffet.items = itemsResult.rows;
 
-      // For each buffet, get its items and upgrades
-      for (const buffet of order.buffets) {
-        const itemsQuery = `
+      // Get upgrades for this buffet
+      const upgradesSQL = `
+        SELECT
+          id, upgrade_id, upgrade_name, price_per_person, num_people, subtotal
+        FROM order_buffet_upgrades
+        WHERE order_buffet_id = $1
+      `;
+
+      const upgradesResult = await query(upgradesSQL, [buffet.id]);
+      buffet.upgrades = upgradesResult.rows;
+
+      // Get selected items for each upgrade
+      for (const upgrade of buffet.upgrades) {
+        const upgradeItemsSQL = `
           SELECT
-            id, menu_item_id, item_name, category_name, quantity
-          FROM order_items
-          WHERE order_buffet_id = $1
+            id, upgrade_item_id, item_name, category_name
+          FROM order_buffet_upgrade_items
+          WHERE order_buffet_upgrade_id = $1
         `;
 
-        const itemsResult = await client.query(itemsQuery, [buffet.id]);
-        buffet.items = itemsResult.rows;
-
-        // Get upgrades for this buffet
-        const upgradesQuery = `
-          SELECT
-            id, upgrade_id, upgrade_name, price_per_person, num_people, subtotal
-          FROM order_buffet_upgrades
-          WHERE order_buffet_id = $1
-        `;
-
-        const upgradesResult = await client.query(upgradesQuery, [buffet.id]);
-        buffet.upgrades = upgradesResult.rows;
-
-        // Get selected items for each upgrade
-        for (const upgrade of buffet.upgrades) {
-          const upgradeItemsQuery = `
-            SELECT
-              id, upgrade_item_id, item_name, category_name
-            FROM order_buffet_upgrade_items
-            WHERE order_buffet_upgrade_id = $1
-          `;
-
-          const upgradeItemsResult = await client.query(upgradeItemsQuery, [upgrade.id]);
-          upgrade.selectedItems = upgradeItemsResult.rows;
-        }
+        const upgradeItemsResult = await query(upgradeItemsSQL, [upgrade.id]);
+        upgrade.selectedItems = upgradeItemsResult.rows;
       }
     }
-
-    return orders;
-
-  } finally {
-    client.release();
   }
+
+  return orders;
 };
 
 // ===== UPDATE ORDER STATUS =====
@@ -294,31 +290,28 @@ const getAllOrders = async () => {
  * Updates the status of an order to 'completed'
  * This marks the order as done so it won't show in the admin portal
  *
+ * Uses query() instead of getClient() since this is a single update
+ * and doesn't need transaction support - more efficient for pooling
+ *
  * @param {number} orderId - The ID of the order to update
+ * @param {string} status - The new status value
  * @returns {object} The updated order
  */
 const updateOrderStatus = async (orderId, status) => {
-  const client = await getClient();
+  const updateSQL = `
+    UPDATE orders
+    SET status = $1, updated_at = NOW()
+    WHERE id = $2
+    RETURNING id, order_number, status, updated_at
+  `;
 
-  try {
-    const query = `
-      UPDATE orders
-      SET status = $1, updated_at = NOW()
-      WHERE id = $2
-      RETURNING id, order_number, status, updated_at
-    `;
+  const result = await query(updateSQL, [status, orderId]);
 
-    const result = await client.query(query, [status, orderId]);
-
-    if (result.rows.length === 0) {
-      throw new Error('Order not found');
-    }
-
-    return result.rows[0];
-
-  } finally {
-    client.release();
+  if (result.rows.length === 0) {
+    throw new Error('Order not found');
   }
+
+  return result.rows[0];
 };
 
 // Export the functions so other files can use them
