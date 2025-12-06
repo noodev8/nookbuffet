@@ -240,3 +240,5 @@ if (result.success) {
 **Frontend:** Never throw on non-SUCCESS return codes. Return structured objects. Let caller handle errors.
 
 **Result:** Clean separation of concerns, predictable error handling, no red console errors.
+
+**Passwords:** Do not hard code passwords. Always use values in the .env file and inform me if you need to add a new one

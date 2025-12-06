@@ -211,91 +211,115 @@ const createOrder = async (orderData) => {
  * This is for the admin portal to see all orders
  * Can filter by branch_id if provided
  *
- * Uses query() instead of getClient() since this is read-only
- * and doesn't need transaction support - more efficient for pooling
+ * Uses a single query with JSON_AGG to avoid N+1 query problems.
+ * The nested structure (orders → buffets → items/upgrades → upgrade_items)
+ * is built using correlated subqueries with JSON aggregation.
  *
  * @param {number|null} branchId - Optional branch ID to filter by (null = all branches)
  * @returns {array} All orders with complete details
  */
 const getAllOrders = async (branchId = null) => {
-  // Get only pending orders (not completed) sorted by fulfillment date
-  // Optionally filter by branch if branchId is provided
-  let ordersSQL = `
+  const params = [];
+  let branchFilter = '';
+
+  // If branchId is provided, add filter
+  if (branchId !== null) {
+    branchFilter = 'AND o.branch_id = $1';
+    params.push(branchId);
+  }
+
+  // Single query that builds the entire nested structure using JSON_AGG
+  // This replaces the N+1 loop pattern with efficient PostgreSQL JSON aggregation
+  const ordersSQL = `
     SELECT
       o.id, o.order_number, o.customer_email, o.customer_phone,
       o.fulfillment_type, o.fulfillment_address, o.fulfillment_date, o.fulfillment_time,
       o.total_price, o.status, o.payment_status, o.payment_method, o.notes,
-      o.created_at, o.updated_at, o.branch_id, b.name as branch_name
+      o.created_at, o.updated_at, o.branch_id, b.name as branch_name,
+
+      -- Aggregate all buffets for this order into a JSON array
+      COALESCE(
+        (
+          SELECT JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', ob.id,
+              'buffet_version_id', ob.buffet_version_id,
+              'num_people', ob.num_people,
+              'price_per_person', ob.price_per_person,
+              'subtotal', ob.subtotal,
+              'dietary_info', ob.dietary_info,
+              'allergens', ob.allergens,
+              'notes', ob.notes,
+
+              -- Nested: aggregate items for this buffet
+              'items', COALESCE(
+                (
+                  SELECT JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                      'id', oi.id,
+                      'menu_item_id', oi.menu_item_id,
+                      'item_name', oi.item_name,
+                      'category_name', oi.category_name,
+                      'quantity', oi.quantity
+                    )
+                  )
+                  FROM order_items oi
+                  WHERE oi.order_buffet_id = ob.id
+                ),
+                '[]'::json
+              ),
+
+              -- Nested: aggregate upgrades for this buffet (with their items)
+              'upgrades', COALESCE(
+                (
+                  SELECT JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                      'id', obu.id,
+                      'upgrade_id', obu.upgrade_id,
+                      'upgrade_name', obu.upgrade_name,
+                      'price_per_person', obu.price_per_person,
+                      'num_people', obu.num_people,
+                      'subtotal', obu.subtotal,
+
+                      -- Deeply nested: aggregate items for this upgrade
+                      'selectedItems', COALESCE(
+                        (
+                          SELECT JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                              'id', obui.id,
+                              'upgrade_item_id', obui.upgrade_item_id,
+                              'item_name', obui.item_name,
+                              'category_name', obui.category_name
+                            )
+                          )
+                          FROM order_buffet_upgrade_items obui
+                          WHERE obui.order_buffet_upgrade_id = obu.id
+                        ),
+                        '[]'::json
+                      )
+                    )
+                  )
+                  FROM order_buffet_upgrades obu
+                  WHERE obu.order_buffet_id = ob.id
+                ),
+                '[]'::json
+              )
+            )
+          )
+          FROM order_buffets ob
+          WHERE ob.order_id = o.id
+        ),
+        '[]'::json
+      ) as buffets
+
     FROM orders o
     LEFT JOIN branches b ON o.branch_id = b.id
-    WHERE o.status != 'completed'
+    WHERE o.status != 'completed' ${branchFilter}
+    ORDER BY o.fulfillment_date ASC, o.created_at DESC
   `;
 
-  const params = [];
-
-  // If branchId is provided, filter by it
-  if (branchId !== null) {
-    ordersSQL += ` AND o.branch_id = $1`;
-    params.push(branchId);
-  }
-
-  ordersSQL += ` ORDER BY o.fulfillment_date ASC, o.created_at DESC`;
-
   const ordersResult = await query(ordersSQL, params);
-  const orders = ordersResult.rows;
-
-  // For each order, get its buffets
-  for (const order of orders) {
-    const buffetsSQL = `
-      SELECT
-        id, buffet_version_id, num_people, price_per_person, subtotal,
-        dietary_info, allergens, notes
-      FROM order_buffets
-      WHERE order_id = $1
-    `;
-
-    const buffetsResult = await query(buffetsSQL, [order.id]);
-    order.buffets = buffetsResult.rows;
-
-    // For each buffet, get its items and upgrades
-    for (const buffet of order.buffets) {
-      const itemsSQL = `
-        SELECT
-          id, menu_item_id, item_name, category_name, quantity
-        FROM order_items
-        WHERE order_buffet_id = $1
-      `;
-
-      const itemsResult = await query(itemsSQL, [buffet.id]);
-      buffet.items = itemsResult.rows;
-
-      // Get upgrades for this buffet
-      const upgradesSQL = `
-        SELECT
-          id, upgrade_id, upgrade_name, price_per_person, num_people, subtotal
-        FROM order_buffet_upgrades
-        WHERE order_buffet_id = $1
-      `;
-
-      const upgradesResult = await query(upgradesSQL, [buffet.id]);
-      buffet.upgrades = upgradesResult.rows;
-
-      // Get selected items for each upgrade
-      for (const upgrade of buffet.upgrades) {
-        const upgradeItemsSQL = `
-          SELECT
-            id, upgrade_item_id, item_name, category_name
-          FROM order_buffet_upgrade_items
-          WHERE order_buffet_upgrade_id = $1
-        `;
-
-        const upgradeItemsResult = await query(upgradeItemsSQL, [upgrade.id]);
-        upgrade.selectedItems = upgradeItemsResult.rows;
-      }
-    }
-  }
-
-  return orders;
+  return ordersResult.rows;
 };
 
 // ===== UPDATE ORDER STATUS =====
