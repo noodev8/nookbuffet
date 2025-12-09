@@ -300,6 +300,18 @@ export default function BasketPage() {
     }
   };
 
+  // Edit an existing order - saves it to localStorage and navigates to order page
+  const handleEditOrder = (index) => {
+    const orderToEdit = orders[index];
+    // Store the order being edited along with its index
+    localStorage.setItem('editingOrder', JSON.stringify({
+      ...orderToEdit,
+      editIndex: index
+    }));
+    // Navigate to the order page with the same buffet version
+    router.push(`/order?buffetVersionId=${orderToEdit.buffetVersionId}`);
+  };
+
   // Add this function to handle date changes with validation
   const handleDateChange = (e) => {
     const selectedDate = e.target.value;
@@ -335,13 +347,22 @@ export default function BasketPage() {
                 <div key={index} className="order-card">
                   <div className="order-header">
                     <h3 className="order-number">{order.buffetName || `Buffet #${index + 1}`}</h3>
-                    <button
-                      className="order-remove-button"
-                      onClick={() => handleRemoveOrder(index)}
-                      title="Remove this order"
-                    >
-                      ✕
-                    </button>
+                    <div className="order-header-buttons">
+                      <button
+                        className="order-edit-button"
+                        onClick={() => handleEditOrder(index)}
+                        title="Edit this order"
+                      >
+                        ✎
+                      </button>
+                      <button
+                        className="order-remove-button"
+                        onClick={() => handleRemoveOrder(index)}
+                        title="Remove this order"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
                   <div className="order-details">
                     {order.notes && (

@@ -134,7 +134,17 @@ export default function UpgradePage() {
       }
     }
 
-    basket.push(finalOrder);
+    // Check if we're editing an existing order (has editIndex)
+    if (order.editIndex !== undefined) {
+      // Replace the existing order at that index
+      basket[order.editIndex] = finalOrder;
+      // Remove editIndex from the final order (don't store it)
+      delete finalOrder.editIndex;
+    } else {
+      // Add as new order
+      basket.push(finalOrder);
+    }
+
     localStorage.setItem('basketData', JSON.stringify(basket));
     router.push('/basket');
   };

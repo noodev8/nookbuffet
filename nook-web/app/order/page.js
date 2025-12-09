@@ -25,6 +25,9 @@ export default function OrderPage() {
   const [dietaryInfo, setDietaryInfo] = useState('');
   const [allergens, setAllergens] = useState('');
 
+  // Edit mode state - when editing an existing basket item
+  const [editingOrder, setEditingOrder] = useState(null);
+
   const toggleItemSelection = (itemId) => {
     setSelectedItems(prev => ({
       ...prev,
@@ -105,6 +108,19 @@ export default function OrderPage() {
       return;
     }
 
+    // Check if we're editing an existing order from the basket
+    const editingData = localStorage.getItem('editingOrder');
+    let orderBeingEdited = null;
+    if (editingData) {
+      orderBeingEdited = JSON.parse(editingData);
+      setEditingOrder(orderBeingEdited);
+      // Pre-fill the form with existing values
+      setNumPeople(orderBeingEdited.numPeople || 5);
+      setNotes(orderBeingEdited.notes || '');
+      setDietaryInfo(orderBeingEdited.dietaryInfo || '');
+      setAllergens(orderBeingEdited.allergens || '');
+    }
+
     const fetchMenuData = async () => {
       try {
         setLoading(true);
@@ -145,23 +161,38 @@ export default function OrderPage() {
             }
           }
 
-          // Initialize all items as selected, except Bread items
-          // For Bread, default to "White and Brown Bread" option
-          const initialSelected = {};
-          sections.forEach(section => {
-            if (section.items && section.items.length > 0) {
-              section.items.forEach(item => {
-                if (section.name === 'Bread') {
-                  // Default to "White and Brown Bread" option
-                  initialSelected[item.id] = item.name.toLowerCase().includes('white and brown');
-                } else {
-                  // All other items start selected
-                  initialSelected[item.id] = true;
-                }
-              });
-            }
-          });
-          setSelectedItems(initialSelected);
+          // If editing, restore the selected items from the order
+          // Otherwise, initialize with defaults
+          if (orderBeingEdited && orderBeingEdited.items) {
+            const editSelected = {};
+            sections.forEach(section => {
+              if (section.items && section.items.length > 0) {
+                section.items.forEach(item => {
+                  // Check if this item was in the edited order
+                  editSelected[item.id] = orderBeingEdited.items.includes(item.id);
+                });
+              }
+            });
+            setSelectedItems(editSelected);
+          } else {
+            // Initialize all items as selected, except Bread items
+            // For Bread, default to "White and Brown Bread" option
+            const initialSelected = {};
+            sections.forEach(section => {
+              if (section.items && section.items.length > 0) {
+                section.items.forEach(item => {
+                  if (section.name === 'Bread') {
+                    // Default to "White and Brown Bread" option
+                    initialSelected[item.id] = item.name.toLowerCase().includes('white and brown');
+                  } else {
+                    // All other items start selected
+                    initialSelected[item.id] = true;
+                  }
+                });
+              }
+            });
+            setSelectedItems(initialSelected);
+          }
         } else {
           // Handle API-level errors without throwing - let caller decide what to do
           console.error('API returned error:', menuData);
@@ -559,6 +590,13 @@ export default function OrderPage() {
                       totalPrice: buffetSubtotal,
                       timestamp: new Date().toISOString()
                     };
+
+                    // If editing, include the edit index so we replace instead of add
+                    if (editingOrder && editingOrder.editIndex !== undefined) {
+                      newOrder.editIndex = editingOrder.editIndex;
+                      // Clear the editing state
+                      localStorage.removeItem('editingOrder');
+                    }
 
                     // Save as pending order - upgrade page will check for available upgrades
                     localStorage.setItem('pendingOrder', JSON.stringify(newOrder));
