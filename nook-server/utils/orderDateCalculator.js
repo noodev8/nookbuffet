@@ -2,14 +2,14 @@
 =======================================================================================================================================
 ORDER DATE CALCULATOR - Works out when the earliest delivery/collection can be
 =======================================================================================================================================
-We need at least 1 day notice for orders, but there's a daily cutoff time.
+ need at least 1 day notice for orders, but there's a daily cutoff time.
 If you order after the cutoff (default 4pm), you need to wait an extra day.
 
 Example:
 - Order at 2pm Monday → earliest delivery is Tuesday (before cutoff, so next day)
 - Order at 5pm Monday → earliest delivery is Wednesday (after cutoff, so day after next)
 
-The cutoff time is stored in the database so it can be changed without touching code.
+The cutoff time is stored in the database 
 =======================================================================================================================================
 */
 
@@ -20,7 +20,7 @@ const { query } = require('../database');
 // Takes into account the daily cutoff time from the database
 const calculateEarliestOrderDate = async () => {
   try {
-    // Grab the cutoff time from the database - this is when we stop taking orders for next day
+    // Grab the cutoff time from the database
     const configResult = await query(
       'SELECT config_value FROM order_config WHERE config_key = $1',
       ['daily_cutoff_time']
@@ -29,7 +29,7 @@ const calculateEarliestOrderDate = async () => {
     // Default to 4pm if not set in database
     const cutoffTime = configResult.rows[0]?.config_value || '16:00';
 
-    // Get current time in HH:MM format so we can compare with cutoff
+    // Get current time in HH:MM format 
     const now = new Date();
     const currentTime = now.toTimeString().slice(0, 5);
 

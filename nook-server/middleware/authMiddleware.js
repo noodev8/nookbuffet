@@ -40,7 +40,7 @@ const verifyToken = (req, res, next) => {
     const token = authHeader.substring(7);
     
     // Verify the token
-    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key-change-this';
+    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
     const decoded = jwt.verify(token, jwtSecret);
     
     // Add user data to request object so other middleware/routes can use it

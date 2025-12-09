@@ -7,9 +7,9 @@ verifies their password, and returns a JWT token if everything is valid.
 
 The flow:
 1. User submits email/username and password
-2. We look up the user in the database
-3. We compare the password with the stored hash using bcrypt
-4. If valid, we create a JWT token and send it back
+2. look up the user in the database
+3. compare the password with the stored hash using bcrypt
+4. If valid, create a JWT token and send it back
 5. The frontend stores this token and sends it with future requests
 =======================================================================================================================================
 */
@@ -86,7 +86,7 @@ const login = async (req, res) => {
         email: user.email,
         role: user.role
       },
-      process.env.JWT_SECRET || 'your-secret-key-change-this', // Secret key from .env
+      process.env.JWT_SECRET || 'your-secret-key', // Secret key from .env
       { expiresIn: '24h' } // Token expires in 24 hours
     );
 
@@ -185,7 +185,6 @@ const createUser = async (req, res) => {
 
     // ===== HASH PASSWORD =====
     // Hash the password before storing it
-    // 10 is the salt rounds - higher is more secure but slower
     const password_hash = await bcrypt.hash(password, 10);
 
     // ===== CREATE USER =====
@@ -200,7 +199,7 @@ const createUser = async (req, res) => {
     });
 
     // ===== SUCCESS RESPONSE =====
-    // Send back the new user info (but NOT the password hash!)
+    // Send back the new user info 
     return res.json({
       return_code: 'SUCCESS',
       message: 'User created successfully',
