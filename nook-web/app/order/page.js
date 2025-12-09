@@ -28,6 +28,10 @@ export default function OrderPage() {
   // Edit mode state - when editing an existing basket item
   const [editingOrder, setEditingOrder] = useState(null);
 
+  // Minimum people warning popup state
+  const [showMinPeopleWarning, setShowMinPeopleWarning] = useState(false);
+  const [pendingOrderData, setPendingOrderData] = useState(null);
+
   const toggleItemSelection = (itemId) => {
     setSelectedItems(prev => ({
       ...prev,
@@ -598,6 +602,13 @@ export default function OrderPage() {
                       localStorage.removeItem('editingOrder');
                     }
 
+                    // Check if less than 5 people - show warning but allow to continue
+                    if (numPeople < 5) {
+                      setPendingOrderData(newOrder);
+                      setShowMinPeopleWarning(true);
+                      return;
+                    }
+
                     // Save as pending order - upgrade page will check for available upgrades
                     localStorage.setItem('pendingOrder', JSON.stringify(newOrder));
 
@@ -626,6 +637,43 @@ export default function OrderPage() {
             >
               OK
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for minimum people warning */}
+      {showMinPeopleWarning && (
+        <div className="modal-overlay">
+          <div className="modal-content min-people-warning">
+            <h3 className="modal-title">Minimum Order Notice</h3>
+            <p className="modal-message">
+              You've selected {numPeople} {numPeople === 1 ? 'person' : 'people'} for this buffet.
+            </p>
+            <p className="modal-message">
+              Please note: You need a minimum of <strong>5 people total</strong> across all buffets in your basket to complete checkout.
+            </p>
+            <p className="modal-message modal-hint">
+              You can add more buffets to reach the minimum, or adjust the number of people.
+            </p>
+            <div className="modal-buttons">
+              <button
+                className="modal-button modal-button-secondary"
+                onClick={() => setShowMinPeopleWarning(false)}
+              >
+                Go Back
+              </button>
+              <button
+                className="modal-button"
+                onClick={() => {
+                  setShowMinPeopleWarning(false);
+                  // Save as pending order and continue
+                  localStorage.setItem('pendingOrder', JSON.stringify(pendingOrderData));
+                  router.push('/upgrade');
+                }}
+              >
+                Continue Anyway
+              </button>
+            </div>
           </div>
         </div>
       )}
