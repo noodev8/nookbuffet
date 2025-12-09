@@ -213,11 +213,47 @@ const updateMenuItemStockStatus = async (itemId, isActive) => {
   }
 };
 
+// ===== GET MENU ITEMS BY IDS =====
+/**
+ * Get menu item details by an array of IDs
+ * Used for getting item names/details for order confirmation emails
+ *
+ * @param {array} itemIds - Array of menu item IDs
+ * @returns {Promise<array>} Array of menu items with name and category
+ */
+const getMenuItemsByIds = async (itemIds) => {
+  if (!itemIds || itemIds.length === 0) {
+    return [];
+  }
+
+  try {
+    // Create placeholders for parameterized query ($1, $2, $3, etc.)
+    const placeholders = itemIds.map((_, index) => `$${index + 1}`).join(', ');
+
+    const result = await query(`
+      SELECT
+        mi.id,
+        mi.name,
+        c.name as category_name
+      FROM menu_items mi
+      JOIN categories c ON mi.category_id = c.id
+      WHERE mi.id IN (${placeholders})
+      ORDER BY c.position, mi.name
+    `, itemIds);
+
+    return result.rows;
+  } catch (error) {
+    console.error('Could not get menu items by IDs:', error);
+    return [];
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the controller
 module.exports = {
   getAllMenuSections,
   getMenuSectionsByBuffetVersion,
   getAllMenuItemsForManagement,
-  updateMenuItemStockStatus
+  updateMenuItemStockStatus,
+  getMenuItemsByIds
 };

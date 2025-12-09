@@ -12,6 +12,7 @@ Controllers are the middle person between routes and models. They:
 
 const orderModel = require('../models/orderModel');
 const { calculateEarliestOrderDate } = require('../utils/orderDateCalculator');
+const { sendOrderConfirmationEmail } = require('../utils/emailService');
 
 // ===== CREATE A NEW ORDER =====
 /**
@@ -137,6 +138,28 @@ const createOrder = async (req, res) => {
 
     // Ask the model to create the order in the database
     const createdOrder = await orderModel.createOrder(orderData);
+
+    // Send confirmation email to customer (don't wait for it - fire and forget)
+    // We pass the original orderData plus the new order ID
+    const emailData = {
+      ...orderData,
+      customerName: orderData.name,
+      customerEmail: orderData.email,
+      deliveryAddress: orderData.address
+    };
+
+    // Send email in background - don't block the response
+    sendOrderConfirmationEmail(emailData, createdOrder.id)
+      .then(result => {
+        if (result.success) {
+          console.log(`Confirmation email sent for order #${createdOrder.id}`);
+        } else {
+          console.error(`Failed to send confirmation email for order #${createdOrder.id}:`, result.error);
+        }
+      })
+      .catch(err => {
+        console.error(`Email error for order #${createdOrder.id}:`, err);
+      });
 
     // Send success response back to the website
     res.json({
