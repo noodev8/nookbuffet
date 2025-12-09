@@ -58,7 +58,7 @@ export default function OrderPage() {
       }
     }
 
-    // Check Sandwiches and Wraps sections individually - each can't exceed number of people
+    // Check Sandwiches and Wraps sections individually - must have same or more people than choices
     const restrictedSections = ['Sandwiches', 'Wraps'];
     for (const section of menuSections) {
       if (restrictedSections.includes(section.name) && section.items) {
@@ -70,7 +70,7 @@ export default function OrderPage() {
         });
 
         if (sectionCount > numPeople) {
-          setModalMessage(`You cannot select more ${section.name} (${sectionCount}) than people (${numPeople}). Please adjust your selections.`);
+          setModalMessage(`You need the same or more people (${numPeople}) than ${section.name.toLowerCase()} choices (${sectionCount}). Please add more people or reduce selections.`);
           setShowModal(true);
           return false;
         }
