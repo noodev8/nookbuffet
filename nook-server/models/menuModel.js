@@ -150,10 +150,11 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
 /**
  * Get ALL menu items across all categories for admin management
  *
- * This returns every menu item with its category info, regardless of is_active status.
- * Used by the admin panel to manage stock status.
+ * This returns every menu item with its category and buffet version info,
+ * regardless of is_active status. Used by the admin panel to manage stock status.
+ * Items are grouped by buffet version for easy display.
  *
- * @returns {Promise<array>} Array of all menu items with category info
+ * @returns {Promise<array>} Array of all menu items with category and buffet version info
  */
 const getAllMenuItemsForManagement = async () => {
   try {
@@ -166,10 +167,14 @@ const getAllMenuItemsForManagement = async () => {
         mi.allergens,
         mi.dietary_info,
         c.id as category_id,
-        c.name as category_name
+        c.name as category_name,
+        c.position as category_position,
+        bv.id as buffet_version_id,
+        bv.title as buffet_version_name
       FROM menu_items mi
       JOIN categories c ON mi.category_id = c.id
-      ORDER BY c.position, c.name, mi.name
+      LEFT JOIN buffet_versions bv ON c.buffet_version_id = bv.id
+      ORDER BY bv.id, c.position, c.name, mi.name
     `);
 
     return result.rows;

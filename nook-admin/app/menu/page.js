@@ -12,6 +12,8 @@ export default function MenuManagementPage() {
   const [user, setUser] = useState(null);
   const [filterCategory, setFilterCategory] = useState('all');
   const [categories, setCategories] = useState([]);
+  const [buffetVersions, setBuffetVersions] = useState([]);
+  const [selectedBuffetVersion, setSelectedBuffetVersion] = useState('all');
 
   // Check authentication on mount
   useEffect(() => {
@@ -64,6 +66,22 @@ export default function MenuManagementPage() {
           // Extract unique categories
           const uniqueCategories = [...new Set(data.data.map(item => item.category_name))];
           setCategories(uniqueCategories);
+
+          // Extract unique buffet versions (filter out nulls for items without a buffet version)
+          const versions = data.data
+            .filter(item => item.buffet_version_id)
+            .reduce((acc, item) => {
+              if (!acc.find(v => v.id === item.buffet_version_id)) {
+                acc.push({ id: item.buffet_version_id, name: item.buffet_version_name });
+              }
+              return acc;
+            }, []);
+          setBuffetVersions(versions);
+
+          // Default to first buffet version if available
+          if (versions.length > 0) {
+            setSelectedBuffetVersion(versions[0].id.toString());
+          }
         } else if (data.return_code === 'UNAUTHORIZED' || data.return_code === 'FORBIDDEN') {
           // Clear invalid token and redirect to login
           localStorage.removeItem('admin_token');
@@ -132,10 +150,24 @@ export default function MenuManagementPage() {
     router.push('/login');
   };
 
-  // Filter menu items by category
-  const filteredItems = filterCategory === 'all' 
-    ? menuItems 
-    : menuItems.filter(item => item.category_name === filterCategory);
+  // Filter menu items by buffet version and category
+  const filteredItems = menuItems.filter(item => {
+    // Filter by buffet version
+    const matchesBuffetVersion = selectedBuffetVersion === 'all' ||
+      (item.buffet_version_id && item.buffet_version_id.toString() === selectedBuffetVersion);
+
+    // Filter by category
+    const matchesCategory = filterCategory === 'all' || item.category_name === filterCategory;
+
+    return matchesBuffetVersion && matchesCategory;
+  });
+
+  // Get categories for the selected buffet version (for the category dropdown)
+  const filteredCategories = selectedBuffetVersion === 'all'
+    ? categories
+    : [...new Set(menuItems
+        .filter(item => item.buffet_version_id && item.buffet_version_id.toString() === selectedBuffetVersion)
+        .map(item => item.category_name))];
 
   if (loading) {
     return (
@@ -177,18 +209,37 @@ export default function MenuManagementPage() {
 
       <div className="page-header">
         <div className="filter-section">
-          <label htmlFor="category-filter">Filter by Category:</label>
-          <select
-            id="category-filter"
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="category-filter"
-          >
-            <option value="all">All Categories</option>
-            {categories.map(category => (
-              <option key={category} value={category}>{category}</option>
+          {/* Buffet Version Tabs */}
+          <div className="buffet-version-tabs">
+            {buffetVersions.map(version => (
+              <button
+                key={version.id}
+                className={`buffet-tab ${selectedBuffetVersion === version.id.toString() ? 'active' : ''}`}
+                onClick={() => {
+                  setSelectedBuffetVersion(version.id.toString());
+                  setFilterCategory('all'); // Reset category filter when switching buffet
+                }}
+              >
+                {version.name}
+              </button>
             ))}
-          </select>
+          </div>
+
+          {/* Category Filter */}
+          <div className="category-filter-wrapper">
+            <label htmlFor="category-filter">Category:</label>
+            <select
+              id="category-filter"
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="category-filter"
+            >
+              <option value="all">All Categories</option>
+              {filteredCategories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 

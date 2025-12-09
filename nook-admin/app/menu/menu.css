@@ -100,11 +100,48 @@
    ======================================== */
 .filter-section {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 1rem;
 }
 
-.filter-section label {
+/* Buffet Version Tabs */
+.buffet-version-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.buffet-tab {
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #666;
+}
+
+.buffet-tab:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.buffet-tab.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+/* Category Filter */
+.category-filter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.category-filter-wrapper label {
   font-weight: 600;
   color: #333;
 }
@@ -349,8 +386,24 @@
     width: 100%;
   }
 
+  .buffet-version-tabs {
+    width: 100%;
+  }
+
+  .buffet-tab {
+    flex: 1;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .category-filter-wrapper {
+    width: 100%;
+  }
+
   .category-filter {
     width: 100%;
+    flex: 1;
   }
 
   .menu-items-grid {
