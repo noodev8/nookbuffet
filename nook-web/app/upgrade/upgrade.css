@@ -29,6 +29,38 @@
   margin: 0;
 }
 
+/* ===== CURRENT ORDER SUMMARY ===== */
+.current-order-summary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid #444;
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.summary-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5rem;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.summary-row span:last-child {
+  font-weight: 600;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.2rem;
+}
+
 /* ===== UPGRADE SHOWCASE ===== */
 .upgrade-showcase {
   background: rgba(255, 255, 255, 0.05);

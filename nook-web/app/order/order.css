@@ -264,7 +264,64 @@
   letter-spacing: 0.5px;
 }
 
-/* ===== PEOPLE COUNT INPUT (LARGE) ===== */
+/* ===== PEOPLE COUNT CONTROLS (+/- BUTTONS) ===== */
+.people-count-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.people-count-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.people-count-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: white;
+  transform: scale(1.05);
+}
+
+.people-count-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.people-count-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.people-count-button.minus {
+  font-size: 1.8rem;
+}
+
+.people-count-button.plus {
+  font-size: 1.5rem;
+}
+
+.people-count-display {
+  font-size: 2rem;
+  font-weight: 700;
+  color: white;
+  min-width: 50px;
+  text-align: center;
+  font-family: 'Oswald', sans-serif;
+}
+
+/* ===== PEOPLE COUNT INPUT (LARGE) - LEGACY ===== */
 .people-count-input-large {
   width: 100px;
   padding: 0.8rem;
@@ -1222,6 +1279,22 @@
   .fulfillment-options {
     flex-direction: column;
     gap: 1rem;
+  }
+
+  /* People count controls mobile */
+  .people-count-button {
+    width: 40px;
+    height: 40px;
+    font-size: 1.3rem;
+  }
+
+  .people-count-button.minus {
+    font-size: 1.5rem;
+  }
+
+  .people-count-display {
+    font-size: 1.8rem;
+    min-width: 45px;
   }
 }
 

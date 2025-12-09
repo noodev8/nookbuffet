@@ -180,6 +180,8 @@ export default function UpgradePage() {
   }
 
   const upgradeTotal = parseFloat(upgrade.price_per_person) * (pendingOrder?.numPeople || 1);
+  const buffetSubtotal = pendingOrder?.totalPrice || 0;
+  const grandTotal = buffetSubtotal + upgradeTotal;
 
   return (
     <div className="welcome-page-option3">
@@ -189,6 +191,15 @@ export default function UpgradePage() {
           {/* Header */}
           <div className="upgrade-page-header">
             <h1 className="upgrade-page-title">Would You Like To Add An Upgrade?</h1>
+          </div>
+
+          {/* Current Order Summary */}
+          <div className="current-order-summary">
+            <div className="summary-label">Your Current Total</div>
+            <div className="summary-row">
+              <span>Buffet ({pendingOrder?.numPeople} people)</span>
+              <span>£{buffetSubtotal.toFixed(2)}</span>
+            </div>
           </div>
 
           {/* Upgrade Card */}

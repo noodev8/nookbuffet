@@ -334,7 +334,7 @@ export default function BasketPage() {
               {orders.map((order, index) => (
                 <div key={index} className="order-card">
                   <div className="order-header">
-                    <h3 className="order-number">Buffet #{index + 1}</h3>
+                    <h3 className="order-number">{order.buffetName || `Buffet #${index + 1}`}</h3>
                     <button
                       className="order-remove-button"
                       onClick={() => handleRemoveOrder(index)}

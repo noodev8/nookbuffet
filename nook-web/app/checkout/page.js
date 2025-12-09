@@ -136,8 +136,8 @@ function CheckoutContent() {
               {orders.map((order, index) => (
                 <div key={index} className="checkout-order-item">
                   <div className="checkout-order-header">
-                    {/* Show which buffet this is (1, 2, 3, etc.) */}
-                    <span className="checkout-order-number">Buffet #{index + 1}</span>
+                    {/* Show the buffet name (e.g., "Standard Buffet", "Kids Buffet") */}
+                    <span className="checkout-order-number">{order.buffetName || `Buffet #${index + 1}`}</span>
                     {/* Show how many people - adds an 's' if more than one person */}
                     <span className="checkout-order-people">{order.numPeople} person{order.numPeople !== 1 ? 's' : ''}</span>
                   </div>

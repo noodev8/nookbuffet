@@ -14,7 +14,7 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedItems, setSelectedItems] = useState({});
-  const [numPeople, setNumPeople] = useState(1);
+  const [numPeople, setNumPeople] = useState(5);
   const [modalMessage, setModalMessage] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [pricePerPerson, setPricePerPerson] = useState(0);
@@ -145,13 +145,19 @@ export default function OrderPage() {
             }
           }
 
-          // Initialize all items as selected, except Bread items (which start unselected)
+          // Initialize all items as selected, except Bread items
+          // For Bread, default to "White and Brown Bread" option
           const initialSelected = {};
           sections.forEach(section => {
             if (section.items && section.items.length > 0) {
               section.items.forEach(item => {
-                // Bread items start unselected, all others start selected
-                initialSelected[item.id] = section.name !== 'Bread';
+                if (section.name === 'Bread') {
+                  // Default to "White and Brown Bread" option
+                  initialSelected[item.id] = item.name.toLowerCase().includes('white and brown');
+                } else {
+                  // All other items start selected
+                  initialSelected[item.id] = true;
+                }
               });
             }
           });
@@ -215,15 +221,23 @@ export default function OrderPage() {
               {/* How Many People Section */}
               <div className="form-section">
                 <h2 className="form-section-title">How Many People?</h2>
-                <div className="form-group">
-                  <input
-                    id="order-people"
-                    type="number"
-                    min="1"
-                    value={numPeople}
-                    onChange={(e) => setNumPeople(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="people-count-input-large"
-                  />
+                <div className="people-count-controls">
+                  <button
+                    type="button"
+                    className="people-count-button minus"
+                    onClick={() => setNumPeople(Math.max(1, numPeople - 1))}
+                    disabled={numPeople <= 1}
+                  >
+                    −
+                  </button>
+                  <span className="people-count-display">{numPeople}</span>
+                  <button
+                    type="button"
+                    className="people-count-button plus"
+                    onClick={() => setNumPeople(numPeople + 1)}
+                  >
+                    +
+                  </button>
                 </div>
               </div>
 
@@ -540,6 +554,7 @@ export default function OrderPage() {
                       dietaryInfo,
                       allergens,
                       buffetVersionId,
+                      buffetName: buffetTitle,
                       pricePerPerson,
                       totalPrice: buffetSubtotal,
                       timestamp: new Date().toISOString()
