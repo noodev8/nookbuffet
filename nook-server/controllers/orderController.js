@@ -140,25 +140,27 @@ const createOrder = async (req, res) => {
     const createdOrder = await orderModel.createOrder(orderData);
 
     // Send confirmation email to customer (don't wait for it - fire and forget)
-    // We pass the original orderData plus the new order ID
+    // We pass the original orderData plus the new order details
+    // Using businessName since that's what the frontend collects (no separate contact name field)
     const emailData = {
       ...orderData,
-      customerName: orderData.name,
+      customerName: orderData.businessName || 'Customer',
       customerEmail: orderData.email,
       deliveryAddress: orderData.address
     };
 
     // Send email in background - don't block the response
-    sendOrderConfirmationEmail(emailData, createdOrder.id)
+    // Pass the order number (ORD-014 format) not just the ID
+    sendOrderConfirmationEmail(emailData, createdOrder.order_number)
       .then(result => {
         if (result.success) {
-          console.log(`Confirmation email sent for order #${createdOrder.id}`);
+          console.log(`Confirmation email sent for ${createdOrder.order_number}`);
         } else {
-          console.error(`Failed to send confirmation email for order #${createdOrder.id}:`, result.error);
+          console.error(`Failed to send confirmation email for ${createdOrder.order_number}:`, result.error);
         }
       })
       .catch(err => {
-        console.error(`Email error for order #${createdOrder.id}:`, err);
+        console.error(`Email error for ${createdOrder.order_number}:`, err);
       });
 
     // Send success response back to the website

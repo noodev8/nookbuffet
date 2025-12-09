@@ -22,10 +22,10 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * Send order confirmation email to customer
  *
  * @param {object} orderData - The complete order data
- * @param {number} orderId - The order ID from the database
+ * @param {string} orderNumber - The order number (e.g., "ORD-014")
  * @returns {Promise<object>} - Result from Resend
  */
-const sendOrderConfirmationEmail = async (orderData, orderId) => {
+const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
   try {
     // Build the buffets HTML section
     let buffetsHtml = '';
@@ -116,7 +116,7 @@ const sendOrderConfirmationEmail = async (orderData, orderId) => {
               <p style="font-size: 18px; margin-bottom: 20px;">Thank you for your order, <strong>${orderData.customerName}</strong>!</p>
               
               <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin-bottom: 25px;">
-                <strong>Order #${orderId}</strong> has been received and is being processed.
+                <strong>Order ${orderNumber}</strong> has been received and is being processed.
               </div>
 
               <!-- Order Details -->
@@ -174,7 +174,7 @@ const sendOrderConfirmationEmail = async (orderData, orderId) => {
     const result = await resend.emails.send({
       from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,
       to: orderData.customerEmail,
-      subject: `Order Confirmation #${orderId} - The Little Nook Buffet`,
+      subject: `Order Confirmation ${orderNumber} - The Little Nook Buffet`,
       html: emailHtml
     });
 

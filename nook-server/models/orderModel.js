@@ -103,8 +103,8 @@ const createOrder = async (orderData) => {
         if (itemDetails.rows.length > 0) {
           const itemQuery = `
             INSERT INTO order_items (
-              order_buffet_id, menu_item_id, item_name, category_name, quantity
-            ) VALUES ($1, $2, $3, $4, $5)
+              order_buffet_id, menu_item_id, item_name, category_name, quantity, order_id
+            ) VALUES ($1, $2, $3, $4, $5, $6)
           `;
 
           const itemValues = [
@@ -112,7 +112,8 @@ const createOrder = async (orderData) => {
             itemId,
             itemDetails.rows[0].name,
             itemDetails.rows[0].category_name,
-            1
+            1,
+            orderId
           ];
 
           await client.query(itemQuery, itemValues);
@@ -141,8 +142,8 @@ const createOrder = async (orderData) => {
             const upgradeQuery = `
               INSERT INTO order_buffet_upgrades (
                 order_buffet_id, upgrade_id, upgrade_name,
-                price_per_person, num_people, subtotal
-              ) VALUES ($1, $2, $3, $4, $5, $6)
+                price_per_person, num_people, subtotal, order_id
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7)
               RETURNING id
             `;
 
@@ -152,7 +153,8 @@ const createOrder = async (orderData) => {
               upgrade.name,
               upgrade.price_per_person,
               buffet.numPeople,
-              upgradeSubtotal
+              upgradeSubtotal,
+              orderId
             ];
 
             const upgradeResult = await client.query(upgradeQuery, upgradeValues);
