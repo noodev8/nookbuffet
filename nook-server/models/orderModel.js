@@ -171,15 +171,16 @@ const createOrder = async (orderData) => {
               if (itemDetails.rows.length > 0) {
                 const itemQuery = `
                   INSERT INTO order_buffet_upgrade_items (
-                    order_buffet_upgrade_id, upgrade_item_id, item_name, category_name
-                  ) VALUES ($1, $2, $3, $4)
+                    order_buffet_upgrade_id, upgrade_item_id, item_name, category_name, order_id
+                  ) VALUES ($1, $2, $3, $4, $5)
                 `;
 
                 const itemValues = [
                   orderBuffetUpgradeId,
                   itemId,
                   itemDetails.rows[0].name,
-                  itemDetails.rows[0].category_name
+                  itemDetails.rows[0].category_name,
+                  orderId
                 ];
 
                 await client.query(itemQuery, itemValues);
