@@ -247,6 +247,7 @@ const getAllOrders = async (branchId = null) => {
             JSON_BUILD_OBJECT(
               'id', ob.id,
               'buffet_version_id', ob.buffet_version_id,
+              'buffet_name', (SELECT bv.title FROM buffet_versions bv WHERE bv.id = ob.buffet_version_id),
               'num_people', ob.num_people,
               'price_per_person', ob.price_per_person,
               'subtotal', ob.subtotal,
@@ -354,10 +355,112 @@ const updateOrderStatus = async (orderId, status) => {
   return result.rows[0];
 };
 
+// ===== GET SINGLE ORDER BY ID =====
+/**
+ * Gets a single order with all its buffets and items by ID
+ * Uses the same JSON aggregation pattern as getAllOrders
+ *
+ * @param {number} orderId - The ID of the order to get
+ * @returns {object|null} The order with complete details, or null if not found
+ */
+const getOrderById = async (orderId) => {
+  const orderSQL = `
+    SELECT
+      o.id, o.order_number, o.customer_email, o.customer_phone,
+      o.fulfillment_type, o.fulfillment_address, o.fulfillment_date, o.fulfillment_time,
+      o.total_price, o.status, o.payment_status, o.payment_method, o.notes,
+      o.created_at, o.updated_at, o.branch_id, b.name as branch_name,
+
+      -- Aggregate all buffets for this order into a JSON array
+      COALESCE(
+        (
+          SELECT JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', ob.id,
+              'buffet_version_id', ob.buffet_version_id,
+              'buffet_name', (SELECT bv.title FROM buffet_versions bv WHERE bv.id = ob.buffet_version_id),
+              'num_people', ob.num_people,
+              'price_per_person', ob.price_per_person,
+              'subtotal', ob.subtotal,
+              'dietary_info', ob.dietary_info,
+              'allergens', ob.allergens,
+              'notes', ob.notes,
+
+              -- Nested: aggregate items for this buffet
+              'items', COALESCE(
+                (
+                  SELECT JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                      'id', oi.id,
+                      'menu_item_id', oi.menu_item_id,
+                      'item_name', oi.item_name,
+                      'category_name', oi.category_name,
+                      'quantity', oi.quantity
+                    )
+                  )
+                  FROM order_items oi
+                  WHERE oi.order_buffet_id = ob.id
+                ),
+                '[]'::json
+              ),
+
+              -- Nested: aggregate upgrades for this buffet (with their items)
+              'upgrades', COALESCE(
+                (
+                  SELECT JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                      'id', obu.id,
+                      'upgrade_id', obu.upgrade_id,
+                      'upgrade_name', obu.upgrade_name,
+                      'price_per_person', obu.price_per_person,
+                      'num_people', obu.num_people,
+                      'subtotal', obu.subtotal,
+
+                      -- Deeply nested: aggregate items for this upgrade
+                      'selectedItems', COALESCE(
+                        (
+                          SELECT JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                              'id', obui.id,
+                              'upgrade_item_id', obui.upgrade_item_id,
+                              'item_name', obui.item_name,
+                              'category_name', obui.category_name
+                            )
+                          )
+                          FROM order_buffet_upgrade_items obui
+                          WHERE obui.order_buffet_upgrade_id = obu.id
+                        ),
+                        '[]'::json
+                      )
+                    )
+                  )
+                  FROM order_buffet_upgrades obu
+                  WHERE obu.order_buffet_id = ob.id
+                ),
+                '[]'::json
+              )
+            )
+          )
+          FROM order_buffets ob
+          WHERE ob.order_id = o.id
+        ),
+        '[]'::json
+      ) as buffets
+
+    FROM orders o
+    LEFT JOIN branches b ON o.branch_id = b.id
+    WHERE o.id = $1
+  `;
+
+  const result = await query(orderSQL, [orderId]);
+  return result.rows[0] || null;
+};
+
 // Export the functions so other files can use them
 module.exports = {
   createOrder,
   getAllOrders,
+  getOrderById,
   updateOrderStatus
 };
 

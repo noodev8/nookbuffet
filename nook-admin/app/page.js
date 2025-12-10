@@ -9,7 +9,6 @@ export default function AdminPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [expandedOrders, setExpandedOrders] = useState({});
   const [filterStatus, setFilterStatus] = useState('all');
   const [user, setUser] = useState(null);
   const [branches, setBranches] = useState([]);
@@ -113,11 +112,8 @@ export default function AdminPage() {
     fetchOrders();
   }, [user, selectedBranch]);
 
-  const toggleOrder = (orderId) => {
-    setExpandedOrders(prev => ({
-      ...prev,
-      [orderId]: !prev[orderId]
-    }));
+  const goToOrderDetails = (orderId) => {
+    router.push(`/orders/${orderId}`);
   };
 
   const formatDate = (dateString) => {
@@ -316,7 +312,7 @@ export default function AdminPage() {
           orders.map((order) => (
             <div key={order.id} className="order-card" data-order-id={order.id}>
               <div className="order-header">
-                <div className="order-header-main" onClick={() => toggleOrder(order.id)}>
+                <div className="order-header-main" onClick={() => goToOrderDetails(order.id)}>
                   <div className="order-header-left">
                     <div className="order-number-section">
                       <h2 className="order-number">{order.order_number}</h2>
@@ -344,9 +340,7 @@ export default function AdminPage() {
                   </div>
                   <div className="order-header-right">
                     <span className="order-total">£{parseFloat(order.total_price).toFixed(2)}</span>
-                    <span className={`expand-icon ${expandedOrders[order.id] ? 'expanded' : ''}`}>
-                      {expandedOrders[order.id] ? '▲' : '▼'}
-                    </span>
+                    <span className="view-details-icon">→</span>
                   </div>
                 </div>
                 <div className="order-actions">
@@ -370,197 +364,7 @@ export default function AdminPage() {
                   </button>
                 </div>
               </div>
-
-              <div className={`order-details ${expandedOrders[order.id] ? 'expanded' : 'collapsed'}`}>
-                  {/* Customer Info */}
-                  <div className="detail-section customer-section">
-                    <h3>Customer Details</h3>
-                    <div className="info-cards">
-                      <div className="info-card">
-                        <div className="info-content">
-                          <span className="info-label">Business</span>
-                          <span className="info-value">{order.notes || 'N/A'}</span>
-                        </div>
-                      </div>
-                      <div className="info-card">
-                        <div className="info-content">
-                          <span className="info-label">Email</span>
-                          <span className="info-value">{order.customer_email}</span>
-                        </div>
-                      </div>
-                      <div className="info-card">
-                        <div className="info-content">
-                          <span className="info-label">Phone</span>
-                          <span className="info-value">{order.customer_phone}</span>
-                        </div>
-                      </div>
-                      <div className="info-card full-width">
-                        <div className="info-content">
-                          <span className="info-label">Address</span>
-                          <span className="info-value">{order.fulfillment_address}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Fulfillment Info */}
-                  <div className="detail-section fulfillment-section">
-                    <h3>Fulfillment Details</h3>
-                    <div className="info-cards">
-                      <div className="info-card">
-                        <div className="info-content">
-                          <span className="info-label">Type</span>
-                          <span className="info-value fulfillment-type">{order.fulfillment_type}</span>
-                        </div>
-                      </div>
-                      <div className="info-card">
-                        <div className="info-content">
-                          <span className="info-label">Date</span>
-                          <span className="info-value">{formatDate(order.fulfillment_date)}</span>
-                        </div>
-                      </div>
-                      <div className="info-card">
-                        <div className="info-content">
-                          <span className="info-label">Time</span>
-                          <span className="info-value">{formatTime(order.fulfillment_time)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Buffets */}
-                  {order.buffets && order.buffets.map((buffet, buffetIndex) => (
-                    <div key={buffet.id} className="detail-section buffet-section">
-                      <h3>Buffet #{buffetIndex + 1}</h3>
-
-                      <div className="buffet-summary">
-                        <div className="summary-item">
-                          <div>
-                            <span className="summary-label">People</span>
-                            <span className="summary-value">{buffet.num_people}</span>
-                          </div>
-                        </div>
-                        <div className="summary-item">
-                          <div>
-                            <span className="summary-label">Per Person</span>
-                            <span className="summary-value">£{parseFloat(buffet.price_per_person).toFixed(2)}</span>
-                          </div>
-                        </div>
-                        <div className="summary-item highlight">
-                          <div>
-                            <span className="summary-label">Subtotal</span>
-                            <span className="summary-value">£{parseFloat(buffet.subtotal).toFixed(2)}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {(buffet.dietary_info || buffet.allergens || buffet.notes) && (
-                        <div className="buffet-notes">
-                          {buffet.dietary_info && (
-                            <div className="note-item dietary-note">
-                              <div>
-                                <span className="note-label">Dietary Info</span>
-                                <span className="note-value">{buffet.dietary_info}</span>
-                              </div>
-                            </div>
-                          )}
-                          {buffet.allergens && (
-                            <div className="note-item allergen-note">
-                              <div>
-                                <span className="note-label">Allergens</span>
-                                <span className="note-value">{buffet.allergens}</span>
-                              </div>
-                            </div>
-                          )}
-                          {buffet.notes && (
-                            <div className="note-item general-note">
-                              <div>
-                                <span className="note-label">Notes</span>
-                                <span className="note-value">{buffet.notes}</span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Menu Items */}
-                      {buffet.items && buffet.items.length > 0 && (
-                        <div className="menu-items">
-                          <h4>Selected Menu Items</h4>
-                          <div className="items-by-category">
-                            {(() => {
-                              // Group items by category
-                              const itemsByCategory = {};
-                              buffet.items.forEach(item => {
-                                if (!itemsByCategory[item.category_name]) {
-                                  itemsByCategory[item.category_name] = [];
-                                }
-                                itemsByCategory[item.category_name].push(item);
-                              });
-
-                              return Object.entries(itemsByCategory).map(([category, items]) => (
-                                <div key={category} className="category-group">
-                                  <h5 className="category-title">
-                                    <span className="category-dot"></span>
-                                    {category}
-                                  </h5>
-                                  <ul className="items-list">
-                                    {items.map(item => (
-                                      <li key={item.id}>
-                                        {item.item_name}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              ));
-                            })()}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Upgrades */}
-                      {buffet.upgrades && buffet.upgrades.length > 0 && (
-                        <div className="upgrades-section">
-                          <h4>Upgrades</h4>
-                          {buffet.upgrades.map((upgrade) => (
-                            <div key={upgrade.id} className="upgrade-card">
-                              <div className="upgrade-header">
-                                <span className="upgrade-name">{upgrade.upgrade_name}</span>
-                                <span className="upgrade-price">
-                                  £{parseFloat(upgrade.price_per_person).toFixed(2)}/person × {upgrade.num_people} = £{parseFloat(upgrade.subtotal).toFixed(2)}
-                                </span>
-                              </div>
-                              {upgrade.selectedItems && upgrade.selectedItems.length > 0 && (
-                                <div className="upgrade-items">
-                                  {(() => {
-                                    // Group selected items by category
-                                    const itemsByCategory = {};
-                                    upgrade.selectedItems.forEach(item => {
-                                      if (!itemsByCategory[item.category_name]) {
-                                        itemsByCategory[item.category_name] = [];
-                                      }
-                                      itemsByCategory[item.category_name].push(item);
-                                    });
-
-                                    return Object.entries(itemsByCategory).map(([category, items]) => (
-                                      <div key={category} className="upgrade-category-group">
-                                        <span className="upgrade-category-name">{category}:</span>
-                                        <span className="upgrade-category-items">
-                                          {items.map(item => item.item_name).join(', ')}
-                                        </span>
-                                      </div>
-                                    ));
-                                  })()}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+            </div>
           ))
         )}
       </div>

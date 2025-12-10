@@ -96,6 +96,12 @@ router.get('/earliest-date', orderController.getEarliestOrderDate);
 // All authenticated users (staff, admin, manager) can view orders
 router.get('/', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.getAllOrders);
 
+// ===== ROUTE: GET SINGLE ORDER BY ID (PROTECTED) =====
+// When someone GETs /api/orders/:id, run the getOrderById function
+// GET is used because we're just reading data
+// All authenticated users (staff, admin, manager) can view orders
+router.get('/:id', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.getOrderById);
+
 // ===== ROUTE: CREATE NEW ORDER =====
 // When someone POSTs to /api/orders, run the createOrder function
 // POST is used because we're creating new data

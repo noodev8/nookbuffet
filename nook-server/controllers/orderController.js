@@ -300,10 +300,58 @@ const getEarliestOrderDate = async (req, res) => {
   }
 };
 
+// ===== GET SINGLE ORDER BY ID =====
+/**
+ * Gets a single order with complete details by its ID
+ * This is for the admin portal order details page
+ *
+ * @param {object} req - The request object (contains the ID in req.params.id)
+ * @param {object} res - The response object
+ */
+const getOrderById = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+
+    // Validate the ID
+    if (!orderId || isNaN(orderId)) {
+      return res.json({
+        return_code: 'INVALID_ID',
+        message: 'Please provide a valid order ID'
+      });
+    }
+
+    // Ask the model to get the order
+    const order = await orderModel.getOrderById(orderId);
+
+    if (!order) {
+      return res.json({
+        return_code: 'NOT_FOUND',
+        message: 'Order not found'
+      });
+    }
+
+    // Send the order back
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Got order details!',
+      data: order
+    });
+
+  } catch (error) {
+    console.error('Error getting order:', error);
+    res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to get order. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 // Export the functions so routes can use them
 module.exports = {
   createOrder,
   getAllOrders,
+  getOrderById,
   updateOrderStatus,
   getEarliestOrderDate
 };

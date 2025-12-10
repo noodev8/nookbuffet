@@ -23,8 +23,8 @@ const { getClient } = require('../database');
  * If anything fails, everything gets rolled back automatically
  * 
  * @param {function} callback - async function that receives a database client
- *                              do all your queries using this client
- * @returns {*} whatever your callback function returns
+ *                              do all queries using this 
+ * @returns {*} whatever the callback function returns
  * @throws {Error} if anything goes wrong (after rolling back)
  */
 const withTransaction = async (callback) => {

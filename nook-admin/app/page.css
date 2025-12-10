@@ -336,15 +336,15 @@
   font-family: 'Oswald', sans-serif;
 }
 
-.expand-icon {
-  font-size: 1rem;
+.view-details-icon {
+  font-size: 1.25rem;
   color: #667eea;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease;
   font-weight: bold;
 }
 
-.expand-icon.expanded {
-  transform: rotate(180deg);
+.order-header-main:hover .view-details-icon {
+  transform: translateX(4px);
 }
 
 /* ========================================
@@ -1013,7 +1013,7 @@
   .logout-button-bottom,
   .print-single-btn,
   .order-actions,
-  .expand-icon,
+  .view-details-icon,
   .order-badges,
   .order-header-left,
   .order-header-right,
