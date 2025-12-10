@@ -113,7 +113,7 @@ export default function AdminPage() {
   }, [user, selectedBranch]);
 
   const goToOrderDetails = (orderId) => {
-    router.push(`/orders/${orderId}`);
+    window.location.href = `/orders/${orderId}`;
   };
 
   const formatDate = (dateString) => {

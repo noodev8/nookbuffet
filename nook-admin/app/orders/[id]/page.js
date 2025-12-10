@@ -143,7 +143,7 @@ export default function OrderDetailsPage() {
   };
 
   const goBack = () => {
-    router.push('/');
+    window.location.href = '/';
   };
 
   if (loading) {
