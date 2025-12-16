@@ -4,7 +4,69 @@
 // Bringing in the tools we need from Next.js and React
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import './checkout.css';
+
+// Load Stripe outside of component to avoid recreating on every render
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+// The actual payment form component that uses Stripe hooks
+function PaymentForm({ orders, clientSecret, onSuccess, onError }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setLoading(true);
+    setErrorMessage('');
+
+    // Confirm the payment with Stripe
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: window.location.origin + '/checkout/success',
+      },
+      redirect: 'if_required', // Only redirect if 3D Secure is needed
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+      onError(error.message);
+    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+      // Payment successful - now create the order
+      onSuccess(paymentIntent.id);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <PaymentElement
+        options={{
+          layout: 'tabs',
+        }}
+      />
+      {errorMessage && (
+        <div className="payment-error-message">
+          {errorMessage}
+        </div>
+      )}
+      <button
+        type="submit"
+        disabled={!stripe || loading}
+        className="checkout-submit-button"
+        style={{ width: '100%', marginTop: '1.5rem' }}
+      >
+        {loading ? 'Processing...' : `Pay £${orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0).toFixed(2)}`}
+      </button>
+    </form>
+  );
+}
 
 function CheckoutContent() {
   // router lets us navigate between pages, searchParams grabs stuff from the URL
@@ -13,67 +75,87 @@ function CheckoutContent() {
 
   // These are state variables - the data this page keeps track of
   const [orders, setOrders] = useState([]); // All the buffet orders from the basket
-  const [loading, setLoading] = useState(false); // Whether we're currently processing the order
-  const [cardNumber, setCardNumber] = useState(''); // Card number input (not actually charged, just for testing)
-  const [cardExpiry, setCardExpiry] = useState(''); // Card expiry date
-  const [cardCVC, setCardCVC] = useState(''); // Card security code
+  const [loading, setLoading] = useState(false); // Whether we're currently processing
+  const [clientSecret, setClientSecret] = useState(''); // Stripe payment intent secret
+  const [paymentError, setPaymentError] = useState('');
 
   // This runs when the page loads - grabs the order data from the URL
-  // The basket page sends all the orders through the URL so it can display them here
   useEffect(() => {
     const ordersParam = searchParams.get('orders');
 
     if (ordersParam) {
       try {
-        // URL encoding makes special characters safe for URLs
         const decoded = decodeURIComponent(ordersParam);
-        // Turn the text back into actual JavaScript objects
         const parsedOrders = JSON.parse(decoded);
-        // Make sure it's an array of orders, even if there's just one
         setOrders(Array.isArray(parsedOrders) ? parsedOrders : [parsedOrders]);
       } catch (e) {
-        // If something goes wrong reading the orders
         console.error('Error parsing orders:', e);
       }
     }
-  }, [searchParams]); // This runs whenever searchParams changes
+  }, [searchParams]);
 
-  // This is what happens when someone clicks "Confirm Order"
-  const handleConfirmOrder = async () => {
-    setLoading(true); // Show the loading state so they know something's happening
-    try {
-      // First, make sure they filled in all the payment fields
-      // .trim() removes any spaces, so "   " counts as empty
-      if (!cardNumber.trim() || !cardExpiry.trim() || !cardCVC.trim()) {
-        alert('Please enter all payment details');
-        setLoading(false);
-        return; // Stop here if fields are empty
+  // Create payment intent when orders are loaded
+  useEffect(() => {
+    if (orders.length === 0) return;
+
+    const createPaymentIntent = async () => {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      const totalPrice = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
+
+      try {
+        const response = await fetch(`${apiUrl}/api/payments/create-payment-intent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: totalPrice,
+            email: orders[0]?.email || '',
+            metadata: {
+              businessName: orders[0]?.businessName || '',
+              numBuffets: orders.length.toString(),
+            }
+          })
+        });
+
+        const result = await response.json();
+        if (result.return_code === 'SUCCESS') {
+          setClientSecret(result.data.clientSecret);
+        } else {
+          setPaymentError('Failed to initialize payment. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error creating payment intent:', error);
+        setPaymentError('Failed to connect to payment server.');
       }
+    };
 
-      // Package up all the order info to send to the server
-      // taking info from the first order since business details are the same for all
+    createPaymentIntent();
+  }, [orders]);
+
+  // Called when Stripe payment succeeds
+  const handlePaymentSuccess = async (paymentIntentId) => {
+    setLoading(true);
+    try {
+      // Now create the order in the database with payment confirmed
       const orderData = {
-        email: orders[0]?.email || '', // The ?. means "if orders[0] exists, get email, otherwise undefined"
-        phone: orders[0]?.phone || '', // The || '' means "if undefined, use empty string instead"
+        email: orders[0]?.email || '',
+        phone: orders[0]?.phone || '',
         businessName: orders[0]?.businessName || '',
         address: orders[0]?.address || '',
-        fulfillmentType: orders[0]?.fulfillmentType || 'delivery', // Either 'delivery' or 'collection'
+        fulfillmentType: orders[0]?.fulfillmentType || 'delivery',
         deliveryDate: orders[0]?.deliveryDate || '',
         deliveryTime: orders[0]?.deliveryTime || '',
-        branchId: orders[0]?.branchId || null, // Include the branch ID from delivery validation
-        // Add up all the order prices to get the grand total
+        branchId: orders[0]?.branchId || null,
         totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
-        // Convert each order into the format the server expects
+        paymentIntentId: paymentIntentId, // Include Stripe payment ID
         buffets: orders.map(order => ({
-          buffetVersionId: order.buffetVersionId, // Which buffet menu they chose
-          numPeople: order.numPeople, // How many people
-          pricePerPerson: order.pricePerPerson, // Price per head
-          totalPrice: order.totalPrice, // Total for this buffet (including upgrades)
-          items: order.items, // All the food items they selected
-          notes: order.notes || '', // Any special requests
-          dietaryInfo: order.dietaryInfo || '', // Dietary requirements
-          allergens: order.allergens || '', // Allergy info
-          // Include selected upgrades with their item selections
+          buffetVersionId: order.buffetVersionId,
+          numPeople: order.numPeople,
+          pricePerPerson: order.pricePerPerson,
+          totalPrice: order.totalPrice,
+          items: order.items,
+          notes: order.notes || '',
+          dietaryInfo: order.dietaryInfo || '',
+          allergens: order.allergens || '',
           upgrades: (order.upgrades || []).map(upgrade => ({
             upgradeId: upgrade.upgradeId,
             selectedItems: upgrade.selectedItems || []
@@ -81,37 +163,32 @@ function CheckoutContent() {
         }))
       };
 
-      //where to send the order 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      // Send the order to the server
       const response = await fetch(`${apiUrl}/api/orders`, {
-        method: 'POST', // POST means we're sending data to create something new
-        headers: {
-          'Content-Type': 'application/json', // Tell the server we're sending JSON
-        },
-        body: JSON.stringify(orderData) // Turn our JavaScript object into JSON text
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
       });
 
-      // Get the server's response and turn it back into a JavaScript object
       const result = await response.json();
 
-      // Check if the order went through successfully
       if (result.return_code === 'SUCCESS') {
-        alert(`Order confirmed! Your order number is ${result.data.orderNumber}`);
-        localStorage.removeItem('basketData'); // Clear the basket since order is complete
-        router.push('/'); // Send them back to the home page
+        localStorage.removeItem('basketData');
+        router.push(`/checkout/success?orderNumber=${result.data.orderNumber}`);
       } else {
-        // Something went wrong on the server
-        alert(`Failed to create order: ${result.message}`);
+        // Payment was taken but order creation failed - this needs manual handling
+        alert(`Payment successful but order creation failed. Please contact us with payment ID: ${paymentIntentId}`);
       }
     } catch (error) {
-      // This catches any errors like network problems or server being down
       console.error('Error creating order:', error);
-      alert('Failed to confirm order. Please try again.');
+      alert('Payment successful but order creation failed. Please contact us.');
     } finally {
-      // This runs no matter what - success or error - to turn off the loading state
       setLoading(false);
     }
+  };
+
+  const handlePaymentError = (message) => {
+    setPaymentError(message);
   };
 
   // Here's what actually shows up on the page
@@ -217,72 +294,70 @@ function CheckoutContent() {
             </div>
           )}
 
-          {/* Payment section - remember this is just for testing, not real payments */}
+          {/* Payment section with Stripe Elements */}
           <div className="checkout-section">
             <h2 className="checkout-section-title">Payment Details</h2>
 
-            {/* Card number input field */}
-            <div className="form-group">
-              <label htmlFor="cardNumber">Card Number:</label>
-              <input
-                id="cardNumber"
-                type="text"
-                value={cardNumber}
-                onChange={(e) => setCardNumber(e.target.value)} // Update state when they type
-                placeholder="1234 5678 9012 3456"
-                className="checkout-input"
-                maxLength="19" // Limit to 19 characters (16 digits + 3 spaces)
-              />
-            </div>
-
-            {/* Expiry and CVC side by side */}
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="cardExpiry">Expiry Date:</label>
-                <input
-                  id="cardExpiry"
-                  type="text"
-                  value={cardExpiry}
-                  onChange={(e) => setCardExpiry(e.target.value)}
-                  placeholder="MM/YY"
-                  className="checkout-input"
-                  maxLength="5" // MM/YY is 5 characters
-                />
+            {paymentError && (
+              <div className="payment-error-message">
+                {paymentError}
               </div>
+            )}
 
-              <div className="form-group">
-                <label htmlFor="cardCVC">CVC:</label>
-                <input
-                  id="cardCVC"
-                  type="text"
-                  value={cardCVC}
-                  onChange={(e) => setCardCVC(e.target.value)}
-                  placeholder="123"
-                  className="checkout-input"
-                  maxLength="4" // Most cards have 3 digits, Amex has 4
+            {clientSecret ? (
+              <Elements
+                stripe={stripePromise}
+                options={{
+                  clientSecret,
+                  appearance: {
+                    theme: 'night',
+                    variables: {
+                      colorPrimary: '#ffffff',
+                      colorBackground: 'rgba(255, 255, 255, 0.08)',
+                      colorText: '#ffffff',
+                      colorDanger: '#ff6b6b',
+                      fontFamily: 'Source Sans Pro, sans-serif',
+                      borderRadius: '6px',
+                    },
+                    rules: {
+                      '.Input': {
+                        border: '2px solid rgba(255, 255, 255, 0.2)',
+                        padding: '12px',
+                      },
+                      '.Input:focus': {
+                        border: '2px solid rgba(255, 255, 255, 0.4)',
+                        boxShadow: '0 0 10px rgba(255, 255, 255, 0.15)',
+                      },
+                      '.Label': {
+                        color: '#ffffff',
+                        fontWeight: '600',
+                      },
+                    },
+                  },
+                }}
+              >
+                <PaymentForm
+                  orders={orders}
+                  clientSecret={clientSecret}
+                  onSuccess={handlePaymentSuccess}
+                  onError={handlePaymentError}
                 />
+              </Elements>
+            ) : (
+              <div className="loading-state">
+                <p>Loading payment form...</p>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* The two buttons at the bottom */}
+          {/* Back button */}
           <div className="checkout-actions">
-            {/* Back button takes them to the previous page */}
             <button
               className="checkout-back-button"
-              onClick={() => router.back()} // Go back to wherever they came from
-              disabled={loading} // Can't click while processing
+              onClick={() => router.back()}
+              disabled={loading}
             >
               Back
-            </button>
-            {/* Main submit button */}
-            <button
-              className="checkout-submit-button"
-              onClick={handleConfirmOrder} // Runs the function we wrote above
-              disabled={loading} // Can't click while processing
-            >
-              {/* Show different text depending on whether we're processing */}
-              {loading ? 'Processing...' : 'Confirm Order'}
             </button>
           </div>
         </div>

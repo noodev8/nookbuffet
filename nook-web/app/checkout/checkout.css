@@ -453,6 +453,34 @@
   cursor: not-allowed;
 }
 
+/* ===== STRIPE PAYMENT STYLES ===== */
+.payment-error-message {
+  background: rgba(255, 107, 107, 0.15);
+  border: 1px solid #ff6b6b;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  color: #ff6b6b;
+  font-size: 0.95rem;
+}
+
+.stripe-test-info {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: rgb(144, 200, 164);
+  text-align: center;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 2rem;
+  color: #aaa;
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   .checkout-title {

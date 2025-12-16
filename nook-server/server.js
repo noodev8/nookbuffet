@@ -21,6 +21,7 @@ const authRoutes = require('./routes/authRoutes');              // Routes for ad
 const deliveryRoutes = require('./routes/deliveryRoutes');      // Routes for delivery services
 const branchRoutes = require('./routes/branchRoutes');          // Routes for branch data
 const upgradeRoutes = require('./routes/upgradeRoutes');        // Routes for buffet upgrades
+const paymentRoutes = require('./routes/paymentRoutes');        // Routes for Stripe payments
 
 // Create the Express app - this is the main server object
 const app = express();
@@ -61,6 +62,7 @@ app.use('/api/auth', authRoutes);                    // Admin authentication end
 app.use('/api/delivery', deliveryRoutes);            // Delivery endpoints
 app.use('/api/branches', branchRoutes);              // Branch endpoints
 app.use('/api/upgrades', upgradeRoutes);             // Upgrade endpoints
+app.use('/api/payments', paymentRoutes);             // Stripe payment endpoints
 
 // ===== HEALTH CHECK ENDPOINT =====
 // This is a simple endpoint that just tells you the server is running

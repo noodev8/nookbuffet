@@ -37,6 +37,9 @@ const createOrder = async (orderData) => {
     const orderNumber = `ORD-${orderCount.toString().padStart(3, '0')}`;
     
     // Insert the main order record
+    // If paymentIntentId is provided, payment was already processed via Stripe
+    const paymentStatus = orderData.paymentIntentId ? 'paid' : 'pending';
+
     const orderQuery = `
       INSERT INTO orders (
         order_number, customer_email, customer_phone,
@@ -56,8 +59,8 @@ const createOrder = async (orderData) => {
       orderData.deliveryTime || null,
       orderData.totalPrice,
       'pending',
-      'pending',
-      'card', // For now, always card
+      paymentStatus,
+      orderData.paymentIntentId ? 'stripe' : 'card', // Use 'stripe' when paid via Stripe
       orderData.businessName || null,
       orderData.branchId || null  // Branch ID for delivery orders
     ];
