@@ -173,14 +173,12 @@ export default function OrderDetailsPage() {
   return (
     <div className="order-details-container">
       <header className="order-details-header">
-        <div className="header-left">
-          <button onClick={goBack} className="back-btn">← Back to Orders</button>
-          <button className="print-btn" onClick={handlePrint}>Print</button>
-        </div>
-        <div className="header-right">
+        <button onClick={goBack} className="back-btn">← Back</button>
+        <div className="header-center">
           <h1>{order.order_number}</h1>
           <div className="order-meta">
             <span className="order-date">Ordered: {formatDateTime(order.created_at)}</span>
+            <span className="order-date-separator">•</span>
             <span className="order-date fulfillment">
               Needed: {order.fulfillment_date ? new Date(order.fulfillment_date).toLocaleDateString('en-GB', {
                 day: 'numeric',
@@ -189,6 +187,8 @@ export default function OrderDetailsPage() {
               }) : 'Not specified'} {order.fulfillment_time ? `at ${order.fulfillment_time}` : ''}
             </span>
           </div>
+        </div>
+        <div className="header-right">
           <div className="order-badges">
             <span className={`badge badge-${order.fulfillment_type}`}>{order.fulfillment_type}</span>
             <span className="badge badge-people">
@@ -200,6 +200,12 @@ export default function OrderDetailsPage() {
       </header>
 
       <div className="order-content">
+        {/* Action Buttons */}
+        <div className="action-buttons">
+          <button className="print-btn" onClick={handlePrint}>Print</button>
+          <button className="done-btn" onClick={markOrderAsDone}>Mark as Done</button>
+        </div>
+
         {/* Customer Details */}
         <div className="detail-section customer-section">
           <h3>Customer Details</h3>
@@ -359,9 +365,6 @@ export default function OrderDetailsPage() {
         ))}
       </div>
 
-      <div className="page-footer">
-        <button className="done-btn" onClick={markOrderAsDone}>Mark as Done</button>
-      </div>
     </div>
   );
 }

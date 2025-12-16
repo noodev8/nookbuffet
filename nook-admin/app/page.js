@@ -343,26 +343,6 @@ export default function AdminPage() {
                     <span className="view-details-icon">→</span>
                   </div>
                 </div>
-                <div className="order-actions">
-                  <button
-                    className="print-single-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePrintSingleOrder(order.id);
-                    }}
-                  >
-                    Print
-                  </button>
-                  <button
-                    className="mark-done-btn"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      markOrderAsDone(order.id);
-                    }}
-                  >
-                    Mark as Done
-                  </button>
-                </div>
               </div>
             </div>
           ))

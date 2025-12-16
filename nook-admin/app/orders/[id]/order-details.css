@@ -32,41 +32,25 @@
 /* Header */
 .order-details-header {
   background: white;
-  padding: 1.5rem 2rem;
+  padding: 1rem 2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 2rem;
-}
-
-.header-left {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.header-right {
-  text-align: right;
-}
-
-.header-right h1 {
-  font-family: 'Oswald', sans-serif;
-  font-size: 2rem;
-  color: #1a202c;
-  margin: 0 0 0.5rem 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1.5rem;
 }
 
 .back-btn {
   background: #667eea;
   color: white;
   border: none;
-  padding: 0.75rem 1.25rem;
+  padding: 0.6rem 1rem;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  width: fit-content;
+  white-space: nowrap;
+  justify-self: start;
 }
 
 .back-btn:hover {
@@ -74,18 +58,36 @@
   transform: translateX(-2px);
 }
 
-.order-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-bottom: 0.75rem;
-  justify-content: flex-end;
+.header-center {
+  text-align: center;
 }
 
-.order-date { color: #718096; font-size: 0.95rem; }
-.order-date.fulfillment { color: #2d3748; font-weight: 600; }
+.header-center h1 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.75rem;
+  color: #1a202c;
+  margin: 0;
+}
 
-.order-badges { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: flex-end; }
+.order-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.order-date { color: #718096; font-size: 0.9rem; }
+.order-date.fulfillment { color: #38a169; font-weight: 600; }
+.order-date-separator { color: #cbd5e0; }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+}
+
+.order-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
 .badge {
   padding: 0.4rem 1rem;
@@ -114,6 +116,18 @@
 
 .done-btn { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
 .done-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4); }
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.action-buttons .print-btn,
+.action-buttons .done-btn {
+  flex: 1;
+}
 
 /* Content */
 .order-content { padding: 2rem; max-width: 1200px; margin: 0 auto; }

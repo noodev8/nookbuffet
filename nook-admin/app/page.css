@@ -337,10 +337,10 @@
 }
 
 .view-details-icon {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   color: #667eea;
   transition: transform 0.2s ease;
-  font-weight: bold;
+  font-weight: 900;
 }
 
 .order-header-main:hover .view-details-icon {
