@@ -750,9 +750,9 @@
 }
 
 .people-count-input {
-  width: 120px;
-  padding: 1rem;
-  font-size: 1.3rem;
+  width: 80px;
+  padding: 0.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
   text-align: center;
   background: rgba(255, 255, 255, 0.1);
@@ -760,6 +760,15 @@
   border-radius: 6px;
   color: white;
   transition: all 0.3s ease;
+  font-family: 'Oswald', sans-serif;
+  -moz-appearance: textfield;
+}
+
+/* Hide number input spinners since we have +/- buttons */
+.people-count-input::-webkit-outer-spin-button,
+.people-count-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .people-count-input:focus {

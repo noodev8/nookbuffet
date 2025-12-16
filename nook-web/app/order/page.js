@@ -265,7 +265,16 @@ export default function OrderPage() {
                   >
                     −
                   </button>
-                  <span className="people-count-display">{numPeople}</span>
+                  <input
+                    type="number"
+                    className="people-count-input"
+                    value={numPeople}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 1;
+                      setNumPeople(Math.max(1, val));
+                    }}
+                    min="1"
+                  />
                   <button
                     type="button"
                     className="people-count-button plus"
