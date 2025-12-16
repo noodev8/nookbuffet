@@ -28,6 +28,7 @@ export default function BasketPage() {
   const [branchId, setBranchId] = useState(null);
   const [validatingAddress, setValidatingAddress] = useState(false);
   const [addressValidated, setAddressValidated] = useState(false);
+  const [addressValidationMessage, setAddressValidationMessage] = useState('');
 
   // Branch selection state (for collection)
   const [branches, setBranches] = useState([]);
@@ -65,17 +66,25 @@ export default function BasketPage() {
     fetchBranches();
   }, []);
 
-  // Auto-validate address when delivery is selected and address is filled
+  // Auto-validate address when delivery is selected and address is filled (debounced)
   useEffect(() => {
     if (fulfillmentType === 'delivery' && address.trim() && !addressValidated) {
-      validateDeliveryArea();
+      // Debounce: wait 1 second after user stops typing before validating
+      const timeoutId = setTimeout(() => {
+        validateDeliveryArea();
+      }, 1000);
+      return () => clearTimeout(timeoutId);
     }
   }, [fulfillmentType, address]);
 
-  // Auto-select nearest branch when collection is selected and address is filled
+  // Auto-select nearest branch when collection is selected and address is filled (debounced)
   useEffect(() => {
     if (fulfillmentType === 'collection' && address.trim()) {
-      findNearestBranchForCollection();
+      // Debounce: wait 1 second after user stops typing before finding nearest branch
+      const timeoutId = setTimeout(() => {
+        findNearestBranchForCollection();
+      }, 1000);
+      return () => clearTimeout(timeoutId);
     }
   }, [fulfillmentType, address]);
 
@@ -109,12 +118,12 @@ export default function BasketPage() {
   // Validate delivery area and get branch ID
   const validateDeliveryArea = async () => {
     if (!address.trim()) {
-      alert('Please enter an address first');
       return;
     }
 
     setValidatingAddress(true);
     setAddressValidated(false);
+    setAddressValidationMessage('');
     setBranchId(null);
 
     try {
@@ -129,7 +138,7 @@ export default function BasketPage() {
 
       if (!response.ok) {
         console.error('Failed to validate address:', response.status);
-        alert('Failed to validate address. Please try again.');
+        setAddressValidationMessage('Failed to validate address. Please try again.');
         return;
       }
 
@@ -139,16 +148,16 @@ export default function BasketPage() {
         if (result.data.isWithinRange) {
           setBranchId(result.data.branch.id);
           setAddressValidated(true);
-          alert(`✓ Address validated! Your nearest branch is ${result.data.branch.name} (${result.data.distanceMiles.toFixed(1)} miles away)`);
+          setAddressValidationMessage(`Your nearest branch is ${result.data.branch.name} (${result.data.distanceMiles.toFixed(1)} miles away)`);
         } else {
-          alert(`Sorry, this address is outside our delivery area. The nearest branch is ${result.data.distanceMiles.toFixed(1)} miles away (maximum: ${result.data.deliveryRadius} miles).`);
+          setAddressValidationMessage(`Sorry, this address is outside our delivery area. The nearest branch is ${result.data.distanceMiles.toFixed(1)} miles away (maximum: ${result.data.deliveryRadius} miles).`);
         }
       } else {
-        alert(`Address validation failed: ${result.message}`);
+        setAddressValidationMessage(`Address validation failed: ${result.message}`);
       }
     } catch (error) {
       console.error('Error validating address:', error);
-      alert('Failed to validate address. Please try again.');
+      setAddressValidationMessage('Failed to validate address. Please try again.');
     } finally {
       setValidatingAddress(false);
     }
@@ -452,6 +461,7 @@ export default function BasketPage() {
                   onChange={(e) => {
                     setAddress(e.target.value);
                     setAddressValidated(false); // Reset validation when address changes
+                    setAddressValidationMessage(''); // Clear message when typing
                     setBranchId(null);
                   }}
                   placeholder="Enter your address"
@@ -462,9 +472,14 @@ export default function BasketPage() {
                     🔄 Validating delivery address...
                   </div>
                 )}
-                {fulfillmentType === 'delivery' && addressValidated && (
+                {fulfillmentType === 'delivery' && !validatingAddress && addressValidated && (
                   <div style={{ marginTop: '5px', color: '#28a745', fontSize: '14px' }}>
-                    ✓ Address validated and within delivery range
+                    ✓ {addressValidationMessage}
+                  </div>
+                )}
+                {fulfillmentType === 'delivery' && !validatingAddress && !addressValidated && addressValidationMessage && (
+                  <div style={{ marginTop: '5px', color: '#dc3545', fontSize: '14px' }}>
+                    ✗ {addressValidationMessage}
                   </div>
                 )}
               </div>
