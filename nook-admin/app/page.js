@@ -310,37 +310,28 @@ export default function AdminPage() {
           </div>
         ) : (
           orders.map((order) => (
-            <div key={order.id} className="order-card" data-order-id={order.id}>
-              <div className="order-header">
-                <div className="order-header-main" onClick={() => goToOrderDetails(order.id)}>
-                  <div className="order-header-left">
-                    <div className="order-number-section">
-                      <h2 className="order-number">{order.order_number}</h2>
-                      <div className="order-dates">
-                        <span className="order-date">
-                          Ordered: {formatDateTime(order.created_at)}
-                        </span>
-                        <span className="order-date fulfillment-date">
-                          Needed: {order.fulfillment_date ? new Date(order.fulfillment_date).toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          }) : 'Not specified'} {order.fulfillment_time ? `at ${order.fulfillment_time}` : ''}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="order-badges">
-                      <span className={`badge badge-${order.fulfillment_type}`}>
-                        {order.fulfillment_type}
-                      </span>
-                      <span className="badge badge-people">
-                        {order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people
-                      </span>
-                    </div>
+            <div key={order.id} className="order-card" data-order-id={order.id} onClick={() => goToOrderDetails(order.id)}>
+              <div className="order-card-content">
+                <div className="order-card-main">
+                  <h2 className="order-number">{order.order_number}</h2>
+                  <div className="order-dates">
+                    <span className="order-date">Ordered: {formatDateTime(order.created_at)}</span>
+                    <span className="order-date fulfillment-date">
+                      Needed: {order.fulfillment_date ? new Date(order.fulfillment_date).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      }) : 'Not specified'} {order.fulfillment_time ? `at ${order.fulfillment_time}` : ''}
+                    </span>
                   </div>
-                  <div className="order-header-right">
-                    <span className="order-total">£{parseFloat(order.total_price).toFixed(2)}</span>
-                    <span className="view-details-icon">→</span>
+                  <div className="order-badges">
+                    <span className={`badge badge-${order.fulfillment_type}`}>
+                      {order.fulfillment_type}
+                    </span>
+                    <span className="badge badge-people">
+                      {order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people
+                    </span>
+                    <span className="badge badge-total">£{parseFloat(order.total_price).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
