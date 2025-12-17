@@ -275,3 +275,248 @@
   .items-by-category { grid-template-columns: 1fr; }
   .page-footer .done-btn { width: 100%; }
 }
+
+/* Print Header - hidden on screen */
+.print-header {
+  display: none;
+}
+
+/* ========================================
+   PRINT STYLES
+   ======================================== */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  .order-details-container {
+    background: white !important;
+    min-height: auto;
+  }
+
+  /* Hide non-essential elements */
+  .order-details-header,
+  .action-buttons,
+  .page-footer {
+    display: none !important;
+  }
+
+  /* Show print header */
+  .print-header {
+    display: block !important;
+    margin-bottom: 15pt;
+    padding-bottom: 10pt;
+    border-bottom: 2pt solid #333;
+  }
+
+  .print-header h1 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 20pt;
+    font-weight: 700;
+    margin: 0 0 5pt 0;
+  }
+
+  .print-meta {
+    display: flex;
+    gap: 20pt;
+    font-size: 10pt;
+    color: #333;
+    margin-bottom: 5pt;
+  }
+
+  .print-meta .print-needed {
+    font-weight: 700;
+  }
+
+  .print-badges {
+    display: flex;
+    gap: 10pt;
+    font-size: 10pt;
+  }
+
+  .print-badges span {
+    background: #eee;
+    padding: 3pt 8pt;
+    border-radius: 3pt;
+    font-weight: 600;
+    text-transform: capitalize;
+  }
+
+  /* Content area */
+  .order-content {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Detail sections */
+  .detail-section {
+    background: white !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+    border-radius: 0 !important;
+    padding: 12pt !important;
+    margin-bottom: 12pt !important;
+    page-break-inside: avoid;
+  }
+
+  .detail-section h3 {
+    font-size: 12pt !important;
+    margin-bottom: 8pt !important;
+    padding-bottom: 4pt !important;
+    border-bottom: 1px solid #ddd !important;
+  }
+
+  /* Info cards - simple list */
+  .info-cards {
+    display: block !important;
+    gap: 0 !important;
+  }
+
+  .info-card {
+    display: flex !important;
+    gap: 8pt !important;
+    padding: 4pt 0 !important;
+    border-bottom: 1px dotted #ccc !important;
+    background: none !important;
+    border-radius: 0 !important;
+  }
+
+  .info-card:last-child {
+    border-bottom: none !important;
+  }
+
+  .info-card.full-width {
+    grid-column: auto !important;
+  }
+
+  .info-label {
+    font-size: 9pt !important;
+    font-weight: 600 !important;
+    min-width: 80pt !important;
+    color: #555 !important;
+  }
+
+  .info-value {
+    font-size: 10pt !important;
+    color: #000 !important;
+  }
+
+  /* Buffet sections */
+  .buffet-section {
+    border-left: 3pt solid #333 !important;
+    background: white !important;
+  }
+
+  .buffet-summary {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8pt !important;
+  }
+
+  .summary-item {
+    background: #f5f5f5 !important;
+    border: 1px solid #ddd !important;
+    padding: 6pt 10pt !important;
+    min-width: auto !important;
+  }
+
+  .summary-item.highlight {
+    background: #333 !important;
+  }
+
+  .summary-label {
+    font-size: 8pt !important;
+  }
+
+  .summary-value {
+    font-size: 11pt !important;
+  }
+
+  /* Notes */
+  .buffet-notes {
+    gap: 8pt !important;
+  }
+
+  .note-item {
+    background: white !important;
+    border: 1px solid #ddd !important;
+    border-left: 3pt solid #333 !important;
+    padding: 6pt !important;
+  }
+
+  .note-label {
+    font-size: 8pt !important;
+  }
+
+  .note-value {
+    font-size: 9pt !important;
+  }
+
+  /* Menu items - compact list */
+  .items-by-category {
+    display: block !important;
+    columns: 2;
+    column-gap: 15pt;
+  }
+
+  .category-group {
+    background: none !important;
+    padding: 0 0 8pt 0 !important;
+    break-inside: avoid;
+    margin-bottom: 8pt;
+  }
+
+  .category-title {
+    font-size: 10pt !important;
+    margin-bottom: 4pt !important;
+    font-weight: 700 !important;
+  }
+
+  .category-dot {
+    display: none !important;
+  }
+
+  .items-list li {
+    font-size: 9pt !important;
+    padding: 2pt 0 !important;
+    border-bottom: none !important;
+  }
+
+  .items-list li::before {
+    content: "• ";
+  }
+
+  /* Upgrades */
+  .upgrade-card {
+    background: #f5f5f5 !important;
+    padding: 8pt !important;
+    margin-bottom: 6pt !important;
+  }
+
+  .upgrade-name,
+  .upgrade-price {
+    font-size: 9pt !important;
+    color: #333 !important;
+  }
+
+  .upgrade-items {
+    margin-top: 4pt !important;
+    padding-top: 4pt !important;
+  }
+
+  .upgrade-category-group {
+    font-size: 8pt !important;
+  }
+
+  .upgrade-category-name,
+  .upgrade-category-items {
+    color: #333 !important;
+  }
+}

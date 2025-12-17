@@ -200,6 +200,24 @@ export default function OrderDetailsPage() {
       </header>
 
       <div className="order-content">
+        {/* Print Header - only visible when printing */}
+        <div className="print-header">
+          <h1>{order.order_number}</h1>
+          <div className="print-meta">
+            <span>Ordered: {formatDateTime(order.created_at)}</span>
+            <span className="print-needed">Needed: {order.fulfillment_date ? new Date(order.fulfillment_date).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric'
+            }) : 'Not specified'} {order.fulfillment_time ? `at ${order.fulfillment_time}` : ''}</span>
+          </div>
+          <div className="print-badges">
+            <span>{order.fulfillment_type}</span>
+            <span>{order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people</span>
+            <span>£{parseFloat(order.total_price).toFixed(2)}</span>
+          </div>
+        </div>
+
         {/* Action Buttons */}
         <div className="action-buttons">
           <button className="print-btn" onClick={handlePrint}>Print</button>
