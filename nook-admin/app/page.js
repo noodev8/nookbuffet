@@ -275,10 +275,12 @@ export default function AdminPage() {
             <span className="stat-label">Total Orders</span>
             <span className="stat-value">{orders.length}</span>
           </div>
-          <div className="stat-item">
-            <span className="stat-label">Revenue</span>
-            <span className="stat-value">£{calculateTotalRevenue().toFixed(2)}</span>
-          </div>
+          {user && user.role === 'manager' && (
+            <div className="stat-item">
+              <span className="stat-label">Revenue</span>
+              <span className="stat-value">£{calculateTotalRevenue().toFixed(2)}</span>
+            </div>
+          )}
         </div>
         <div className="page-actions">
           <div className="branch-filter">
