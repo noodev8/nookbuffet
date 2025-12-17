@@ -138,6 +138,40 @@ export default function OrderDetailsPage() {
     }
   };
 
+  const cancelOrder = async () => {
+    if (!confirm('Are you sure you want to cancel this order?')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      const response = await fetch(`${apiUrl}/api/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'cancelled' })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.return_code === 'SUCCESS') {
+        router.push('/');
+      } else {
+        alert('Failed to cancel order: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      alert('Failed to cancel order. Please try again.');
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -222,6 +256,7 @@ export default function OrderDetailsPage() {
         <div className="action-buttons">
           <button className="print-btn" onClick={handlePrint}>Print</button>
           <button className="done-btn" onClick={markOrderAsDone}>Mark as Done</button>
+          <button className="cancel-btn" onClick={cancelOrder}>Cancel Order</button>
         </div>
 
         {/* Customer Details */}
