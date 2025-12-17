@@ -188,7 +188,106 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
   }
 };
 
+/**
+ * Send order ready/complete email to customer
+ * Sent when admin marks the order as done
+ *
+ * @param {object} orderData - The complete order data from database
+ * @returns {Promise<object>} - Result from Resend
+ */
+const sendOrderReadyEmail = async (orderData) => {
+  try {
+    const isDelivery = orderData.fulfillment_type === 'delivery';
+    const fulfillmentText = isDelivery ? 'delivery' : 'collection';
+
+    // Format the date nicely
+    const dateText = orderData.fulfillment_date
+      ? new Date(orderData.fulfillment_date).toLocaleDateString('en-GB', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        })
+      : 'your scheduled date';
+
+    const timeText = orderData.fulfillment_time || '';
+
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; margin: 0; padding: 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+
+            <!-- Header -->
+            <div style="background: #1a1a1a; color: white; padding: 30px; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">THE LITTLE NOOK BUFFET</h1>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">Order Ready!</p>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 30px;">
+              <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin-bottom: 25px; border-radius: 0 8px 8px 0;">
+                <h2 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 20px;">Your order is ready!</h2>
+                <p style="margin: 0; color: #333;">Order <strong>${orderData.order_number}</strong> has been prepared and is ready for ${fulfillmentText}.</p>
+              </div>
+
+              ${isDelivery ? `
+                <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                  <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px;">Delivery Details</h3>
+                  <p style="margin: 0 0 8px 0;"><strong>Date:</strong> ${dateText}</p>
+                  ${timeText ? `<p style="margin: 0 0 8px 0;"><strong>Time:</strong> ${timeText}</p>` : ''}
+                  <p style="margin: 0;"><strong>Address:</strong> ${orderData.fulfillment_address || 'As provided'}</p>
+                </div>
+                <p style="color: #666;">Your order is on its way! Please ensure someone is available to receive the delivery.</p>
+              ` : `
+                <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                  <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px;">Collection Details</h3>
+                  <p style="margin: 0 0 8px 0;"><strong>Date:</strong> ${dateText}</p>
+                  ${timeText ? `<p style="margin: 0 0 8px 0;"><strong>Time:</strong> ${timeText}</p>` : ''}
+                </div>
+                <p style="color: #666;">Your order is ready and waiting for you! Please collect at your scheduled time.</p>
+              `}
+
+              <!-- Total -->
+              <div style="background: #1a1a1a; color: white; padding: 15px 20px; border-radius: 8px; text-align: right; margin-top: 20px;">
+                <span style="font-size: 16px;">Order Total: </span>
+                <span style="font-size: 22px; font-weight: bold;">£${parseFloat(orderData.total_price).toFixed(2)}</span>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="background: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 14px;">
+              <p style="margin: 0 0 10px 0;">Thank you for choosing The Little Nook Buffet!</p>
+              <p style="margin: 0;">If you have any questions, please don't hesitate to contact us.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Send the email
+    const result = await resend.emails.send({
+      from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,
+      to: orderData.customer_email,
+      subject: `Your Order ${orderData.order_number} is Ready! - The Little Nook Buffet`,
+      html: emailHtml
+    });
+
+    console.log('Order ready email sent:', result);
+    return { success: true, result };
+
+  } catch (error) {
+    console.error('Failed to send order ready email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
-  sendOrderConfirmationEmail
+  sendOrderConfirmationEmail,
+  sendOrderReadyEmail
 };
 

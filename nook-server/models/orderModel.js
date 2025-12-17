@@ -346,7 +346,9 @@ const updateOrderStatus = async (orderId, status) => {
     UPDATE orders
     SET status = $1, updated_at = NOW()
     WHERE id = $2
-    RETURNING id, order_number, status, updated_at
+    RETURNING id, order_number, customer_email, customer_phone,
+              fulfillment_type, fulfillment_address, fulfillment_date, fulfillment_time,
+              total_price, status, updated_at
   `;
 
   const result = await query(updateSQL, [status, orderId]);

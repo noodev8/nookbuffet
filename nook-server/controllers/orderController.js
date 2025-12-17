@@ -251,6 +251,17 @@ const updateOrderStatus = async (req, res) => {
     // Ask the model to update the order status
     const updatedOrder = await orderModel.updateOrderStatus(orderId, status);
 
+    // If status is completed, send email to customer
+    if (status === 'completed' && updatedOrder.customer_email) {
+      const { sendOrderReadyEmail } = require('../utils/emailService');
+      const emailResult = await sendOrderReadyEmail(updatedOrder);
+      if (emailResult.success) {
+        console.log('Order ready email sent to:', updatedOrder.customer_email);
+      } else {
+        console.log('Failed to send order ready email:', emailResult.error);
+      }
+    }
+
     // Send success response
     res.json({
       return_code: 'SUCCESS',
