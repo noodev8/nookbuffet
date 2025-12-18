@@ -82,6 +82,7 @@ export default function UpgradePage() {
     };
 
     fetchUpgrade();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   // Add order to basket and go to basket page

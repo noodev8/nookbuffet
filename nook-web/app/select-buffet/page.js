@@ -51,7 +51,7 @@ export default function SelectBuffetPage() {
       <div className="select-buffet-container">
         <div className="select-buffet-content">
           <h1 className="select-buffet-title">Choose Your Buffet</h1>
-          <p className="select-buffet-subtitle">Select the buffet package that's right for you</p>
+          <p className="select-buffet-subtitle">Select the buffet package that&apos;s right for you</p>
 
           {/* Beta Warning Banner */}
           <div className="beta-warning-banner">

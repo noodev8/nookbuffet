@@ -75,6 +75,7 @@ export default function BasketPage() {
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fulfillmentType, address]);
 
   // Auto-select nearest branch when collection is selected and address is filled (debounced)
@@ -86,6 +87,7 @@ export default function BasketPage() {
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fulfillmentType, address]);
 
   // Find nearest branch for collection orders
@@ -218,6 +220,7 @@ export default function BasketPage() {
     };
 
     fetchEarliestDate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleProceedToCheckout = () => {

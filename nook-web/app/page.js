@@ -42,26 +42,24 @@ const CONFIG = {
   },
 };
 
+// Helper to check basket state from localStorage
+function getInitialBasketState() {
+  if (typeof window === 'undefined') return false;
+  try {
+    const basketData = localStorage.getItem('basketData');
+    if (!basketData) return false;
+    const parsed = JSON.parse(basketData);
+    return Array.isArray(parsed) ? parsed.length > 0 : !!parsed;
+  } catch {
+    return false;
+  }
+}
+
 export default function Home() {
   const scrollIndicatorRef = useRef(null);
   const heroSectionRef = useRef(null);
   const router = useRouter();
-  const [hasBasket, setHasBasket] = useState(false);
-
-  useEffect(() => {
-    // Check if there's basket data in localStorage
-    const basketData = localStorage.getItem('basketData');
-    if (basketData) {
-      try {
-        const parsed = JSON.parse(basketData);
-        // Check if it's an array with items or a single object
-        const hasItems = Array.isArray(parsed) ? parsed.length > 0 : !!parsed;
-        setHasBasket(hasItems);
-      } catch (e) {
-        setHasBasket(false);
-      }
-    }
-  }, []);
+  const [hasBasket, setHasBasket] = useState(getInitialBasketState);
 
   useEffect(() => {
     const handleScroll = () => {

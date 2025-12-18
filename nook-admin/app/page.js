@@ -110,6 +110,7 @@ export default function AdminPage() {
     };
 
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, selectedBranch]);
 
   const goToOrderDetails = (orderId) => {

@@ -2,10 +2,10 @@
 
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import './order.css';
 
-export default function OrderPage() {
+function OrderPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const buffetVersionId = searchParams.get('buffetVersionId');
@@ -656,7 +656,7 @@ export default function OrderPage() {
           <div className="modal-content min-people-warning">
             <h3 className="modal-title">Minimum Order Notice</h3>
             <p className="modal-message">
-              You've selected {numPeople} {numPeople === 1 ? 'person' : 'people'} for this buffet.
+              You&apos;ve selected {numPeople} {numPeople === 1 ? 'person' : 'people'} for this buffet.
             </p>
             <p className="modal-message">
               Please note: You need a minimum of <strong>5 people total</strong> across all buffets in your basket to complete checkout.
@@ -690,3 +690,10 @@ export default function OrderPage() {
   );
 }
 
+export default function OrderPage() {
+  return (
+    <Suspense fallback={<div className="welcome-page-option3"><div className="order-page-container"><div className="loading-state"><p>Loading...</p></div></div></div>}>
+      <OrderPageContent />
+    </Suspense>
+  );
+}
