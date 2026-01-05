@@ -2,10 +2,10 @@
 =======================================================================================================================================
 CONTACT CONTROLLER - Handles contact form submissions
 =======================================================================================================================================
-This file handles when someone fills out the contact form on your website.
-It takes their information and sends you an email with their message.
+This file handles when someone fills out the contact form on the website.
+It takes their information and sends an email with their message.
 
-The email is sent using the Resend email service (you need an API key for this).
+The email is sent using Resend 
 =======================================================================================================================================
 */
 
@@ -13,8 +13,7 @@ The email is sent using the Resend email service (you need an API key for this).
 const { Resend } = require('resend');
 
 // ===== SET UP EMAIL SERVICE =====
-// Create a Resend instance with your API key
-// This is like logging into the email service so we can send emails
+// Create a Resend instance 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ===== SEND CONTACT EMAIL =====
@@ -50,11 +49,9 @@ const sendContactEmail = async (req, res) => {
 
     // ===== BUILD EMAIL =====
     // Create the email subject line
-    // If they provided a subject, use it. Otherwise use a generic one.
     const emailSubject = subject ? `Contact Form: ${subject}` : 'New Contact Form Message';
 
-    // Create the email content (the HTML that you'll receive)
-    // This is a nicely formatted email with styling
+    // Create the email content 
     const emailContent = `
       <!DOCTYPE html>
       <html>
@@ -142,7 +139,7 @@ const sendContactEmail = async (req, res) => {
         <body>
           <div class="container">
             <div class="header">
-              <h1>📧 New Contact Form Message</h1>
+              <h1>New Contact Form Message</h1>
             </div>
 
             <div class="content">

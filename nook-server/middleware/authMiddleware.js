@@ -60,7 +60,7 @@ const verifyToken = (req, res, next) => {
 
 // ===== CHECK ROLE =====
 /**
- * Middleware factory to check if user has required role
+ * Middleware to check if user has required role
  * 
  * Returns a middleware function that checks if the authenticated user
  * has one of the allowed roles.

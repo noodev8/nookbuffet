@@ -10,8 +10,7 @@ like a translator between the server code and the database:
 - The database sends back the data
 - This file returns it to the code
 
-It also uses a "connection pool" which is like having multiple phone lines to the database.
-Instead of waiting for one line to be free, you can use any available line. This makes things faster.
+It also uses a "connection pool" 
 =======================================================================================================================================
 */
 
@@ -72,16 +71,7 @@ const query = async (queryText, values) => {
 /**
  * Get a direct connection to the database for transactions
  *
- * Use this when you need to run multiple queries that must all succeed or all fail together.
- * This is called a "transaction" and it's important for data consistency.
  *
- * Example usage:
- * const client = await getClient();
- * await client.query('BEGIN');
- * await client.query('INSERT INTO orders...');
- * await client.query('UPDATE inventory...');
- * await client.query('COMMIT');
- * client.release();
  *
  * @returns {Promise} A database client connection
  */

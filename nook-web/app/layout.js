@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 // SEO metadata that appears in browser tabs and search results
-// This is applied to all pages unless overridden
+// This is applied to all pages 
 export const metadata = {
   title: "The Nook Buffet",
   description: "Fresh, customizable sandwich buffets for workplace dining",
@@ -29,12 +29,12 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* Additional head elements can be added here if needed */}
+        {}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Navigation component appears on every page */}
+        {}
         <Navigation />
         
         {/* This is where individual page content gets rendered */}

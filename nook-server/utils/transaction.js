@@ -4,15 +4,6 @@ TRANSACTION UTILITY
 =======================================================================================================================================
 helper for running multiple database queries that need to all succeed or all fail together
 
-instead of manually writing BEGIN/COMMIT/ROLLBACK every time, you can wrap your queries in
-withTransaction() and it handles all that for you automatically
-
-Example usage:
-  const result = await withTransaction(async (client) => {
-    await client.query('INSERT INTO orders...');
-    await client.query('UPDATE inventory...');
-    return { success: true };
-  });
 =======================================================================================================================================
 */
 

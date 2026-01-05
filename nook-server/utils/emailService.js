@@ -6,9 +6,9 @@ This utility provides reusable email functions for the application.
 Uses Resend for email delivery - same service as the contact form.
 
 Environment variables needed:
-- RESEND_API_KEY: Your Resend API key
-- FROM_EMAIL: The email address to send from (must be verified in Resend)
-- EMAIL_NAME: The name to show as the sender (e.g., "The Little Nook Buffet")
+- RESEND_API_KEY
+- FROM_EMAIL 
+- EMAIL_NAME
 =======================================================================================================================================
 */
 
@@ -183,7 +183,7 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
 
   } catch (error) {
     console.error('Failed to send order confirmation email:', error);
-    // Don't throw - we don't want email failure to break the order
+  
     return { success: false, error: error.message };
   }
 };
@@ -200,7 +200,7 @@ const sendOrderReadyEmail = async (orderData) => {
     const isDelivery = orderData.fulfillment_type === 'delivery';
     const fulfillmentText = isDelivery ? 'delivery' : 'collection';
 
-    // Format the date nicely
+    // Format the date 
     const dateText = orderData.fulfillment_date
       ? new Date(orderData.fulfillment_date).toLocaleDateString('en-GB', {
           weekday: 'long',

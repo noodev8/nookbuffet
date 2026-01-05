@@ -39,7 +39,7 @@ export default function UpgradePage() {
   // Load pending order and fetch upgrade details
   useEffect(() => {
     if (hasFetched.current) return;
-    hasFetched.current = true; // Set immediately to prevent double execution
+    hasFetched.current = true; // Set immediately to prevent doubles
 
     const pending = localStorage.getItem('pendingOrder');
     if (!pending) {
@@ -82,12 +82,12 @@ export default function UpgradePage() {
     };
 
     fetchUpgrade();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [router]);
 
   // Add order to basket and go to basket page
   const addToBasketAndRedirect = (order, upgradeData) => {
-    // Guard against double execution
+  
     if (hasAddedToBasket.current) return;
 
     // Double-check pendingOrder still exists (hasn't been cleared already)
@@ -120,7 +120,7 @@ export default function UpgradePage() {
       finalOrder.totalPrice = order.totalPrice + upgradeSubtotal;
     }
 
-    // Clear pendingOrder FIRST to prevent any race conditions
+    // Clear pending order
     localStorage.removeItem('pendingOrder');
 
     // Get existing basket
@@ -135,7 +135,7 @@ export default function UpgradePage() {
       }
     }
 
-    // Check if we're editing an existing order (has editIndex)
+    // Check if editing an existing order (has editIndex)
     if (order.editIndex !== undefined) {
       // Replace the existing order at that index
       basket[order.editIndex] = finalOrder;

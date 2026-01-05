@@ -2,8 +2,6 @@
 =======================================================================================================================================
 BUFFET VERSION ROUTES - API endpoints for buffet version data
 =======================================================================================================================================
-Routes are like the "front desk" of your API. They receive requests from the website and send them
-to the right controller to handle.
 
 This route handles buffet versions - these are the different buffet packages customers can choose from
 (like "Standard Buffet", "Premium Buffet", etc.) with their pricing information.

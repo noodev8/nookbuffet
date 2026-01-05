@@ -4,15 +4,6 @@ MENU MODEL - Database queries for menu data
 =======================================================================================================================================
 This file contains all the SQL queries for getting menu data from the database.
 
-Models are the "data layer" - they talk to the database and return data.
-Controllers use models to get data, then format it and send it to the website.
-
-Think of it like this:
-- Website asks controller for menu
-- Controller asks model for menu data
-- Model queries the database
-- Model returns data to controller
-- Controller formats it and sends it to website
 =======================================================================================================================================
 */
 
@@ -23,13 +14,7 @@ const { query } = require('../database');  // Import the database query function
  * Helper function that builds the SQL query for getting menu sections
  *
  * This function creates a reusable SQL query that can be used with or without filters.
- * It's a helper because we use it in multiple places (get all, get by ID, etc.)
- *
- * The query does a lot of work:
- * 1. Gets all active categories (menu sections)
- * 2. Joins with buffet_versions to get pricing
- * 3. Joins with menu_items to get all items in each category
- * 4. Converts all items into a JSON array for easy use in the website
+ * It's used by multiple functions in this file to get different types of menu data.
  *
  * @param {string} whereClause - Optional WHERE clause to filter results
  *                               Example: "AND c.id = $1" to get only one section
@@ -118,8 +103,7 @@ const getAllMenuSections = async () => {
  * Get menu sections filtered by buffet version ID
  *
  * This returns only the menu sections that belong to a specific buffet version.
- * For example, if you want only the "Standard Buffet" menu items, pass in that buffet version's ID.
- *
+
  * Example: getMenuSectionsByBuffetVersion(1) returns:
  * [
  *   { id: 1, name: "Sandwiches", buffet_version_id: 1, items: [...] },

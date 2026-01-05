@@ -5,11 +5,6 @@ AUTH MODEL - Database queries for admin user authentication
 This file handles all database operations related to admin users - finding users by email/username,
 updating last login times, etc.
 
-Think of it like this:
-- Controller asks model to find a user
-- Model queries the database
-- Model returns the user data (including password hash) to controller
-- Controller verifies the password and creates a token
 =======================================================================================================================================
 */
 

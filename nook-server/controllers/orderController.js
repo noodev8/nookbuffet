@@ -139,9 +139,7 @@ const createOrder = async (req, res) => {
     // Ask the model to create the order in the database
     const createdOrder = await orderModel.createOrder(orderData);
 
-    // Send confirmation email to customer (don't wait for it - fire and forget)
-    // We pass the original orderData plus the new order details
-    // Using businessName since that's what the frontend collects (no separate contact name field)
+    // Send confirmation email to customer 
     const emailData = {
       ...orderData,
       customerName: orderData.businessName || 'Customer',
@@ -150,7 +148,7 @@ const createOrder = async (req, res) => {
     };
 
     // Send email in background - don't block the response
-    // Pass the order number (ORD-014 format) not just the ID
+    // Pass the order number (ORD-014 format)
     sendOrderConfirmationEmail(emailData, createdOrder.order_number)
       .then(result => {
         if (result.success) {
