@@ -2,11 +2,7 @@
 =======================================================================================================================================
 BRANCH CONTROLLER - Handles branch-related requests
 =======================================================================================================================================
-Controllers are the middle person between routes and models. They:
-1. Receive the request from the route
-2. Validate the data
-3. Ask the model to get data from the database
-4. Send response back to the website
+This file handles requests related to branches
 =======================================================================================================================================
 */
 
@@ -58,7 +54,7 @@ const findNearestBranch = async (req, res) => {
   try {
     const { address } = req.body;
 
-    // Check we have an address
+    // Check if there is an address
     if (!address || !address.trim()) {
       return res.json({
         return_code: 'MISSING_FIELDS',

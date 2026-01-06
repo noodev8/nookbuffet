@@ -2,15 +2,9 @@
 =======================================================================================================================================
 MENU CONTROLLER - Handles all menu-related API requests
 =======================================================================================================================================
-This file is the "brain" for menu requests. When someone asks for menu data via the API,
+This file is for menu requests. When someone asks for menu data via the API,
 this file figures out what they want and gets it from the database.
 
-Controllers are like the middle person between the routes (which receive requests) and the models
-(which talk to the database). The controller:
-1. Receives the request
-2. Asks the model to get data from the database
-3. Formats the response
-4. Sends it back to the website
 =======================================================================================================================================
 */
 
@@ -22,8 +16,8 @@ const menuModel = require('../models/menuModel');
  * Get all menu sections with their items
  * This is called when someone visits /api/menu
  *
- * @param {object} req - The request object (contains info about what the user asked for)
- * @param {object} res - The response object (we use this to send data back)
+ * @param {object} req - The request object 
+ * @param {object} res - The response object 
  */
 const getAllMenuSections = async (req, res) => {
   try {
@@ -36,7 +30,7 @@ const getAllMenuSections = async (req, res) => {
       return_code: 'SUCCESS',
       message: 'Got the menu!',
       data: sections,                    // The actual menu data
-      count: sections.length             // How many sections we got
+      count: sections.length             // How many sections 
     });
 
   } catch (error) {
@@ -55,10 +49,9 @@ const getAllMenuSections = async (req, res) => {
  * This is called when someone visits /api/menu/buffet-version/:id
  *
  * This returns only the menu sections that belong to a specific buffet version.
- * For example, if you want only the "Standard Buffet" menu items, pass in that buffet version's ID.
  *
- * @param {object} req - The request object (contains the buffet version ID in req.params.id)
- * @param {object} res - The response object (we use this to send data back)
+ * @param {object} req - The request object 
+ * @param {object} res - The response object 
  */
 const getMenuSectionsByBuffetVersion = async (req, res) => {
   try {

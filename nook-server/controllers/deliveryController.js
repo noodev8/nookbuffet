@@ -59,7 +59,7 @@ const validateDeliveryArea = async (req, res) => {
       });
     }
 
-    // Find the nearest branch (straight-line distance for initial filtering)
+    // Find the nearest branch (straight-line distance )
     const nearestBranch = await branchModel.findNearestBranch(
       customerCoords.lat, 
       customerCoords.lng

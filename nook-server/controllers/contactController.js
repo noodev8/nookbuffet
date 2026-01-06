@@ -22,7 +22,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * This is called when someone POSTs to /api/contact
  *
  * @param {object} req - The request object (contains the form data in req.body)
- * @param {object} res - The response object (we use this to send data back)
+ * @param {object} res - The response object 
  */
 const sendContactEmail = async (req, res) => {
   try {
@@ -197,8 +197,8 @@ const sendContactEmail = async (req, res) => {
     // ===== SEND THE EMAIL =====
     // Use the Resend service to actually send the email
     const emailResult = await resend.emails.send({
-      from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,  // Who the email is from (your business name + email)
-      to: process.env.TO_EMAIL,            // Who receives the email (you - the business owner)
+      from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,  // Who the email is from 
+      to: process.env.TO_EMAIL,            // Who receives the email 
       subject: emailSubject,               // The subject line of the email
       html: emailContent,                  // The HTML content of the email
       reply_to: email                      // When you reply, it goes to the customer's email
@@ -215,7 +215,7 @@ const sendContactEmail = async (req, res) => {
 
   } catch (error) {
     // ===== ERROR HANDLING =====
-    // Log the actual error so we can see what went wrong
+   
     console.error('Email sending error:', error);
 
     // Tell the website that something went wrong
@@ -228,7 +228,6 @@ const sendContactEmail = async (req, res) => {
 };
 
 // ===== EXPORTS =====
-// Make this function available to the routes file
 module.exports = {
   sendContactEmail
 };

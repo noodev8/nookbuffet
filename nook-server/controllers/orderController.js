@@ -2,11 +2,7 @@
 =======================================================================================================================================
 ORDER CONTROLLER - Handles order creation requests
 =======================================================================================================================================
-Controllers are the middle person between routes and models. They:
-1. Receive the request from the route
-2. Validate the data
-3. Ask the model to save to database
-4. Send response back to the website
+This file handles requests for creating new orders.
 =======================================================================================================================================
 */
 
@@ -19,8 +15,8 @@ const { sendOrderConfirmationEmail } = require('../utils/emailService');
  * Creates a new order with all buffets and items
  * This is called when someone submits their order at checkout
  * 
- * @param {object} req - The request object (contains order data in req.body)
- * @param {object} res - The response object (we use this to send data back)
+ * @param {object} req - The request object
+ * @param {object} res - The response object 
  */
 const createOrder = async (req, res) => {
   try {
@@ -191,7 +187,7 @@ const createOrder = async (req, res) => {
  * This is for the admin portal
  * Supports optional branch_id query param to filter by branch
  *
- * @param {object} req - The request object (can have ?branch_id=X query param)
+ * @param {object} req - The request object 
  * @param {object} res - The response object
  */
 const getAllOrders = async (req, res) => {
@@ -230,7 +226,7 @@ const getAllOrders = async (req, res) => {
  * Updates the status of an order
  * This is for marking orders as completed in the admin portal
  *
- * @param {object} req - The request object (contains orderId in params and status in body)
+ * @param {object} req - The request object 
  * @param {object} res - The response object
  */
 const updateOrderStatus = async (req, res) => {
@@ -314,7 +310,7 @@ const getEarliestOrderDate = async (req, res) => {
  * Gets a single order with complete details by its ID
  * This is for the admin portal order details page
  *
- * @param {object} req - The request object (contains the ID in req.params.id)
+ * @param {object} req - The request object 
  * @param {object} res - The response object
  */
 const getOrderById = async (req, res) => {

@@ -24,10 +24,9 @@ const buffetVersionModel = require('../models/buffetVersionModel');
 const getBuffetVersionById = async (req, res) => {
   try {
     // Get the ID from the URL
-    // If someone visits /api/buffet-versions/3, then req.params.id = 3
     const versionId = req.params.id;
 
-    // Check if the ID is valid (must be a number)
+    // Check if the ID is valid 
     if (!versionId || isNaN(versionId)) {
       return res.json({
         return_code: 'INVALID_ID',
@@ -55,7 +54,7 @@ const getBuffetVersionById = async (req, res) => {
       });
     }
 
-    // Some other error happened
+    // Some other error happened somehow
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Could not get that buffet version'

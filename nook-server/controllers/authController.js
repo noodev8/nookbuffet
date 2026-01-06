@@ -91,7 +91,7 @@ const login = async (req, res) => {
     );
 
     // ===== SUCCESS RESPONSE =====
-    // Send back the token and user info (but NOT the password hash!)
+    // Send back the token and user info 
     return res.json({
       return_code: 'SUCCESS',
       token: token,
