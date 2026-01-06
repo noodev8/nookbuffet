@@ -199,72 +199,6 @@ const getUpgradeWithItems = async (upgradeId) => {
   }
 };
 
-// ===== CREATE UPGRADE CATEGORY =====
-const createUpgradeCategory = async (upgradeId, name, description, numChoices, isRequired, position) => {
-  try {
-    const result = await query(
-      `INSERT INTO upgrade_categories (upgrade_id, name, description, num_choices, is_required, position)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id, upgrade_id, name, description, num_choices, is_required, position`,
-      [upgradeId, name, description, numChoices, isRequired, position]
-    );
-    return result.rows[0];
-  } catch (error) {
-    console.error('Could not create upgrade category:', error);
-    throw error;
-  }
-};
-
-// ===== CREATE UPGRADE ITEM =====
-const createUpgradeItem = async (upgradeCategoryId, name, description) => {
-  try {
-    const result = await query(
-      `INSERT INTO upgrade_items (upgrade_category_id, name, description)
-       VALUES ($1, $2, $3)
-       RETURNING id, upgrade_category_id, name, description`,
-      [upgradeCategoryId, name, description]
-    );
-    return result.rows[0];
-  } catch (error) {
-    console.error('Could not create upgrade item:', error);
-    throw error;
-  }
-};
-
-// ===== GET CATEGORIES FOR UPGRADE =====
-const getCategoriesForUpgrade = async (upgradeId) => {
-  try {
-    const result = await query(
-      `SELECT id, name, description, num_choices, is_required, position
-       FROM upgrade_categories
-       WHERE upgrade_id = $1 AND is_active = true
-       ORDER BY position, name`,
-      [upgradeId]
-    );
-    return result.rows;
-  } catch (error) {
-    console.error('Could not get categories for upgrade:', error);
-    throw error;
-  }
-};
-
-// ===== GET ITEMS FOR CATEGORY =====
-const getItemsForCategory = async (categoryId) => {
-  try {
-    const result = await query(
-      `SELECT id, name, description
-       FROM upgrade_items
-       WHERE upgrade_category_id = $1 AND is_active = true
-       ORDER BY name`,
-      [categoryId]
-    );
-    return result.rows;
-  } catch (error) {
-    console.error('Could not get items for category:', error);
-    throw error;
-  }
-};
-
 module.exports = {
   getAllUpgrades,
   getUpgradeById,
@@ -274,10 +208,6 @@ module.exports = {
   unlinkUpgradeFromBuffet,
   updateUpgrade,
   deactivateUpgrade,
-  getUpgradeWithItems,
-  createUpgradeCategory,
-  createUpgradeItem,
-  getCategoriesForUpgrade,
-  getItemsForCategory
+  getUpgradeWithItems
 };
 

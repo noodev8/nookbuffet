@@ -38,18 +38,6 @@ ENDPOINTS:
    URL Parameters: id (integer) - the upgrade ID
    Response: { return_code, message, data: { upgrade with categories and items } }
 
-7. POST /api/upgrades/:id/categories
-   Purpose: Create a category within an upgrade (admin)
-   URL Parameters: id (integer) - the upgrade ID
-   Request Body: { name, description, numChoices, isRequired, position }
-   Response: { return_code, message, data: category }
-
-8. POST /api/upgrades/categories/:categoryId/items
-   Purpose: Create an item within a category (admin)
-   URL Parameters: categoryId (integer) - the category ID
-   Request Body: { name, description }
-   Response: { return_code, message, data: item }
-
 =======================================================================================================================================
 */
 
@@ -72,12 +60,6 @@ router.post('/', upgradeController.createUpgrade);
 
 // POST link upgrade to buffet
 router.post('/buffet/:buffetId', upgradeController.linkUpgradeToBuffet);
-
-// POST create category for upgrade
-router.post('/:id/categories', upgradeController.createUpgradeCategory);
-
-// POST create item for category
-router.post('/categories/:categoryId/items', upgradeController.createUpgradeItem);
 
 // PUT update upgrade
 router.put('/:id', upgradeController.updateUpgrade);

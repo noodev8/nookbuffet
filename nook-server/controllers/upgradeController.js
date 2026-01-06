@@ -178,84 +178,12 @@ const getUpgradeWithItems = async (req, res) => {
   }
 };
 
-// ===== CREATE UPGRADE CATEGORY =====
-const createUpgradeCategory = async (req, res) => {
-  try {
-    const upgradeId = req.params.id;
-    const { name, description, numChoices, isRequired, position } = req.body;
-
-    if (!upgradeId || isNaN(upgradeId)) {
-      return res.json({
-        return_code: 'INVALID_ID',
-        message: 'Please provide a valid upgrade ID'
-      });
-    }
-
-    if (!name) {
-      return res.json({
-        return_code: 'MISSING_FIELDS',
-        message: 'Category name is required'
-      });
-    }
-
-    const category = await upgradeModel.createUpgradeCategory(
-      upgradeId, name, description, numChoices || null, isRequired || false, position || 0
-    );
-    res.json({
-      return_code: 'SUCCESS',
-      message: 'Category created',
-      data: category
-    });
-  } catch (error) {
-    res.json({
-      return_code: 'SERVER_ERROR',
-      message: 'Could not create category'
-    });
-  }
-};
-
-// ===== CREATE UPGRADE ITEM =====
-const createUpgradeItem = async (req, res) => {
-  try {
-    const categoryId = req.params.categoryId;
-    const { name, description } = req.body;
-
-    if (!categoryId || isNaN(categoryId)) {
-      return res.json({
-        return_code: 'INVALID_ID',
-        message: 'Please provide a valid category ID'
-      });
-    }
-
-    if (!name) {
-      return res.json({
-        return_code: 'MISSING_FIELDS',
-        message: 'Item name is required'
-      });
-    }
-
-    const item = await upgradeModel.createUpgradeItem(categoryId, name, description);
-    res.json({
-      return_code: 'SUCCESS',
-      message: 'Item created',
-      data: item
-    });
-  } catch (error) {
-    res.json({
-      return_code: 'SERVER_ERROR',
-      message: 'Could not create item'
-    });
-  }
-};
-
 module.exports = {
   getAllUpgrades,
   getUpgradesForBuffet,
   createUpgrade,
   linkUpgradeToBuffet,
   updateUpgrade,
-  getUpgradeWithItems,
-  createUpgradeCategory,
-  createUpgradeItem
+  getUpgradeWithItems
 };
 
