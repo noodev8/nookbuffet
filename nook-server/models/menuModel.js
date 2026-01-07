@@ -58,7 +58,7 @@ const getMenuSectionsQuery = (whereClause = '', params = []) => {
       LEFT JOIN menu_items mi ON c.id = mi.category_id AND mi.is_active = true
       -- Only get active categories, plus any additional filters passed in
       WHERE c.is_active = true ${whereClause}
-      -- Group by category so we get one row per category with all its items combined
+      -- Group by category 
       GROUP BY c.id, c.name, c.description, c.is_required, c.buffet_version_id, bv.price_per_person
       -- Sort by category ID
       ORDER BY c.id;
@@ -73,12 +73,6 @@ const getMenuSectionsQuery = (whereClause = '', params = []) => {
  *
  * This returns every menu section in the database (like Sandwiches, Wraps, Savoury, etc.)
  * along with all the items in each section.
- *
- * Example: Returns [
- *   { id: 1, name: "Sandwiches", items: [...] },
- *   { id: 2, name: "Wraps", items: [...] },
- *   { id: 3, name: "Savoury", items: [...] }
- * ]
  *
  * @returns {Promise<array>} Array of all menu sections with their items
  */
@@ -103,12 +97,6 @@ const getAllMenuSections = async () => {
  * Get menu sections filtered by buffet version ID
  *
  * This returns only the menu sections that belong to a specific buffet version.
-
- * Example: getMenuSectionsByBuffetVersion(1) returns:
- * [
- *   { id: 1, name: "Sandwiches", buffet_version_id: 1, items: [...] },
- *   { id: 2, name: "Wraps", buffet_version_id: 1, items: [...] }
- * ]
  *
  * @param {number} buffetVersionId - The ID of the buffet version you want
  * @returns {Promise<array>} Array of menu sections for that buffet version

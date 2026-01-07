@@ -7,8 +7,6 @@ This file contains all the SQL queries for getting buffet version data from the 
 A buffet version is a package/tier that customers can choose from.
 Each version has a name, description, and price per person.
 
-Models are the "data layer" - they talk to the database and return data.
-Controllers use models to get data, then format it and send it to the website.
 =======================================================================================================================================
 */
 
@@ -58,12 +56,6 @@ const getBuffetVersionById = async (versionId) => {
  *
  * This returns every buffet version that's currently active.
  * These are the different packages customers can choose from.
- *
- * Example: Returns [
- *   { id: 1, title: "Standard Buffet", price_per_person: 15.99, ... },
- *   { id: 2, title: "Premium Buffet", price_per_person: 22.99, ... },
- *   { id: 3, title: "Deluxe Buffet", price_per_person: 29.99, ... }
- * ]
  *
  * @returns {Promise<array>} Array of all active buffet versions
  */

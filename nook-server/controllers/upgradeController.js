@@ -55,94 +55,6 @@ const getUpgradesForBuffet = async (req, res) => {
   }
 };
 
-// ===== CREATE NEW UPGRADE =====
-const createUpgrade = async (req, res) => {
-  try {
-    const { name, description, pricePerPerson } = req.body;
-
-    if (!name || !pricePerPerson) {
-      return res.json({
-        return_code: 'MISSING_FIELDS',
-        message: 'Name and price per person are required'
-      });
-    }
-
-    const upgrade = await upgradeModel.createUpgrade(name, description, pricePerPerson);
-    res.json({
-      return_code: 'SUCCESS',
-      message: 'Upgrade created',
-      data: upgrade
-    });
-  } catch (error) {
-    res.json({
-      return_code: 'SERVER_ERROR',
-      message: 'Could not create upgrade'
-    });
-  }
-};
-
-// ===== LINK UPGRADE TO BUFFET =====
-// makes an upgrade available for a specific buffet
-const linkUpgradeToBuffet = async (req, res) => {
-  try {
-    const buffetVersionId = req.params.buffetId;
-    const { upgradeId } = req.body;
-
-    if (!buffetVersionId || isNaN(buffetVersionId)) {
-      return res.json({
-        return_code: 'INVALID_ID',
-        message: 'Please provide a valid buffet version ID'
-      });
-    }
-
-    if (!upgradeId) {
-      return res.json({
-        return_code: 'MISSING_FIELDS',
-        message: 'Upgrade ID is required'
-      });
-    }
-
-    const link = await upgradeModel.linkUpgradeToBuffet(buffetVersionId, upgradeId);
-    res.json({
-      return_code: 'SUCCESS',
-      message: 'Upgrade linked to buffet',
-      data: link
-    });
-  } catch (error) {
-    res.json({
-      return_code: 'SERVER_ERROR',
-      message: 'Could not link upgrade to buffet'
-    });
-  }
-};
-
-// ===== UPDATE UPGRADE =====
-const updateUpgrade = async (req, res) => {
-  try {
-    const upgradeId = req.params.id;
-    const { name, description, pricePerPerson } = req.body;
-
-    if (!upgradeId || isNaN(upgradeId)) {
-      return res.json({
-        return_code: 'INVALID_ID',
-        message: 'Please provide a valid upgrade ID'
-      });
-    }
-
-    const upgrade = await upgradeModel.updateUpgrade(upgradeId, name, description, pricePerPerson);
-    res.json({
-      return_code: 'SUCCESS',
-      message: 'Upgrade updated',
-      data: upgrade
-    });
-  } catch (error) {
-    res.json({
-      return_code: 'SERVER_ERROR',
-      message: 'Could not update upgrade'
-    });
-  }
-};
-
 // ===== GET UPGRADE WITH ALL CATEGORIES AND ITEMS =====
 // returns full upgrade structure for the order page
 const getUpgradeWithItems = async (req, res) => {
@@ -181,9 +93,6 @@ const getUpgradeWithItems = async (req, res) => {
 module.exports = {
   getAllUpgrades,
   getUpgradesForBuffet,
-  createUpgrade,
-  linkUpgradeToBuffet,
-  updateUpgrade,
   getUpgradeWithItems
 };
 

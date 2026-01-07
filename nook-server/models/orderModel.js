@@ -2,7 +2,6 @@
 =======================================================================================================================================
 ORDER MODEL - Database queries for orders
 =======================================================================================================================================
-Models are like the "database talkers" - they know how to ask the database for information and save stuff.
 This model handles all order-related database operations.
 
 The order structure has 3 tables:
@@ -235,7 +234,6 @@ const getAllOrders = async (branchId = null) => {
   }
 
   // Single query that builds the entire nested structure using JSON_AGG
-  // This replaces the N+1 loop pattern with efficient PostgreSQL JSON aggregation
   const ordersSQL = `
     SELECT
       o.id, o.order_number, o.customer_email, o.customer_phone,
@@ -333,9 +331,6 @@ const getAllOrders = async (branchId = null) => {
 /**
  * Updates the status of an order to 'completed'
  * This marks the order as done so it won't show in the admin portal
- *
- * Uses query() instead of getClient() since this is a single update
- * and doesn't need transaction support - more efficient for pooling
  *
  * @param {number} orderId - The ID of the order to update
  * @param {string} status - The new status value

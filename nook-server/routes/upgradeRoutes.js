@@ -16,24 +16,7 @@ ENDPOINTS:
    URL Parameters: buffetId (integer) - the buffet version ID
    Response: { return_code, message, data: [...upgrades], count }
 
-3. POST /api/upgrades
-   Purpose: Create a new upgrade (admin)
-   Request Body: { name, description, pricePerPerson }
-   Response: { return_code, message, data: upgrade }
-
-4. POST /api/upgrades/buffet/:buffetId
-   Purpose: Link an upgrade to a buffet (admin)
-   URL Parameters: buffetId (integer) - the buffet version ID
-   Request Body: { upgradeId }
-   Response: { return_code, message, data: link }
-
-5. PUT /api/upgrades/:id
-   Purpose: Update an upgrade (admin)
-   URL Parameters: id (integer) - the upgrade ID
-   Request Body: { name, description, pricePerPerson }
-   Response: { return_code, message, data: upgrade }
-
-6. GET /api/upgrades/:id/full
+3. GET /api/upgrades/:id/full
    Purpose: Get upgrade with all categories and items (for order page)
    URL Parameters: id (integer) - the upgrade ID
    Response: { return_code, message, data: { upgrade with categories and items } }
@@ -54,15 +37,6 @@ router.get('/buffet/:buffetId', upgradeController.getUpgradesForBuffet);
 
 // GET upgrade with all categories and items
 router.get('/:id/full', upgradeController.getUpgradeWithItems);
-
-// POST create new upgrade
-router.post('/', upgradeController.createUpgrade);
-
-// POST link upgrade to buffet
-router.post('/buffet/:buffetId', upgradeController.linkUpgradeToBuffet);
-
-// PUT update upgrade
-router.put('/:id', upgradeController.updateUpgrade);
 
 module.exports = router;
 
