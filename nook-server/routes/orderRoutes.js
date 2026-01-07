@@ -2,8 +2,6 @@
 =======================================================================================================================================
 ORDER ROUTES - API endpoints for order creation
 =======================================================================================================================================
-Routes are like the "front desk" of your API. They receive requests from the website and send them
-to the right controller to handle.
 
 ENDPOINTS:
 
@@ -92,13 +90,13 @@ router.get('/earliest-date', orderController.getEarliestOrderDate);
 
 // ===== ROUTE: GET ALL ORDERS (PROTECTED) =====
 // When someone GETs /api/orders, run the getAllOrders function
-// GET is used because we're just reading data
+// GET is used because just reading data
 // All authenticated users (staff, admin, manager) can view orders
 router.get('/', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.getAllOrders);
 
 // ===== ROUTE: GET SINGLE ORDER BY ID (PROTECTED) =====
 // When someone GETs /api/orders/:id, run the getOrderById function
-// GET is used because we're just reading data
+// GET is used 
 // All authenticated users (staff, admin, manager) can view orders
 router.get('/:id', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.getOrderById);
 
@@ -109,7 +107,7 @@ router.post('/', orderController.createOrder);
 
 // ===== ROUTE: UPDATE ORDER STATUS (PROTECTED) =====
 // When someone PATCHes /api/orders/:id/status, run the updateOrderStatus function
-// PATCH is used because we're updating existing data
+// PATCH is used because its updating existing data
 // All authenticated users (staff, admin, manager) can update order status
 router.patch('/:id/status', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.updateOrderStatus);
 

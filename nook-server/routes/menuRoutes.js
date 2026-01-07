@@ -2,13 +2,6 @@
 =======================================================================================================================================
 MENU ROUTES - API endpoints for menu data
 =======================================================================================================================================
-Routes are like the "front desk" of your API. They receive requests from the website and send them
-to the right controller to handle.
-
-Think of it like a restaurant:
-- Website makes a request (like "give me the menu")
-- Route receives it and says "okay, I'll send you to the menu controller"
-- Controller handles it and sends back the data
 
 ENDPOINTS:
 

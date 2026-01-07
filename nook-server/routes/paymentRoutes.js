@@ -36,7 +36,7 @@ router.post('/create-payment-intent', async (req, res) => {
       amount: amountInPence,
       currency: 'gbp',
       receipt_email: email || undefined,
-      // Store order info so we can link payment to order later
+      // Store order info so  can link payment to order later
       metadata: metadata || {},
       // Enable automatic payment methods for flexibility
       automatic_payment_methods: {
