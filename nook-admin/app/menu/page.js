@@ -63,11 +63,11 @@ export default function MenuManagementPage() {
         if (data.return_code === 'SUCCESS') {
           setMenuItems(data.data || []);
 
-          // Extract unique categories
+          // get unique categories
           const uniqueCategories = [...new Set(data.data.map(item => item.category_name))];
           setCategories(uniqueCategories);
 
-          // Extract unique buffet versions (filter out nulls for items without a buffet version)
+          // get unique buffet versions (filter out nulls for items without a buffet version)
           const versions = data.data
             .filter(item => item.buffet_version_id)
             .reduce((acc, item) => {
@@ -268,7 +268,7 @@ export default function MenuManagementPage() {
                 className={`stock-toggle ${item.is_active ? 'in-stock' : 'out-of-stock'}`}
                 onClick={() => toggleStockStatus(item.id, item.is_active)}
               >
-                {item.is_active ? '✓ In Stock' : '✗ Out of Stock'}
+                {item.is_active ? 'In Stock' : 'Out of Stock'}
               </button>
             </div>
           </div>

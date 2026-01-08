@@ -24,7 +24,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* Additional head elements can be added here if needed */}
+        {}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

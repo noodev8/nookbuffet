@@ -69,7 +69,7 @@ export default function StaffManagementPage() {
   useEffect(() => {
     if (!user) return;
     fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [user]);
 
   const fetchUsers = async () => {
