@@ -5,9 +5,7 @@ ORDER DATE CALCULATOR - Works out when the earliest delivery/collection can be
  need at least 1 day notice for orders, but there's a daily cutoff time.
 If you order after the cutoff (default 4pm), you need to wait an extra day.
 
-Example:
-- Order at 2pm Monday → earliest delivery is Tuesday (before cutoff, so next day)
-- Order at 5pm Monday → earliest delivery is Wednesday (after cutoff, so day after next)
+
 
 The cutoff time is stored in the database 
 =======================================================================================================================================
@@ -48,7 +46,7 @@ const calculateEarliestOrderDate = async () => {
       success: true,
       earliestDate: earliestDate.toISOString().split('T')[0],  // Format as YYYY-MM-DD
       cutoffTime,
-      isAfterCutoff: currentTime >= cutoffTime  // Let the frontend know if we're past cutoff
+      isAfterCutoff: currentTime >= cutoffTime  // Let the frontend know if it is past cutoff
     };
 
   } catch (error) {

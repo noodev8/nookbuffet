@@ -5,10 +5,6 @@ EMAIL SERVICE - Handles sending emails via Resend
 This utility provides reusable email functions for the application.
 Uses Resend for email delivery - same service as the contact form.
 
-Environment variables needed:
-- RESEND_API_KEY
-- FROM_EMAIL 
-- EMAIL_NAME
 =======================================================================================================================================
 */
 
@@ -32,7 +28,7 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
     let buffetNumber = 1;
 
     for (const buffet of orderData.buffets) {
-      // Fetch item details from database if we only have IDs
+      // Fetch item details from database 
       let itemDetails = buffet.itemDetails || [];
       if (buffet.items && buffet.items.length > 0 && itemDetails.length === 0) {
         itemDetails = await menuModel.getMenuItemsByIds(buffet.items);

@@ -28,7 +28,7 @@ const withTransaction = async (callback) => {
     // Run whatever queries the caller wants to do
     const result = await callback(client);
     
-    // If we got here without errors, save everything
+    // If theres no errors, save everything
     await client.query('COMMIT');
     
     return result;
