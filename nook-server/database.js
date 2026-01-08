@@ -23,7 +23,7 @@ const pool = new Pool({
   // These settings come from the .env file
   host: process.env.DB_HOST,           // Where the database server is 
   port: process.env.DB_PORT,           // What port it's listening on 
-  database: process.env.DB_NAME,       // The name of your database
+  database: process.env.DB_NAME,       // The name of the database
   user: process.env.DB_USER,           // Username to log in with
   password: process.env.DB_PASSWORD,   // Password to log in with
 
@@ -31,7 +31,7 @@ const pool = new Pool({
   // These control how the pool behaves
   max: 200,                            // Maximum number of connections to keep open at once
   idleTimeoutMillis: 60000,            // If a connection isn't used for 60 seconds, close it
-  connectionTimeoutMillis: 60000,      // If we can't connect within 60 seconds, give up and error
+  connectionTimeoutMillis: 60000,      // If can't connect within 60 seconds, give up and error
 });
 
 // ===== ERROR HANDLING =====
@@ -49,7 +49,7 @@ pool.on('error', (err) => {
  * This is the main function used to talk to the database.
  * It handles errors and returns the results.
  *
- * @param {string} queryText - The SQL query you want to run (e.g., "SELECT * FROM users")
+ * @param {string} queryText - The SQL query it wants to run (e.g., "SELECT * FROM users")
  * @param {array} values - Optional parameters to safely inject into the query
  *                         This prevents SQL injection attacks
  *                         Example: query("SELECT * FROM users WHERE id = $1", [5])
