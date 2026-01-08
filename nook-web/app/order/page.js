@@ -95,7 +95,7 @@ function OrderPageContent() {
       'Cake': ['/assets/cake3.png', '/assets/cake4.png','/assets/cake.png', '/assets/cake2.png'],
       'Continental Tray': ['/assets/savoury.png', '/assets/food2.png', '/assets/nook.jpg', '/assets/sandwiches.png'],
 
-      // Kids Buffet Categories (single image only - position 0 is used)
+      // Kids Buffet Categories (single image only)
       'Vegetable Sticks & Dips': ['/assets/dips3.png'],
       'Biscuits & Cakes': ['/assets/kidscake.png'],
       'Crisps': ['/assets/kidscrisps.png'],
@@ -112,7 +112,7 @@ function OrderPageContent() {
       return;
     }
 
-    // Check if we're editing an existing order from the basket
+    // Check if  editing an existing order from the basket
     const editingData = localStorage.getItem('editingOrder');
     let orderBeingEdited = null;
     if (editingData) {
@@ -231,8 +231,8 @@ function OrderPageContent() {
 
           {/* Beta Warning Banner */}
           <div className="beta-warning-banner">
-            <strong>⚠️ BETA VERSION - TESTING ONLY</strong>
-            <p>This is a test version of our ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
+            <strong>BETA VERSION - TESTING ONLY</strong>
+            <p>This is a test version of a ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
           </div>
 
           {loading && (

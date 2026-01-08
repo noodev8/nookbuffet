@@ -1,7 +1,7 @@
 // This tells Next.js to run this page on the client side (in the browser) not the server
 'use client';
 
-// Bringing in the tools we need from Next.js and React
+// what i need from Next.js and React
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -75,7 +75,7 @@ function CheckoutContent() {
 
   // These are state variables - the data this page keeps track of
   const [orders, setOrders] = useState([]); // All the buffet orders from the basket
-  const [loading, setLoading] = useState(false); // Whether we're currently processing
+  const [loading, setLoading] = useState(false); // Whether its currently processing
   const [clientSecret, setClientSecret] = useState(''); // Stripe payment intent secret
   const [paymentError, setPaymentError] = useState('');
 
@@ -200,8 +200,8 @@ function CheckoutContent() {
 
           {/* Big warning banner at the top - this is just for testing, not real orders */}
           <div className="beta-warning-banner">
-            <strong>⚠️ BETA VERSION - TESTING ONLY</strong>
-            <p>This is a test version of our ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
+            <strong>BETA VERSION - TESTING ONLY</strong>
+            <p>This is a test version of a ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
           </div>
 
           {/* Show all the buffets they're ordering */}
@@ -255,7 +255,7 @@ function CheckoutContent() {
             )}
           </div>
 
-          {/* Show the business details - only if we have orders and a business name */}
+          {/* Show the business details - only if rhey have orders and a business name */}
           {orders.length > 0 && orders[0].businessName && (
             <div className="checkout-section">
               <h2 className="checkout-section-title">Business Details</h2>

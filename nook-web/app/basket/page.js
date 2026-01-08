@@ -324,7 +324,7 @@ export default function BasketPage() {
     router.push(`/order?buffetVersionId=${orderToEdit.buffetVersionId}`);
   };
 
-  // Add this function to handle date changes with validation
+  // handle date changes with validation
   const handleDateChange = (e) => {
     const selectedDate = e.target.value;
     
@@ -347,8 +347,8 @@ export default function BasketPage() {
 
           {/* Beta Warning Banner */}
           <div className="beta-warning-banner">
-            <strong>⚠️ BETA VERSION - TESTING ONLY</strong>
-            <p>This is a test version of our ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
+            <strong>BETA VERSION - TESTING ONLY</strong>
+            <p>This is a test version of a ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
           </div>
 
           {/* Orders Summary Section */}
@@ -436,7 +436,7 @@ export default function BasketPage() {
           {/* Minimum People Warning */}
           {orders.length > 0 && orders.reduce((sum, order) => sum + (order.numPeople || 0), 0) < 5 && (
             <div className="minimum-people-warning">
-              ⚠️ Minimum order is 5 people. Current total: {orders.reduce((sum, order) => sum + (order.numPeople || 0), 0)} {orders.reduce((sum, order) => sum + (order.numPeople || 0), 0) === 1 ? 'person' : 'people'}.
+              Minimum order is 5 people. Current total: {orders.reduce((sum, order) => sum + (order.numPeople || 0), 0)} {orders.reduce((sum, order) => sum + (order.numPeople || 0), 0) === 1 ? 'person' : 'people'}.
             </div>
           )}
 
@@ -472,7 +472,7 @@ export default function BasketPage() {
                 />
                 {fulfillmentType === 'delivery' && validatingAddress && (
                   <div style={{ marginTop: '5px', color: '#007bff', fontSize: '14px' }}>
-                    🔄 Validating delivery address...
+                    Validating delivery address...
                   </div>
                 )}
                 {fulfillmentType === 'delivery' && !validatingAddress && addressValidated && (
@@ -583,7 +583,7 @@ export default function BasketPage() {
                         <div style={{ marginTop: '5px', fontSize: '14px', color: '#666' }}>
                           {cutoffInfo.isAfterCutoff ? (
                             <span style={{ color: '#ff6b35' }}>
-                              ⏰ After {cutoffInfo.cutoffTime} cutoff - earliest delivery: {new Date(cutoffInfo.earliestDate + 'T00:00:00').toLocaleDateString('en-GB')}
+                              After {cutoffInfo.cutoffTime} cutoff - earliest delivery: {new Date(cutoffInfo.earliestDate + 'T00:00:00').toLocaleDateString('en-GB')}
                             </span>
                           ) : (
                             <span style={{ color: '#28a745' }}>
