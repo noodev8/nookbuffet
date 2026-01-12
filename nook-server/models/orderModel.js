@@ -319,7 +319,7 @@ const getAllOrders = async (branchId = null) => {
 
     FROM orders o
     LEFT JOIN branches b ON o.branch_id = b.id
-    WHERE o.status != 'completed' ${branchFilter}
+    WHERE o.status NOT IN ('completed', 'cancelled') ${branchFilter}
     ORDER BY o.fulfillment_date ASC, o.created_at DESC
   `;
 
