@@ -181,6 +181,10 @@ export default function StaffManagementPage() {
     router.push('/menu');
   };
 
+  const goToReports = () => {
+    router.push('/reports');
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
@@ -332,6 +336,7 @@ export default function StaffManagementPage() {
           <button className="nav-item" onClick={goToOrders}>Orders</button>
           <button className="nav-item" onClick={goToMenuManagement}>Menu Items</button>
           <button className="nav-item active">Staff Management</button>
+          <button className="nav-item" onClick={goToReports}>Reports</button>
         </nav>
       </header>
 

@@ -246,6 +246,10 @@ export default function AdminPage() {
     router.push('/staff');
   };
 
+  const goToReports = () => {
+    router.push('/reports');
+  };
+
   return (
     <div className="admin-container">
       <header className="admin-header">
@@ -266,6 +270,9 @@ export default function AdminPage() {
           )}
           {user && user.role === 'manager' && (
             <button className="nav-item" onClick={goToStaffManagement}>Staff Management</button>
+          )}
+          {user && user.role === 'manager' && (
+            <button className="nav-item" onClick={goToReports}>Reports</button>
           )}
         </nav>
       </header>
