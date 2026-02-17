@@ -295,3 +295,37 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* Branch Report Styles */
+.branch-report {
+  padding: 1rem 0;
+}
+
+.branch-totals {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.total-card {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 180px;
+}
+
+.total-label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.total-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #a8e6cf;
+}
+

@@ -75,9 +75,50 @@ const getCategories = async (req, res) => {
   }
 };
 
+// ===== GET BRANCH REPORT =====
+/**
+ * Get branch performance data showing order count and revenue
+ *
+ * GET /api/reports/branches
+ * Query params:
+ *   - startDate: Optional start date (YYYY-MM-DD)
+ *   - endDate: Optional end date (YYYY-MM-DD)
+ *
+ * @param {object} req - Express request object
+ * @param {object} res - Express response object
+ */
+const getBranchReport = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const data = await reportModel.getBranchReport(startDate, endDate);
+
+    // Return with parsed numbers
+    const branches = data.map(branch => ({
+      branch_id: branch.branch_id,
+      branch_name: branch.branch_name,
+      total_orders: parseInt(branch.total_orders),
+      total_revenue: parseFloat(branch.total_revenue)
+    }));
+
+    return res.json({
+      return_code: 'SUCCESS',
+      data: branches
+    });
+
+  } catch (error) {
+    console.error('Error getting branch report:', error);
+    return res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to get branch report'
+    });
+  }
+};
+
 // ===== EXPORTS =====
 module.exports = {
   getStockReport,
-  getCategories
+  getCategories,
+  getBranchReport
 };
 
