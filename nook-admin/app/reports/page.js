@@ -7,6 +7,7 @@ import './reports.css';
 export default function ReportsPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('stock');
 
   // Check authentication on mount
   useEffect(() => {
@@ -79,6 +80,33 @@ export default function ReportsPage() {
 
       <div className="page-header">
         <h2>Reports</h2>
+      </div>
+
+      <div className="reports-tabs">
+        <button
+          className={`report-tab ${activeTab === 'stock' ? 'active' : ''}`}
+          onClick={() => setActiveTab('stock')}
+        >
+          Stock Report
+        </button>
+        <button
+          className={`report-tab ${activeTab === 'branch' ? 'active' : ''}`}
+          onClick={() => setActiveTab('branch')}
+        >
+          Branch Report
+        </button>
+        <button
+          className={`report-tab ${activeTab === 'account' ? 'active' : ''}`}
+          onClick={() => setActiveTab('account')}
+        >
+          Account Reports
+        </button>
+        <button
+          className={`report-tab ${activeTab === 'custom' ? 'active' : ''}`}
+          onClick={() => setActiveTab('custom')}
+        >
+          Custom Report
+        </button>
       </div>
 
       <div className="reports-content">

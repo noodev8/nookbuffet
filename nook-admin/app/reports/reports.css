@@ -104,20 +104,46 @@
 }
 
 /* ========================================
+   REPORTS TABS
+   ======================================== */
+.reports-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.report-tab {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px 8px 0 0;
+}
+
+.report-tab:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.report-tab.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* ========================================
    REPORTS CONTENT
    ======================================== */
 .reports-content {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border-radius: 12px;
+  border-radius: 0 12px 12px 12px;
   padding: 3rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.placeholder-message {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1.2rem;
+  min-height: 300px;
 }
 
 /* ========================================
