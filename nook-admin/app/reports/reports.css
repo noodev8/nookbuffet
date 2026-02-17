@@ -158,3 +158,140 @@
   font-size: 1.2rem;
 }
 
+/* ========================================
+   STOCK REPORT
+   ======================================== */
+.stock-report {
+  color: white;
+}
+
+/* ========================================
+   REPORT FILTERS
+   ======================================== */
+.report-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-group select,
+.filter-group input[type="date"] {
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  cursor: pointer;
+  min-width: 160px;
+}
+
+.filter-group select:focus,
+.filter-group input[type="date"]:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.filter-group select option {
+  background: #4a3a6e;
+  color: white;
+}
+
+.filter-group input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+.report-loading,
+.report-error,
+.report-empty {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+}
+
+.report-error {
+  color: #ff6b6b;
+}
+
+.stock-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.stock-table th,
+.stock-table td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+}
+
+.stock-table th {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.stock-table th:first-child {
+  width: 60px;
+  text-align: center;
+}
+
+.stock-table td:first-child {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.stock-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stock-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.stock-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.times-ordered {
+  text-align: right;
+  font-weight: 600;
+  color: #a8e6cf;
+}
+
+.stock-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.stock-table th.sortable:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
