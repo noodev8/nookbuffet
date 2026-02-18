@@ -125,10 +125,66 @@ const getBranchReport = async (startDate = null, endDate = null) => {
   }
 };
 
+// ===== GET ACCOUNT REPORT =====
+/**
+ * Get customer account performance data showing order count and total spent
+ * Supports filtering by date range
+ *
+ * NOTE: Currently uses customer_email as identifier since customer_id
+ * doesn't exist yet. When customer accounts are added i will do it properly
+ *
+ * @param {string} startDate - Optional start date (YYYY-MM-DD)
+ * @param {string} endDate - Optional end date (YYYY-MM-DD)
+ * @returns {Promise<array>} Array of customers with order counts and total spent
+ */
+const getAccountReport = async (startDate = null, endDate = null) => {
+  try {
+    // TODO: When customer_id is added to orders table, update this query to:
+    // - JOIN with customers table
+    // - Include customer name, account created date, etc.
+    // - Group by customer_id instead of customer_email
+
+    let queryText = `
+      SELECT
+        customer_email,
+        COUNT(id) as total_orders,
+        COALESCE(SUM(total_price), 0) as total_spent,
+        MIN(created_at) as first_order_date,
+        MAX(created_at) as last_order_date
+      FROM orders
+      WHERE 1=1
+    `;
+
+    const params = [];
+
+    if (startDate) {
+      params.push(startDate);
+      queryText += ` AND created_at >= $${params.length}`;
+    }
+
+    if (endDate) {
+      params.push(endDate);
+      queryText += ` AND created_at < ($${params.length}::date + interval '1 day')`;
+    }
+
+    queryText += `
+      GROUP BY customer_email
+      ORDER BY total_spent DESC, total_orders DESC
+    `;
+
+    const result = await query(queryText, params);
+    return result.rows;
+  } catch (error) {
+    console.error('Could not get account report:', error);
+    throw new Error('Failed to get account report');
+  }
+};
+
 // ===== EXPORTS =====
 module.exports = {
   getStockReport,
   getOrderedCategories,
-  getBranchReport
+  getBranchReport,
+  getAccountReport
 };
 

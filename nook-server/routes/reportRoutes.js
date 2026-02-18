@@ -31,6 +31,11 @@ router.get('/categories', verifyToken, checkRole(['manager']), reportController.
 // Returns branch performance data (orders and revenue) - manager only
 router.get('/branches', verifyToken, checkRole(['manager']), reportController.getBranchReport);
 
+// ===== ROUTE: GET ACCOUNT REPORT (PROTECTED) =====
+// GET /api/reports/accounts?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD
+// Returns customer account performance data (orders and total spent) - manager only
+router.get('/accounts', verifyToken, checkRole(['manager']), reportController.getAccountReport);
+
 // ===== EXPORTS =====
 module.exports = router;
 

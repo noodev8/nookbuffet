@@ -115,10 +115,52 @@ const getBranchReport = async (req, res) => {
   }
 };
 
+// ===== GET ACCOUNT REPORT =====
+/**
+ * Get customer account performance data showing order count and total spent
+ *
+ * GET /api/reports/accounts
+ * Query params:
+ *   - startDate: Optional start date (YYYY-MM-DD)
+ *   - endDate: Optional end date (YYYY-MM-DD)
+ *
+ * @param {object} req - Express request object
+ * @param {object} res - Express response object
+ */
+const getAccountReport = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const data = await reportModel.getAccountReport(startDate, endDate);
+
+    // Return with parsed numbers
+    const accounts = data.map(account => ({
+      customer_email: account.customer_email,
+      total_orders: parseInt(account.total_orders),
+      total_spent: parseFloat(account.total_spent),
+      first_order_date: account.first_order_date,
+      last_order_date: account.last_order_date
+    }));
+
+    return res.json({
+      return_code: 'SUCCESS',
+      data: accounts
+    });
+
+  } catch (error) {
+    console.error('Error getting account report:', error);
+    return res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to get account report'
+    });
+  }
+};
+
 // ===== EXPORTS =====
 module.exports = {
   getStockReport,
   getCategories,
-  getBranchReport
+  getBranchReport,
+  getAccountReport
 };
 

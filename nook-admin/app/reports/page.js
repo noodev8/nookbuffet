@@ -28,6 +28,16 @@ export default function ReportsPage() {
   const [branchSortBy, setBranchSortBy] = useState('revenue');
   const [branchSortOrder, setBranchSortOrder] = useState('desc');
 
+  // Account report state
+  const [accountData, setAccountData] = useState([]);
+  const [accountLoading, setAccountLoading] = useState(false);
+  const [accountError, setAccountError] = useState(null);
+  const [accountDateRange, setAccountDateRange] = useState('all');
+  const [accountCustomStartDate, setAccountCustomStartDate] = useState('');
+  const [accountCustomEndDate, setAccountCustomEndDate] = useState('');
+  const [accountSortBy, setAccountSortBy] = useState('spent');
+  const [accountSortOrder, setAccountSortOrder] = useState('desc');
+
   // Check authentication on mount
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -244,6 +254,97 @@ export default function ReportsPage() {
     totalOrders: acc.totalOrders + branch.total_orders,
     totalRevenue: acc.totalRevenue + branch.total_revenue
   }), { totalOrders: 0, totalRevenue: 0 });
+
+  // Calculate date range for account report API
+  const getAccountDateParams = () => {
+    const today = new Date();
+    let startDate = null;
+    let endDate = null;
+
+    switch (accountDateRange) {
+      case '7days':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case '30days':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 30);
+        break;
+      case '90days':
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 90);
+        break;
+      case 'custom':
+        if (accountCustomStartDate) startDate = new Date(accountCustomStartDate);
+        if (accountCustomEndDate) endDate = new Date(accountCustomEndDate);
+        break;
+      default:
+        break;
+    }
+
+    return {
+      startDate: startDate ? startDate.toISOString().split('T')[0] : null,
+      endDate: endDate ? endDate.toISOString().split('T')[0] : null
+    };
+  };
+
+  // Fetch account report when tab is active and user is authenticated
+  useEffect(() => {
+    if (!user || activeTab !== 'account') return;
+
+    const fetchAccountReport = async () => {
+      setAccountLoading(true);
+      setAccountError(null);
+
+      try {
+        const token = localStorage.getItem('admin_token');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+
+        const { startDate, endDate } = getAccountDateParams();
+        let url = `${apiUrl}/api/reports/accounts`;
+        const params = new URLSearchParams();
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (params.toString()) url += `?${params.toString()}`;
+
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.return_code === 'SUCCESS') {
+          setAccountData(data.data || []);
+        } else {
+          setAccountError(data.message || 'Failed to load account report');
+        }
+      } catch (err) {
+        console.error('Error fetching account report:', err);
+        setAccountError('Failed to load account report');
+      } finally {
+        setAccountLoading(false);
+      }
+    };
+
+    fetchAccountReport();
+  }, [user, activeTab, accountDateRange, accountCustomStartDate, accountCustomEndDate]);
+
+  // Sort account data
+  const sortedAccountData = [...accountData].sort((a, b) => {
+    const field = accountSortBy === 'spent' ? 'total_spent' : 'total_orders';
+    return accountSortOrder === 'desc'
+      ? b[field] - a[field]
+      : a[field] - b[field];
+  });
+
+  // Calculate totals for account report
+  const accountTotals = accountData.reduce((acc, account) => ({
+    totalOrders: acc.totalOrders + account.total_orders,
+    totalSpent: acc.totalSpent + account.total_spent,
+    totalCustomers: acc.totalCustomers + 1
+  }), { totalOrders: 0, totalSpent: 0, totalCustomers: 0 });
 
   const filteredStockData = (selectedCategory === 'all'
     ? stockData
@@ -514,6 +615,126 @@ export default function ReportsPage() {
                         <td>{branch.branch_name}</td>
                         <td className="times-ordered">{branch.total_orders}</td>
                         <td className="times-ordered">£{branch.total_revenue.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'account' && (
+          <div className="account-report">
+            <div className="report-filters">
+              <div className="filter-group">
+                <label>Date Range:</label>
+                <select
+                  value={accountDateRange}
+                  onChange={(e) => setAccountDateRange(e.target.value)}
+                >
+                  <option value="all">All Time</option>
+                  <option value="7days">Last 7 Days</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="90days">Last 90 Days</option>
+                  <option value="custom">Custom Range</option>
+                </select>
+              </div>
+              {accountDateRange === 'custom' && (
+                <>
+                  <div className="filter-group">
+                    <label>Start Date:</label>
+                    <input
+                      type="date"
+                      value={accountCustomStartDate}
+                      onChange={(e) => setAccountCustomStartDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="filter-group">
+                    <label>End Date:</label>
+                    <input
+                      type="date"
+                      value={accountCustomEndDate}
+                      onChange={(e) => setAccountCustomEndDate(e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {accountLoading && (
+              <div className="report-loading">Loading account report...</div>
+            )}
+
+            {accountError && (
+              <div className="report-error">{accountError}</div>
+            )}
+
+            {!accountLoading && !accountError && sortedAccountData.length === 0 && (
+              <div className="report-empty">No customer data available yet.</div>
+            )}
+
+            {!accountLoading && !accountError && sortedAccountData.length > 0 && (
+              <>
+                <div className="branch-totals">
+                  <div className="total-card">
+                    <span className="total-label">Total Customers</span>
+                    <span className="total-value">{accountTotals.totalCustomers}</span>
+                  </div>
+                  <div className="total-card">
+                    <span className="total-label">Total Orders</span>
+                    <span className="total-value">{accountTotals.totalOrders}</span>
+                  </div>
+                  <div className="total-card">
+                    <span className="total-label">Total Revenue</span>
+                    <span className="total-value">£{accountTotals.totalSpent.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <table className="stock-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Customer Email</th>
+                      <th
+                        className="sortable"
+                        onClick={() => {
+                          if (accountSortBy === 'orders') {
+                            setAccountSortOrder(accountSortOrder === 'desc' ? 'asc' : 'desc');
+                          } else {
+                            setAccountSortBy('orders');
+                            setAccountSortOrder('desc');
+                          }
+                        }}
+                      >
+                        Total Orders {accountSortBy === 'orders' ? (accountSortOrder === 'desc' ? '▼' : '▲') : ''}
+                      </th>
+                      <th
+                        className="sortable"
+                        onClick={() => {
+                          if (accountSortBy === 'spent') {
+                            setAccountSortOrder(accountSortOrder === 'desc' ? 'asc' : 'desc');
+                          } else {
+                            setAccountSortBy('spent');
+                            setAccountSortOrder('desc');
+                          }
+                        }}
+                      >
+                        Total Spent {accountSortBy === 'spent' ? (accountSortOrder === 'desc' ? '▼' : '▲') : ''}
+                      </th>
+                      <th>First Order</th>
+                      <th>Last Order</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedAccountData.map((account, index) => (
+                      <tr key={account.customer_email}>
+                        <td>{index + 1}</td>
+                        <td>{account.customer_email}</td>
+                        <td className="times-ordered">{account.total_orders}</td>
+                        <td className="times-ordered">£{account.total_spent.toFixed(2)}</td>
+                        <td>{new Date(account.first_order_date).toLocaleDateString('en-GB')}</td>
+                        <td>{new Date(account.last_order_date).toLocaleDateString('en-GB')}</td>
                       </tr>
                     ))}
                   </tbody>
