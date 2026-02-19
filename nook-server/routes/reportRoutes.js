@@ -36,6 +36,12 @@ router.get('/branches', verifyToken, checkRole(['manager']), reportController.ge
 // Returns customer account performance data (orders and total spent) - manager only
 router.get('/accounts', verifyToken, checkRole(['manager']), reportController.getAccountReport);
 
+// ===== ROUTE: RUN CUSTOM REPORT (PROTECTED) =====
+// POST /api/reports/custom
+// Body: { prompt: "natural language question" }
+// Uses Ollama to convert to SQL and execute - manager only
+router.post('/custom', verifyToken, checkRole(['manager']), reportController.runCustomReport);
+
 // ===== EXPORTS =====
 module.exports = router;
 

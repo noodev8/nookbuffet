@@ -38,6 +38,12 @@ export default function ReportsPage() {
   const [accountSortBy, setAccountSortBy] = useState('spent');
   const [accountSortOrder, setAccountSortOrder] = useState('desc');
 
+  // Custom report state
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [customLoading, setCustomLoading] = useState(false);
+  const [customError, setCustomError] = useState(null);
+  const [customResult, setCustomResult] = useState(null);
+
   // Check authentication on mount
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -354,6 +360,42 @@ export default function ReportsPage() {
       ? b.times_ordered - a.times_ordered
       : a.times_ordered - b.times_ordered;
   });
+
+  // Run custom report
+  const runCustomReport = async () => {
+    if (!customPrompt.trim()) return;
+
+    setCustomLoading(true);
+    setCustomError(null);
+    setCustomResult(null);
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+
+      const response = await fetch(`${apiUrl}/api/reports/custom`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prompt: customPrompt })
+      });
+
+      const data = await response.json();
+
+      if (data.return_code === 'SUCCESS') {
+        setCustomResult(data.data);
+      } else {
+        setCustomError(data.message || 'Failed to run custom report');
+      }
+    } catch (err) {
+      console.error('Error running custom report:', err);
+      setCustomError('Failed to run custom report');
+    } finally {
+      setCustomLoading(false);
+    }
+  };
 
   const goToOrders = () => router.push('/');
   const goToMenuManagement = () => router.push('/menu');
@@ -740,6 +782,70 @@ export default function ReportsPage() {
                   </tbody>
                 </table>
               </>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'custom' && (
+          <div className="custom-report">
+            <div className="custom-report-input">
+              <label htmlFor="custom-prompt">Ask a question about your data:</label>
+              <textarea
+                id="custom-prompt"
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                placeholder="e.g., Show me the top 10 customers by total spending, or How many orders were placed last month?"
+                rows={3}
+                disabled={customLoading}
+              />
+              <button
+                className="run-report-btn"
+                onClick={runCustomReport}
+                disabled={customLoading || !customPrompt.trim()}
+              >
+                {customLoading ? 'Running...' : 'Run Report'}
+              </button>
+            </div>
+
+            {customLoading && (
+              <div className="report-loading">Generating report...</div>
+            )}
+
+            {customError && (
+              <div className="report-error">{customError}</div>
+            )}
+
+            {customResult && (
+              <div className="custom-report-results">
+                <div className="result-count">
+                  {customResult.rowCount} row{customResult.rowCount !== 1 ? 's' : ''} returned
+                </div>
+
+                {customResult.rows.length > 0 && (
+                  <div className="custom-table-wrapper">
+                    <table className="stock-table">
+                      <thead>
+                        <tr>
+                          {Object.keys(customResult.rows[0]).map(col => (
+                            <th key={col}>{col}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {customResult.rows.map((row, idx) => (
+                          <tr key={idx}>
+                            {Object.values(row).map((val, colIdx) => (
+                              <td key={colIdx}>
+                                {val === null ? <em>null</em> : String(val)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
