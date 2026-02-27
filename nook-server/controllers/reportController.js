@@ -305,7 +305,7 @@ SQL:`;
     if (error.code) {
       return res.json({
         return_code: 'QUERY_ERROR',
-        message: `Query error: ${error.message}`
+        message: "Couldn't get results for that question. Please try a different question or add more details."
       });
     }
 
