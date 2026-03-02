@@ -208,6 +208,40 @@ const deleteUser = async (userId) => {
   return result.rows[0];
 };
 
+// ===== SAVE 2FA CODE =====
+// Store the OTP code and expiry time on the user record
+const saveTwoFaCode = async (userId, code, expiresAt) => {
+  const sql = `
+    UPDATE admin_users
+    SET two_fa_code = $1, two_fa_expires_at = $2
+    WHERE id = $3
+  `;
+  await query(sql, [code, expiresAt, userId]);
+};
+
+// ===== GET USER WITH 2FA CODE =====
+// Fetch a user by ID including their stored OTP code and expiry
+const findUserByIdWithCode = async (userId) => {
+  const sql = `
+    SELECT id, email, full_name, role, branch_id, two_fa_code, two_fa_expires_at
+    FROM admin_users
+    WHERE id = $1
+  `;
+  const result = await query(sql, [userId]);
+  return result.rows[0];
+};
+
+// ===== CLEAR 2FA CODE =====
+// Wipe the code once it's been used or expired
+const clearTwoFaCode = async (userId) => {
+  const sql = `
+    UPDATE admin_users
+    SET two_fa_code = NULL, two_fa_expires_at = NULL
+    WHERE id = $1
+  `;
+  await query(sql, [userId]);
+};
+
 // Export all the functions so they can be used in the controller
 module.exports = {
   findUserByEmail,
@@ -219,6 +253,9 @@ module.exports = {
   usernameExists,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  saveTwoFaCode,
+  findUserByIdWithCode,
+  clearTwoFaCode
 };
 

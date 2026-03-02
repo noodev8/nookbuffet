@@ -17,6 +17,7 @@ The flow:
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authModel = require('../models/authModel');
+const { sendTwoFaCodeEmail } = require('../utils/emailService');
 
 // ===== LOGIN FUNCTION =====
 // Authenticates an admin user and returns a JWT token
@@ -73,36 +74,27 @@ const login = async (req, res) => {
       });
     }
 
-    // ===== UPDATE LAST LOGIN =====
-    // Record when this user last logged in
-    await authModel.updateLastLogin(user.id);
+    // ===== GENERATE 2FA CODE =====
+    // Make a random 6-digit code, store it on the user, and email it
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
-    // ===== CREATE JWT TOKEN =====
-    // Create a token that contains the user's ID and role
-    // This token will be sent with future requests to prove they're logged in
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role
-      },
-      process.env.JWT_SECRET || 'your-secret-key', // Secret key from .env
-      { expiresIn: '24h' } // Token expires in 24 hours
+    await authModel.saveTwoFaCode(user.id, code, expiresAt);
+    await sendTwoFaCodeEmail(user.email, user.full_name, code);
+
+    // ===== TEMP TOKEN =====
+    // Short-lived token just to carry the user ID to the verify step
+    // Not a full login token - just used for the 2FA handoff
+    const tempToken = jwt.sign(
+      { userId: user.id, type: 'two_fa_pending' },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '10m' }
     );
 
-    // ===== SUCCESS RESPONSE =====
-    // Send back the token and user info 
     return res.json({
-      return_code: 'SUCCESS',
-      token: token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        full_name: user.full_name,
-        role: user.role,
-        branch_id: user.branch_id
-      }
+      return_code: 'TWO_FA_REQUIRED',
+      temp_token: tempToken,
+      message: 'A verification code has been sent to your email'
     });
 
   } catch (error) {
@@ -356,12 +348,91 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// ===== VERIFY 2FA CODE =====
+// Second step of login - check the code the user received by email
+// Expects: { temp_token: string, code: string } in the request body
+const verifyTwoFa = async (req, res) => {
+  try {
+    const { temp_token, code } = req.body;
+
+    // Both fields are required - temp_token keeps track of who is verifying, code is what they typed in
+    if (!temp_token || !code) {
+      return res.json({ return_code: 'MISSING_FIELDS', message: 'Token and code are required' });
+    }
+
+    // Decode the temp token to get the user ID
+    // This token was issued at the end of step 1 (password check) and lasts 10 minutes
+    // If it's expired or tampered with, jwt.verify will throw and i catch it below
+    let decoded;
+    try {
+      decoded = jwt.verify(temp_token, process.env.JWT_SECRET || 'your-secret-key');
+    } catch (e) {
+      // Token is expired or invalid - user needs to start the login again
+      return res.json({ return_code: 'INVALID_TOKEN', message: 'Verification session expired, please log in again' });
+    }
+
+    // Stops someone skipping the code check by passing their existing session token
+    if (decoded.type !== 'two_fa_pending') {
+      return res.json({ return_code: 'INVALID_TOKEN', message: 'Invalid token type' });
+    }
+
+    // Fetch the user with their stored code from the database
+    // decoded.userId came from the temp token  issued in step 1
+    const user = await authModel.findUserByIdWithCode(decoded.userId);
+    if (!user) {
+      return res.json({ return_code: 'INVALID_TOKEN', message: 'User not found' });
+    }
+
+    // Check the code matches what was saved - also handles the case where no code exists at all
+    if (!user.two_fa_code || user.two_fa_code !== code) {
+      return res.json({ return_code: 'INVALID_CODE', message: 'Invalid verification code' });
+    }
+
+    // Check the code hasn't expired - codes last 10 minutes from when they were sent
+    // Clear the code from the DB even if expired so it can't be reused
+    if (new Date() > new Date(user.two_fa_expires_at)) {
+      await authModel.clearTwoFaCode(user.id);
+      return res.json({ return_code: 'CODE_EXPIRED', message: 'Verification code has expired, please log in again' });
+    }
+
+    // Code is good - clear it from the DB so it can't be used again, then record the login
+    await authModel.clearTwoFaCode(user.id);
+    await authModel.updateLastLogin(user.id);
+
+    // Issue the real 24h session token - this is what gets stored in the browser and used for all future requests
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    // Send the token and user info back - frontend stores the token and redirects to the dashboard
+    return res.json({
+      return_code: 'SUCCESS',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        branch_id: user.branch_id
+      }
+    });
+
+  } catch (error) {
+    console.error('2FA verify error:', error);
+    return res.json({ return_code: 'SERVER_ERROR', message: 'An error occurred during verification' });
+  }
+};
+
 // Export all the functions
 module.exports = {
   login,
+  verifyTwoFa,
   getAllUsers,
   createUser,
   updateUser,
   deleteUser
 };
+
 

@@ -282,8 +282,55 @@ const sendOrderReadyEmail = async (orderData) => {
   }
 };
 
+/**
+ * Send a 2FA login code to an admin user
+ *
+ * @param {string} toEmail - The admin's email address
+ * @param {string} fullName - Their name, used in the greeting
+ * @param {string} code - The 6-digit OTP code
+ */
+const sendTwoFaCodeEmail = async (toEmail, fullName, code) => {
+  try {
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; margin: 0; padding: 20px;">
+          <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="background: #1a1a1a; color: white; padding: 30px; text-align: center;">
+              <h1 style="margin: 0; font-size: 22px; letter-spacing: 1px;">THE LITTLE NOOK BUFFET</h1>
+              <p style="margin: 8px 0 0 0; opacity: 0.9;">Admin Login</p>
+            </div>
+            <div style="padding: 30px; text-align: center;">
+              <p style="margin-bottom: 8px;">Hi <strong>${fullName}</strong>,</p>
+              <p style="margin-bottom: 25px; color: #555;">Use the code below to complete your login. It expires in 10 minutes.</p>
+              <div style="background: #f5f5f5; border-radius: 8px; padding: 20px; letter-spacing: 8px; font-size: 36px; font-weight: bold; color: #1a1a1a;">
+                ${code}
+              </div>
+              <p style="margin-top: 25px; color: #999; font-size: 13px;">If you didn't try to log in, you can ignore this email.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const result = await resend.emails.send({
+      from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,
+      to: toEmail,
+      subject: 'Your login code - The Little Nook Buffet Admin',
+      html: emailHtml
+    });
+
+    return { success: true, result };
+  } catch (error) {
+    console.error('Failed to send 2FA email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 module.exports = {
   sendOrderConfirmationEmail,
-  sendOrderReadyEmail
+  sendOrderReadyEmail,
+  sendTwoFaCodeEmail
 };
 

@@ -126,8 +126,13 @@ const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
 // ===== LOGIN ROUTE =====
 // POST /api/auth/login
-// Accepts email/username and password, returns JWT token if valid
+// Accepts email/username and password - triggers 2FA email, returns temp token
 router.post('/login', authController.login);
+
+// ===== VERIFY 2FA ROUTE =====
+// POST /api/auth/verify-2fa
+// Accepts temp_token and code - returns full JWT if valid
+router.post('/verify-2fa', authController.verifyTwoFa);
 
 // ===== GET ALL USERS ROUTE (PROTECTED) =====
 // GET /api/auth/users
