@@ -14,9 +14,9 @@
 
 /* Container that centers and limits navbar width */
 .nav-container-option3 {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem 2rem;
+  padding: 1rem 3rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -89,6 +89,22 @@
 
 .nav-links-option3 a:hover::after {
   width: 100%;
+}
+
+/* Account icon link — no underline animation */
+.nav-account-link {
+  display: flex;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.8) !important;
+  transition: color 0.3s ease !important;
+}
+
+.nav-account-link:hover {
+  color: white !important;
+}
+
+.nav-account-link::after {
+  display: none !important;
 }
 
 /* ========================================

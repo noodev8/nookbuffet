@@ -1,0 +1,9 @@
+/* Register-specific overrides — base styles come from login.css */
+
+/* Password hint text under field */
+.auth-password-hint {
+  color: #666;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
