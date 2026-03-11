@@ -101,6 +101,18 @@
   color: white;
 }
 
+/* ===== ERROR MESSAGE ===== */
+.auth-error {
+  background: rgba(255, 107, 107, 0.12);
+  border: 1px solid rgba(255, 107, 107, 0.35);
+  border-radius: 6px;
+  color: #ff8a8a;
+  font-size: 0.95rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
 /* ===== SUBMIT BUTTON ===== */
 .auth-submit-button {
   width: 100%;
