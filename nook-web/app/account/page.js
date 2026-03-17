@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import './account.css';
 
@@ -22,10 +23,33 @@ const STATUS_LABELS = {
 };
 
 export default function AccountPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('orders');
   const [profile, setProfile] = useState(EMPTY_CUSTOMER);
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState(EMPTY_CUSTOMER);
+
+  // Load the customer from localStorage 
+  useEffect(() => {
+    const stored = localStorage.getItem('customer');
+    if (!stored) {
+      router.push('/login');
+      return;
+    }
+    try {
+      const customer = JSON.parse(stored);
+      setProfile(customer);
+      setEditData(customer);
+    } catch {
+      router.push('/login');
+    }
+  }, [router]);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('customer_token');
+    localStorage.removeItem('customer');
+    router.push('/login');
+  };
 
   const handleEditChange = (e) => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
@@ -50,7 +74,7 @@ export default function AccountPage() {
             <h1 className="account-name">{profile.first_name} {profile.last_name}</h1>
             <p className="account-email">{profile.email}</p>
           </div>
-          <Link href="/login" className="account-signout-link">Sign out</Link>
+          <button className="account-signout-link" onClick={handleSignOut}>Sign out</button>
         </div>
 
         {/* ===== TABS ===== */}

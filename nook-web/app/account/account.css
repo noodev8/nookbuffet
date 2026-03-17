@@ -54,6 +54,10 @@
 }
 
 .account-signout-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
   color: #888;
   font-size: 0.9rem;
   text-decoration: none;

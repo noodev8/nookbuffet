@@ -40,9 +40,35 @@ const createCustomer = async (customerData) => {
   return result.rows[0];
 };
 
+// ===== FIND CUSTOMER BY EMAIL =====
+// Look up a customer by their email address
+// Used during login to check if the account exists
+const findByEmail = async (email) => {
+  const sql = `
+    SELECT id, email, password_hash, first_name, last_name, phone, default_address, is_active
+    FROM customers
+    WHERE email = $1
+  `;
+  const result = await query(sql, [email]);
+  return result.rows[0]; // Returns undefined if not found
+};
+
+// ===== UPDATE LAST LOGIN =====
+// Set the last_login timestamp when a customer successfully logs in
+const updateLastLogin = async (customerId) => {
+  const sql = `
+    UPDATE customers
+    SET last_login = CURRENT_TIMESTAMP
+    WHERE id = $1
+  `;
+  await query(sql, [customerId]);
+};
+
 // Export the functions so the controller can use them
 module.exports = {
   emailExists,
-  createCustomer
+  createCustomer,
+  findByEmail,
+  updateLastLogin
 };
 
