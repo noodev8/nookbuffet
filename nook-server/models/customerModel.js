@@ -53,6 +53,32 @@ const findByEmail = async (email) => {
   return result.rows[0]; // Returns undefined if not found
 };
 
+// ===== UPDATE CUSTOMER PROFILE =====
+// Update a customer's editable profile fields
+// Returns the updated customer row
+const updateCustomer = async (id, data) => {
+  const sql = `
+    UPDATE customers
+    SET first_name       = $1,
+        last_name        = $2,
+        email            = $3,
+        phone            = $4,
+        default_address  = $5,
+        updated_at       = CURRENT_TIMESTAMP
+    WHERE id = $6
+    RETURNING id, email, first_name, last_name, phone, default_address
+  `;
+  const result = await query(sql, [
+    data.first_name      || null,
+    data.last_name       || null,
+    data.email,
+    data.phone           || null,
+    data.default_address || null,
+    id
+  ]);
+  return result.rows[0];
+};
+
 // ===== UPDATE LAST LOGIN =====
 // Set the last_login timestamp when a customer successfully logs in
 const updateLastLogin = async (customerId) => {
@@ -69,6 +95,7 @@ module.exports = {
   emailExists,
   createCustomer,
   findByEmail,
+  updateCustomer,
   updateLastLogin
 };
 

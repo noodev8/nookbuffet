@@ -165,6 +165,61 @@ const login = async (req, res) => {
   }
 };
 
+// ===== UPDATE PROFILE =====
+/**
+ * Updates a customer's profile details
+ * The customer is identified by the JWT - they can only edit their own account
+ *
+ * @param {object} req - The request object (req.user set by verifyToken middleware)
+ * @param {object} res - The response object
+ */
+const updateProfile = async (req, res) => {
+  try {
+    const customerId = req.user.id;
+    const { first_name, last_name, email, phone, default_address } = req.body;
+
+    // Email is required
+    if (!email) {
+      return res.json({
+        return_code: 'MISSING_FIELDS',
+        message: 'Email is required'
+      });
+    }
+
+    // If they changed their email, make sure it isn't taken by someone else
+    const existing = await customerModel.findByEmail(email.toLowerCase().trim());
+    if (existing && existing.id !== customerId) {
+      return res.json({
+        return_code: 'EMAIL_TAKEN',
+        message: 'This email is already in use by another account'
+      });
+    }
+
+    // Save the updated details
+    const customer = await customerModel.updateCustomer(customerId, {
+      first_name:      first_name?.trim()      || null,
+      last_name:       last_name?.trim()       || null,
+      email:           email.toLowerCase().trim(),
+      phone:           phone?.trim()           || null,
+      default_address: default_address?.trim() || null
+    });
+
+    // Send back the updated customer
+    return res.json({
+      return_code: 'SUCCESS',
+      message: 'Profile updated successfully',
+      customer
+    });
+
+  } catch (err) {
+    console.error('Customer updateProfile error:', err);
+    return res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Something went wrong. Please try again.'
+    });
+  }
+};
+
 // Export the functions so routes can use them
-module.exports = { register, login };
+module.exports = { register, login, updateProfile };
 

@@ -24,12 +24,15 @@ const STATUS_LABELS = {
 
 export default function AccountPage() {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('orders');
   const [profile, setProfile] = useState(EMPTY_CUSTOMER);
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState(EMPTY_CUSTOMER);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
-  // Load the customer from localStorage 
+  // Load the customer from localStorage
   useEffect(() => {
     const stored = localStorage.getItem('customer');
     if (!stored) {
@@ -38,11 +41,14 @@ export default function AccountPage() {
     }
     try {
       const customer = JSON.parse(stored);
-      setProfile(customer);
-      setEditData(customer);
+      // Ensure null values from the db don't break controlled inputs
+      const safe = { ...EMPTY_CUSTOMER, ...customer, phone: customer.phone || '', default_address: customer.default_address || '' };
+      setProfile(safe);
+      setEditData(safe);
     } catch {
       router.push('/login');
     }
+    setLoading(false);
   }, [router]);
 
   const handleSignOut = () => {
@@ -53,13 +59,46 @@ export default function AccountPage() {
 
   const handleEditChange = (e) => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
+    setSaveError('');
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    setProfile(editData);
-    setEditing(false);
+    setSaveError('');
+    setSaving(true);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      const token = localStorage.getItem('customer_token');
+      const response = await fetch(`${apiUrl}/api/customers/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(editData)
+      });
+
+      const data = await response.json();
+
+      if (data.return_code === 'SUCCESS') {
+        // Update the profile in state and localStorage
+        const safe = { ...EMPTY_CUSTOMER, ...data.customer, phone: data.customer.phone || '', default_address: data.customer.default_address || '' };
+        setProfile(safe);
+        localStorage.setItem('customer', JSON.stringify(data.customer));
+        setEditing(false);
+      } else {
+        setSaveError(data.message || 'Failed to save changes. Please try again.');
+      }
+    } catch (err) {
+      console.error('Update profile error:', err);
+      setSaveError('Unable to connect to server. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) return null;
 
   const initials = ((profile.first_name?.[0] || '') + (profile.last_name?.[0] || '')).toUpperCase() || '?';
 
@@ -195,9 +234,12 @@ export default function AccountPage() {
                   <label>Default Delivery Address</label>
                   <input className="auth-input" name="default_address" value={editData.default_address} onChange={handleEditChange} placeholder="Your delivery address" />
                 </div>
+                {saveError && <p className="auth-error">{saveError}</p>}
                 <div className="profile-edit-actions">
-                  <button type="submit" className="auth-submit-button">Save Changes</button>
-                  <button type="button" className="account-cancel-button" onClick={() => setEditing(false)}>Cancel</button>
+                  <button type="submit" className="auth-submit-button" disabled={saving}>
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                  <button type="button" className="account-cancel-button" onClick={() => setEditing(false)} disabled={saving}>Cancel</button>
                 </div>
               </form>
             )}
