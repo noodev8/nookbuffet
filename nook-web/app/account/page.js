@@ -13,8 +13,6 @@ const EMPTY_CUSTOMER = {
   default_address: '',
 };
 
-const ORDERS = [];
-
 const STATUS_LABELS = {
   pending: { label: 'Pending', className: 'status-pending' },
   confirmed: { label: 'Confirmed', className: 'status-confirmed' },
@@ -31,8 +29,10 @@ export default function AccountPage() {
   const [editData, setEditData] = useState(EMPTY_CUSTOMER);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
 
-  // Load the customer from localStorage
+  // Load the customer from localStorage and then fetch their orders
   useEffect(() => {
     const stored = localStorage.getItem('customer');
     if (!stored) {
@@ -41,15 +41,54 @@ export default function AccountPage() {
     }
     try {
       const customer = JSON.parse(stored);
-      // Ensure null values from the db don't break controlled inputs
       const safe = { ...EMPTY_CUSTOMER, ...customer, phone: customer.phone || '', default_address: customer.default_address || '' };
       setProfile(safe);
       setEditData(safe);
     } catch {
       router.push('/login');
+      return;
     }
     setLoading(false);
+
+    // Fetch the customer's order history
+    const token = localStorage.getItem('customer_token');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+    fetch(`${apiUrl}/api/customers/orders`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.return_code === 'SUCCESS') setOrders(data.data);
+      })
+      .catch(() => {})
+      .finally(() => setOrdersLoading(false));
   }, [router]);
+
+  const handleReorder = (order) => {
+    // Convert each buffet from the old order into the basket format
+    const basketItems = order.buffets.map(buffet => ({
+      buffetVersionId: buffet.buffet_version_id,
+      buffetName: buffet.buffet_name,
+      numPeople: buffet.num_people,
+      pricePerPerson: parseFloat(buffet.price_per_person),
+      totalPrice: parseFloat(buffet.subtotal),
+      items: buffet.items.map(i => i.menu_item_id),
+      upgrades: buffet.upgrades.map(u => ({
+        upgradeId: u.upgrade_id,
+        upgradeName: u.upgrade_name,
+        pricePerPerson: parseFloat(u.price_per_person),
+        subtotal: parseFloat(u.subtotal),
+        selectedItems: u.selectedItems.map(si => si.upgrade_item_id)
+      })),
+      notes: buffet.notes || '',
+      dietaryInfo: buffet.dietary_info || '',
+      allergens: buffet.allergens || '',
+      timestamp: new Date().toISOString()
+    }));
+
+    localStorage.setItem('basketData', JSON.stringify(basketItems));
+    router.push('/basket');
+  };
 
   const handleSignOut = () => {
     localStorage.removeItem('customer_token');
@@ -135,15 +174,21 @@ export default function AccountPage() {
         {/* ===== ORDERS TAB ===== */}
         {activeTab === 'orders' && (
           <div className="account-section">
-            {ORDERS.length === 0 ? (
+            {ordersLoading ? (
+              <div className="account-empty"><p>Loading your orders...</p></div>
+            ) : orders.length === 0 ? (
               <div className="account-empty">
                 <p>You haven't placed any orders yet.</p>
                 <Link href="/select-buffet" className="account-cta-button">Order a Buffet</Link>
               </div>
             ) : (
               <div className="orders-list">
-                {ORDERS.map((order) => {
+                {orders.map((order) => {
                   const status = STATUS_LABELS[order.status] || { label: order.status, className: '' };
+                  const fulfilmentDate = order.fulfillment_date
+                    ? new Date(order.fulfillment_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                    : '—';
+                  const orderedDate = new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
                   return (
                     <div key={order.id} className="order-card">
                       <div className="order-card-header">
@@ -151,16 +196,16 @@ export default function AccountPage() {
                           <span className="order-number">{order.order_number}</span>
                           <span className={`order-status-badge ${status.className}`}>{status.label}</span>
                         </div>
-                        <span className="order-total">£{order.total_price.toFixed(2)}</span>
+                        <span className="order-total">£{parseFloat(order.total_price).toFixed(2)}</span>
                       </div>
                       <div className="order-card-body">
                         <div className="order-detail-row">
                           <span className="order-detail-label">Buffet</span>
-                          <span>{order.buffets.map(b => `${b.name} (${b.num_people} people)`).join(', ')}</span>
+                          <span>{order.buffets.map(b => `${b.buffet_name} (${b.num_people} people)`).join(', ')}</span>
                         </div>
                         <div className="order-detail-row">
                           <span className="order-detail-label">Date</span>
-                          <span>{order.fulfillment_date}</span>
+                          <span>{fulfilmentDate}</span>
                         </div>
                         <div className="order-detail-row">
                           <span className="order-detail-label">Type</span>
@@ -168,8 +213,13 @@ export default function AccountPage() {
                         </div>
                         <div className="order-detail-row">
                           <span className="order-detail-label">Ordered</span>
-                          <span>{order.created_at}</span>
+                          <span>{orderedDate}</span>
                         </div>
+                      </div>
+                      <div className="order-card-footer">
+                        <button className="order-reorder-button" onClick={() => handleReorder(order)}>
+                          Reorder
+                        </button>
                       </div>
                     </div>
                   );

@@ -9,6 +9,7 @@ This file handles registration and login for customer accounts.
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const customerModel = require('../models/customerModel');
+const orderModel = require('../models/orderModel');
 
 const SALT_ROUNDS = 12;
 
@@ -220,6 +221,37 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// ===== GET MY ORDERS =====
+/**
+ * Returns all orders for the currently logged-in customer
+ * The customer ID comes from the JWT - they can only see their own orders
+ *
+ * @param {object} req - The request object (req.user set by verifyToken)
+ * @param {object} res - The response object
+ */
+const getMyOrders = async (req, res) => {
+  try {
+    const customerId = req.user.id;
+
+    // Fetch all orders for this customer from the database
+    const orders = await orderModel.getOrdersByCustomerId(customerId);
+
+    return res.json({
+      return_code: 'SUCCESS',
+      message: 'Got your orders!',
+      data: orders,
+      count: orders.length
+    });
+
+  } catch (err) {
+    console.error('Customer getMyOrders error:', err);
+    return res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Something went wrong. Please try again.'
+    });
+  }
+};
+
 // Export the functions so routes can use them
-module.exports = { register, login, updateProfile };
+module.exports = { register, login, updateProfile, getMyOrders };
 

@@ -136,6 +136,10 @@ function CheckoutContent() {
     setLoading(true);
     try {
       // Now create the order in the database with payment confirmed
+      // If a customer is logged in, link the order to their account
+      const storedCustomer = localStorage.getItem('customer');
+      const customerId = storedCustomer ? JSON.parse(storedCustomer).id : null;
+
       const orderData = {
         email: orders[0]?.email || '',
         phone: orders[0]?.phone || '',
@@ -146,6 +150,7 @@ function CheckoutContent() {
         deliveryTime: orders[0]?.deliveryTime || '',
         branchId: orders[0]?.branchId || null,
         totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
+        customerId,
         paymentIntentId: paymentIntentId, // Include Stripe payment ID
         buffets: orders.map(order => ({
           buffetVersionId: order.buffetVersionId,
