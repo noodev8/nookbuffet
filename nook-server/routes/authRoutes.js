@@ -129,6 +129,11 @@ const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 // Accepts email/username and password - triggers 2FA email, returns temp token
 router.post('/login', authController.login);
 
+// ===== STAFF WEB LOGIN ROUTE =====
+// POST /api/auth/staff-web-login
+// Lets staff log into the customer-facing site using their admin credentials
+router.post('/staff-web-login', authController.staffWebLogin);
+
 // ===== VERIFY 2FA ROUTE =====
 // POST /api/auth/verify-2fa
 // Accepts temp_token and code - returns full JWT if valid

@@ -23,22 +23,53 @@ export default function LoginPage() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const response = await fetch(`${apiUrl}/api/customers/login`, {
+
+      // Try customer login first
+      const customerRes = await fetch(`${apiUrl}/api/customers/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+      const customerData = await customerRes.json();
 
-      const data = await response.json();
-
-      if (data.return_code === 'SUCCESS') {
-        // Save the token and customer info
-        localStorage.setItem('customer_token', data.token);
-        localStorage.setItem('customer', JSON.stringify(data.customer));
+      if (customerData.return_code === 'SUCCESS') {
+        localStorage.setItem('customer_token', customerData.token);
+        localStorage.setItem('customer', JSON.stringify(customerData.customer));
         router.push('/account');
-      } else {
-        setError(data.message || 'Login failed. Please try again.');
+        return;
       }
+
+      // If the credentials were wrong, try staff login
+      if (customerData.return_code === 'INVALID_CREDENTIALS') {
+        const staffRes = await fetch(`${apiUrl}/api/auth/staff-web-login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        const staffData = await staffRes.json();
+
+        if (staffData.return_code === 'SUCCESS') {
+          // Store as the same keys the rest of the app uses, with accountType so i know they're staff
+          localStorage.setItem('customer_token', staffData.token);
+          localStorage.setItem('customer', JSON.stringify({
+            ...staffData.staff,
+            first_name: staffData.staff.full_name.split(' ')[0],
+            last_name:  staffData.staff.full_name.split(' ').slice(1).join(' '),
+            accountType: 'staff'
+          }));
+          router.push('/account');
+          return;
+        }
+
+        if (staffData.return_code === 'ACCOUNT_DISABLED') {
+          setError(staffData.message);
+          return;
+        }
+      }
+
+      // Everything failed - show the original customer error
+      setError(customerData.message || 'Login failed. Please try again.');
+
     } catch (err) {
       console.error('Login error:', err);
       setError('Unable to connect to server. Please try again.');

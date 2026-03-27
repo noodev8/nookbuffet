@@ -425,6 +425,86 @@ const verifyTwoFa = async (req, res) => {
   }
 };
 
+// ===== STAFF WEB LOGIN =====
+/**
+ * Lets staff members log into the customer-facing site using their admin credentials
+ * Same password check as the admin login but no 2FA 
+ * Returns a JWT with type:'staff' so the frontend knows who they are
+ *
+ * @param {object} req - The request object
+ * @param {object} res - The response object
+ */
+const staffWebLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.json({
+        return_code: 'MISSING_FIELDS',
+        message: 'Email and password are required'
+      });
+    }
+
+    // Look up by email first, then username (staff might use either)
+    let user = await authModel.findUserByEmail(email.toLowerCase().trim());
+    if (!user) {
+      user = await authModel.findUserByUsername(email.trim());
+    }
+
+    if (!user) {
+      return res.json({
+        return_code: 'INVALID_CREDENTIALS',
+        message: 'Invalid email or password'
+      });
+    }
+
+    if (!user.is_active) {
+      return res.json({
+        return_code: 'ACCOUNT_DISABLED',
+        message: 'Your account has been disabled'
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+    if (!isPasswordValid) {
+      return res.json({
+        return_code: 'INVALID_CREDENTIALS',
+        message: 'Invalid email or password'
+      });
+    }
+
+    // Stamp the login time
+    await authModel.updateLastLogin(user.id);
+
+    // Sign a 7-day token - same duration as customer tokens
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role, type: 'staff' },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      return_code: 'SUCCESS',
+      message: 'Logged in successfully',
+      token,
+      staff: {
+        id:        user.id,
+        email:     user.email,
+        full_name: user.full_name,
+        role:      user.role,
+        branch_id: user.branch_id
+      }
+    });
+
+  } catch (err) {
+    console.error('Staff web login error:', err);
+    return res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Something went wrong. Please try again.'
+    });
+  }
+};
+
 // Export all the functions
 module.exports = {
   login,
@@ -432,7 +512,8 @@ module.exports = {
   getAllUsers,
   createUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  staffWebLogin
 };
 
 
