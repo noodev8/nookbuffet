@@ -36,8 +36,13 @@ const createOrder = async (orderData) => {
     const orderNumber = `ORD-${orderCount.toString().padStart(3, '0')}`;
     
     // Insert the main order record
-    // If paymentIntentId is provided, payment was already processed via Stripe
-    const paymentStatus = orderData.paymentIntentId ? 'paid' : 'pending';
+    // Staff skip takes priority - mark as waived. Otherwise check for Stripe payment.
+    let paymentStatus = 'pending';
+    if (orderData.staffSkipReason) {
+      paymentStatus = 'waived';
+    } else if (orderData.paymentIntentId) {
+      paymentStatus = 'paid';
+    }
 
     const orderQuery = `
       INSERT INTO orders (
@@ -59,7 +64,7 @@ const createOrder = async (orderData) => {
       orderData.totalPrice,
       'pending',
       paymentStatus,
-      orderData.paymentIntentId ? 'stripe' : 'card',
+      orderData.staffSkipReason ? `Staff skip: ${orderData.staffSkipReason}` : (orderData.paymentIntentId ? 'stripe' : 'card'),
       orderData.businessName || null,
       orderData.branchId || null,
       orderData.customerId || null

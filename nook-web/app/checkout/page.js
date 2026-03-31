@@ -78,6 +78,89 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false); // Whether its currently processing
   const [clientSecret, setClientSecret] = useState(''); // Stripe payment intent secret
   const [paymentError, setPaymentError] = useState('');
+  const [isStaff, setIsStaff] = useState(false); // Whether the logged-in user is a staff member
+  const [showSkipInput, setShowSkipInput] = useState(false); // Show the skip reason field
+  const [skipReason, setSkipReason] = useState(''); // Why they're skipping payment
+  const [skipLoading, setSkipLoading] = useState(false); // Processing the skipped order
+
+  // Check if the logged-in user is a staff member 
+  useEffect(() => {
+    const stored = localStorage.getItem('customer');
+    if (stored) {
+      try {
+        const customer = JSON.parse(stored);
+        if (customer.accountType === 'staff') setIsStaff(true);
+      } catch (_) {}
+    }
+  }, []);
+
+  // ===== STAFF SKIP HANDLER =====
+  // Bypasses Stripe entirely - creates the order with the skip reason as the payment method
+  const handleStaffSkip = async () => {
+    if (!skipReason.trim()) {
+      setPaymentError('Please enter a reason for skipping payment.');
+      return;
+    }
+
+    setSkipLoading(true);
+    setPaymentError('');
+
+    try {
+      const storedCustomer = localStorage.getItem('customer');
+      const parsedCustomer = storedCustomer ? JSON.parse(storedCustomer) : null;
+      // Staff IDs live in admin_users, not customers 
+      const customerId = parsedCustomer && parsedCustomer.accountType !== 'staff' ? parsedCustomer.id : null;
+
+      const orderData = {
+        email: orders[0]?.email || '',
+        phone: orders[0]?.phone || '',
+        businessName: orders[0]?.businessName || '',
+        address: orders[0]?.address || '',
+        fulfillmentType: orders[0]?.fulfillmentType || 'delivery',
+        deliveryDate: orders[0]?.deliveryDate || '',
+        deliveryTime: orders[0]?.deliveryTime || '',
+        branchId: orders[0]?.branchId || null,
+        totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
+        customerId,
+        staffSkipReason: skipReason.trim(),
+        buffets: orders.map(order => ({
+          buffetVersionId: order.buffetVersionId,
+          numPeople: order.numPeople,
+          pricePerPerson: order.pricePerPerson,
+          totalPrice: order.totalPrice,
+          items: order.items,
+          notes: order.notes || '',
+          dietaryInfo: order.dietaryInfo || '',
+          allergens: order.allergens || '',
+          upgrades: (order.upgrades || []).map(upgrade => ({
+            upgradeId: upgrade.upgradeId,
+            selectedItems: upgrade.selectedItems || []
+          }))
+        }))
+      };
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      const response = await fetch(`${apiUrl}/api/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+
+      if (result.return_code === 'SUCCESS') {
+        localStorage.removeItem('basketData');
+        router.push(`/checkout/success?orderNumber=${result.data.orderNumber}`);
+      } else {
+        setPaymentError('Order creation failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('Staff skip error:', err);
+      setPaymentError('Unable to connect to server. Please try again.');
+    } finally {
+      setSkipLoading(false);
+    }
+  };
 
   // This runs when the page loads - grabs the order data from the URL
   useEffect(() => {
@@ -137,8 +220,10 @@ function CheckoutContent() {
     try {
       // Now create the order in the database with payment confirmed
       // If a customer is logged in, link the order to their account
+      // Staff IDs live in admin_users, not customers 
       const storedCustomer = localStorage.getItem('customer');
-      const customerId = storedCustomer ? JSON.parse(storedCustomer).id : null;
+      const parsedCustomer = storedCustomer ? JSON.parse(storedCustomer) : null;
+      const customerId = parsedCustomer && parsedCustomer.accountType !== 'staff' ? parsedCustomer.id : null;
 
       const orderData = {
         email: orders[0]?.email || '',
@@ -306,6 +391,54 @@ function CheckoutContent() {
             {paymentError && (
               <div className="payment-error-message">
                 {paymentError}
+              </div>
+            )}
+
+            {/* Staff-only skip payment block */}
+            {isStaff && (
+              <div className="staff-skip-section">
+                <p className="staff-skip-label">You're logged in as staff — you can skip payment if needed.</p>
+                {!showSkipInput ? (
+                  <button
+                    className="staff-skip-toggle-button"
+                    onClick={() => setShowSkipInput(true)}
+                  >
+                    Skip Payment
+                  </button>
+                ) : (
+                  <div className="staff-skip-form">
+                    <label className="staff-skip-reason-label" htmlFor="skipReason">
+                      Why are you skipping payment?
+                    </label>
+                    <textarea
+                      id="skipReason"
+                      className="staff-skip-reason-input"
+                      placeholder="e.g. Staff meal, Testing, Manager approved..."
+                      value={skipReason}
+                      onChange={(e) => setSkipReason(e.target.value)}
+                      rows={3}
+                    />
+                    <div className="staff-skip-actions">
+                      <button
+                        className="staff-skip-confirm-button"
+                        onClick={handleStaffSkip}
+                        disabled={skipLoading || !skipReason.trim()}
+                      >
+                        {skipLoading ? 'Placing Order...' : 'Confirm & Place Order'}
+                      </button>
+                      <button
+                        className="staff-skip-cancel-button"
+                        onClick={() => { setShowSkipInput(false); setSkipReason(''); }}
+                        disabled={skipLoading}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <div className="staff-skip-divider">
+                  <span>or pay by card below</span>
+                </div>
               </div>
             )}
 
