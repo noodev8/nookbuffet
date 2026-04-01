@@ -250,6 +250,10 @@ export default function AdminPage() {
     router.push('/reports');
   };
 
+  const goToSummary = () => {
+    router.push('/summary');
+  };
+
   return (
     <div className="admin-container">
       <header className="admin-header">
@@ -307,6 +311,9 @@ export default function AdminPage() {
               ))}
             </select>
           </div>
+          <button className="action-button" onClick={goToSummary}>
+            Summary
+          </button>
           <button className="action-button" onClick={handlePrintOrders}>
             Print Orders
           </button>

@@ -1,0 +1,224 @@
+@import '../page.css';
+
+/* ========================================
+   BRANCH SECTION
+   ======================================== */
+.summary-branch-section {
+  margin-bottom: 3rem;
+}
+
+.summary-branch-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.summary-branch-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  flex: 1;
+}
+
+/* ========================================
+   DATE SECTION
+   ======================================== */
+.summary-date-section {
+  margin-bottom: 2.5rem;
+}
+
+.summary-date-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.summary-date-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.summary-date-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.summary-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.85rem;
+  background: #edf2f7;
+  border: 1px solid #cbd5e0;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.summary-badge-people {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: transparent;
+  color: white;
+}
+
+.summary-branch-header .summary-badge-people {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  color: white;
+}
+
+/* ========================================
+   CATEGORY GRID
+   ======================================== */
+.summary-category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.summary-category-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e8ecf1;
+  transition: all 0.2s ease;
+}
+
+.summary-category-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #667eea;
+}
+
+.summary-category-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #667eea;
+  margin: 0 0 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ========================================
+   ITEMS LIST
+   ======================================== */
+.summary-items-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.summary-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #e8ecf1;
+}
+
+.summary-item-row:last-child {
+  border-bottom: none;
+}
+
+.summary-item-name {
+  font-size: 0.9rem;
+  color: #2d3748;
+  font-weight: 500;
+}
+
+.summary-item-meta {
+  font-size: 0.75rem;
+  color: #718096;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ========================================
+   ORDER REFERENCE CHIPS
+   ======================================== */
+.summary-order-refs {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.summary-order-refs-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.summary-order-ref-list {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.summary-order-ref-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.85rem;
+  background: #f0f4ff;
+  border: 1px solid #c3d0f7;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #667eea;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.summary-order-ref-chip:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.summary-ref-time {
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+  .summary-category-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-date-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+
