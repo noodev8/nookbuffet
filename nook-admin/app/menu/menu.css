@@ -100,8 +100,22 @@
    ======================================== */
 .filter-section {
   display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Branch Filter */
+.branch-filter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.branch-filter-wrapper label {
+  font-weight: 600;
+  color: #333;
 }
 
 /* Buffet Version Tabs */

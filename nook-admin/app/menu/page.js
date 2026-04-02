@@ -14,6 +14,8 @@ export default function MenuManagementPage() {
   const [categories, setCategories] = useState([]);
   const [buffetVersions, setBuffetVersions] = useState([]);
   const [selectedBuffetVersion, setSelectedBuffetVersion] = useState('all');
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState('all');
 
   // Check authentication on mount
   useEffect(() => {
@@ -26,7 +28,7 @@ export default function MenuManagementPage() {
     }
 
     const parsedUser = JSON.parse(userData);
-    
+
     // Check if user has permission (admin or manager only)
     if (parsedUser.role !== 'admin' && parsedUser.role !== 'manager') {
       router.push('/');
@@ -34,9 +36,25 @@ export default function MenuManagementPage() {
     }
 
     setUser(parsedUser);
+
+    // Fetch branches for the selector
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+    fetch(`${apiUrl}/api/branches`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(branchData => {
+        if (branchData.return_code === 'SUCCESS') {
+          setBranches(branchData.data || []);
+          if (parsedUser.branch_id) {
+            setSelectedBranch(parsedUser.branch_id.toString());
+          }
+        }
+      })
+      .catch(err => console.error('Error fetching branches:', err));
   }, [router]);
 
-  // Fetch menu items when user is authenticated
+  // Fetch menu items when user is authenticated or branch changes
   useEffect(() => {
     if (!user) return;
 
@@ -47,8 +65,9 @@ export default function MenuManagementPage() {
 
         const token = localStorage.getItem('admin_token');
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        
-        const response = await fetch(`${apiUrl}/api/menu/manage`, {
+        const branchParam = selectedBranch !== 'all' ? `?branch_id=${selectedBranch}` : '';
+
+        const response = await fetch(`${apiUrl}/api/menu/manage${branchParam}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -99,7 +118,7 @@ export default function MenuManagementPage() {
     };
 
     fetchMenuItems();
-  }, [user, router]);
+  }, [user, router, selectedBranch]);
 
   // Toggle stock status
   const toggleStockStatus = async (itemId, currentStatus) => {
@@ -216,6 +235,25 @@ export default function MenuManagementPage() {
 
       <div className="page-header">
         <div className="filter-section">
+          {/* Branch Selector */}
+          <div className="branch-filter-wrapper">
+            <label htmlFor="branch-filter">Branch:</label>
+            <select
+              id="branch-filter"
+              value={selectedBranch}
+              onChange={(e) => {
+                setSelectedBranch(e.target.value);
+                setFilterCategory('all');
+              }}
+              className="category-filter"
+            >
+              <option value="all">All Branches</option>
+              {branches.map(branch => (
+                <option key={branch.id} value={branch.id.toString()}>{branch.name}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Buffet Version Tabs */}
           <div className="buffet-version-tabs">
             {buffetVersions.map(version => (

@@ -101,8 +101,9 @@ const getMenuSectionsByBuffetVersion = async (req, res) => {
  */
 const getAllMenuItemsForManagement = async (req, res) => {
   try {
-    // Get all menu items from the database
-    const items = await menuModel.getAllMenuItemsForManagement();
+    // Optional branch filter via query param e.g. /api/menu/manage?branch_id=2
+    const branchId = req.query.branch_id ? parseInt(req.query.branch_id) : null;
+    const items = await menuModel.getAllMenuItemsForManagement(branchId);
 
     // Send the data back
     res.json({

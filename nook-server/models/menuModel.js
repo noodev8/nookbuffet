@@ -120,16 +120,22 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
 
 // ===== GET ALL MENU ITEMS FOR MANAGEMENT =====
 /**
- * Get ALL menu items across all categories for admin management
+ * Get ALL menu items across all categories for admin management.
+ * Optionally filter by branch_id to show only items for a specific branch.
  *
- * This returns every menu item with its category and buffet version info,
- * regardless of is_active status. Used by the admin panel to manage stock status.
- * Items are grouped by buffet version for easy display.
- *
- * @returns {Promise<array>} Array of all menu items with category and buffet version info
+ * @param {number|null} branchId - Optional branch ID to filter by
+ * @returns {Promise<array>} Array of menu items with category, buffet version and branch info
  */
-const getAllMenuItemsForManagement = async () => {
+const getAllMenuItemsForManagement = async (branchId = null) => {
   try {
+    const params = [];
+    let whereClause = '';
+
+    if (branchId) {
+      params.push(branchId);
+      whereClause = `WHERE mi.branch_id = $1`;
+    }
+
     const result = await query(`
       SELECT
         mi.id,
@@ -138,6 +144,8 @@ const getAllMenuItemsForManagement = async () => {
         mi.is_active,
         mi.allergens,
         mi.dietary_info,
+        mi.branch_id,
+        b.name as branch_name,
         c.id as category_id,
         c.name as category_name,
         c.position as category_position,
@@ -146,8 +154,10 @@ const getAllMenuItemsForManagement = async () => {
       FROM menu_items mi
       JOIN categories c ON mi.category_id = c.id
       LEFT JOIN buffet_versions bv ON c.buffet_version_id = bv.id
-      ORDER BY bv.id, c.position, c.name, mi.name
-    `);
+      LEFT JOIN branches b ON mi.branch_id = b.id
+      ${whereClause}
+      ORDER BY b.name, bv.id, c.position, c.name, mi.name
+    `, params);
 
     return result.rows;
   } catch (error) {
