@@ -42,6 +42,12 @@ export default function BasketPage() {
       // Handle both array and single object formats
       const ordersList = Array.isArray(parsed) ? parsed : [parsed];
       setOrders(ordersList);
+
+      // Pre-fill collection branch if orders were placed with a branch already selected
+      const firstBranchId = ordersList.find(o => o.branchId)?.branchId;
+      if (firstBranchId) {
+        setCollectionBranchId(firstBranchId.toString());
+      }
     }
   }, []);
 
@@ -320,8 +326,9 @@ export default function BasketPage() {
       ...orderToEdit,
       editIndex: index
     }));
-    // Navigate to the order page with the same buffet version
-    router.push(`/order?buffetVersionId=${orderToEdit.buffetVersionId}`);
+    // Navigate to the order page with the same buffet version and branch
+    const branchParam = orderToEdit.branchId ? `&branch_id=${orderToEdit.branchId}` : '';
+    router.push(`/order?buffetVersionId=${orderToEdit.buffetVersionId}${branchParam}`);
   };
 
   // handle date changes with validation

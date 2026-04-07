@@ -9,6 +9,7 @@ function OrderPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const buffetVersionId = searchParams.get('buffetVersionId');
+  const branchId = searchParams.get('branch_id');
 
   const [menuSections, setMenuSections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -143,8 +144,9 @@ function OrderPageContent() {
           }
         }
 
-        // Fetch menu data
-        const menuUrl = `${apiUrl}/api/menu/buffet-version/${buffetVersionId}`;
+        // Fetch menu data (filter by branch if provided)
+        const branchParam = branchId ? `?branch_id=${branchId}` : '';
+        const menuUrl = `${apiUrl}/api/menu/buffet-version/${buffetVersionId}${branchParam}`;
         const menuResponse = await fetch(menuUrl);
 
         if (!menuResponse.ok) {
@@ -224,7 +226,7 @@ function OrderPageContent() {
               className="back-to-buffet-button"
               onClick={() => router.push('/select-buffet')}
             >
-              ← Change Buffet
+              Change Buffet / Branch
             </button>
             <h1 className="order-page-title">{buffetTitle || 'Start Your Order'}</h1>
           </div>
@@ -601,7 +603,8 @@ function OrderPageContent() {
                       buffetName: buffetTitle,
                       pricePerPerson,
                       totalPrice: buffetSubtotal,
-                      timestamp: new Date().toISOString()
+                      timestamp: new Date().toISOString(),
+                      ...(branchId ? { branchId: parseInt(branchId) } : {})
                     };
 
                     // If editing, include the edit index so we replace instead of add
