@@ -275,6 +275,7 @@ function OrderPageContent() {
                       const val = parseInt(e.target.value) || 1;
                       setNumPeople(Math.max(1, val));
                     }}
+                    onWheel={(e) => e.target.blur()}
                     min="1"
                   />
                   <button
