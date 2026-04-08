@@ -53,6 +53,7 @@ TABLE: buffet_versions - Types of buffets (e.g., "Standard Buffet", "Kids Buffet
   - description (text)
   - price_per_person (numeric)
   - is_active (boolean)
+  - branch_id (integer, FK to branches, nullable) - if set, this version is specific to that branch
 
 TABLE: order_buffets - Links orders to buffet types
   - id (integer, primary key)

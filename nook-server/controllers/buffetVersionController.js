@@ -74,8 +74,11 @@ const getBuffetVersionById = async (req, res) => {
  */
 const getAllBuffetVersions = async (req, res) => {
   try {
+    const { branch_id } = req.query;
+    const branchId = branch_id && !isNaN(branch_id) ? parseInt(branch_id) : null;
+
     // Ask the model to get all buffet versions from the database
-    const versions = await buffetVersionModel.getAllBuffetVersions();
+    const versions = await buffetVersionModel.getAllBuffetVersions(branchId);
 
     // Send all the buffet versions back to the website
     res.json({

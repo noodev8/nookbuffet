@@ -31,7 +31,7 @@ const getBuffetVersionById = async (versionId) => {
     // Query the database for this specific buffet version
     // $1 is a placeholder for the versionId (prevents SQL injection)
     const result = await query(
-      `SELECT id, title, description, price_per_person, is_active, created_at
+      `SELECT id, title, description, price_per_person, is_active, created_at, branch_id
        FROM buffet_versions
        WHERE id = $1 AND is_active = true`,
       [versionId]
@@ -59,14 +59,23 @@ const getBuffetVersionById = async (versionId) => {
  *
  * @returns {Promise<array>} Array of all active buffet versions
  */
-const getAllBuffetVersions = async () => {
+const getAllBuffetVersions = async (branchId = null) => {
   try {
+    const params = [];
+    let whereClause = 'WHERE is_active = true';
+
+    if (branchId) {
+      params.push(branchId);
+      whereClause += ` AND branch_id = $${params.length}`;
+    }
+
     // Query the database for all active buffet versions
     const result = await query(
-      `SELECT id, title, description, price_per_person, is_active, created_at
+      `SELECT id, title, description, price_per_person, is_active, created_at, branch_id
        FROM buffet_versions
-       WHERE is_active = true
-       ORDER BY id`
+       ${whereClause}
+       ORDER BY id`,
+      params
     );
 
     // Return all rows (each row is one buffet version)

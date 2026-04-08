@@ -12,37 +12,31 @@ export default function SelectBuffetPage() {
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState('');
 
+  // Re-fetch buffet versions when branch changes
   useEffect(() => {
+    if (!selectedBranch) return;
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+    setLoading(true);
+    setError(null);
 
-    // Fetch buffet versions
-    const fetchBuffetVersions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const response = await fetch(`${apiUrl}/api/buffet-versions`);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
+    fetch(`${apiUrl}/api/buffet-versions?branch_id=${selectedBranch}`)
+      .then(res => res.json())
+      .then(data => {
         if (data.return_code === 'SUCCESS') {
           setBuffetVersions(data.data || []);
         } else {
           setError(data.message || 'Failed to load buffet versions');
         }
-      } catch (err) {
-        console.error('Error fetching buffet versions:', err);
-        setError('Failed to load buffet versions. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
+      })
+      .catch(() => setError('Failed to load buffet versions. Please try again.'))
+      .finally(() => setLoading(false));
+  }, [selectedBranch]);
 
-    // Fetch branches for the selector
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+
+    // Fetch branches — setting selectedBranch will trigger the buffet versions fetch above
     const fetchBranches = async () => {
       try {
         const res = await fetch(`${apiUrl}/api/branches`);
@@ -59,7 +53,6 @@ export default function SelectBuffetPage() {
       }
     };
 
-    fetchBuffetVersions();
     fetchBranches();
   }, []);
 

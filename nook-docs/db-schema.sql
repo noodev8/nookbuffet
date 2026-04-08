@@ -187,7 +187,8 @@ CREATE TABLE public.buffet_versions (
     description text,
     price_per_person numeric(8,2),
     is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    branch_id integer
 );
 
 
