@@ -482,7 +482,7 @@ function CheckoutContent() {
                 />
               </Elements>
             ) : (
-              <div className="loading-state">
+              <div className="checkout-loading-state">
                 <p>Loading payment form...</p>
               </div>
             )}
@@ -513,7 +513,7 @@ export default function CheckoutPage() {
       <div className="welcome-page-option3">
         <div className="checkout-page-container">
           <div className="checkout-content-wrapper">
-            <div className="loading-state">
+            <div className="checkout-loading-state">
               <p>Loading checkout...</p>
             </div>
           </div>

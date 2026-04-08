@@ -88,14 +88,14 @@
 /* ========================================
    PAGE HEADER
    ======================================== */
-.page-header {
+.reports-page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
 }
 
-.page-header h2 {
+.reports-page-header h2 {
   font-family: 'Oswald', sans-serif;
   font-size: 2rem;
   font-weight: 600;

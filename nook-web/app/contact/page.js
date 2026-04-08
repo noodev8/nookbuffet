@@ -75,8 +75,8 @@ export default function ContactPage() {
 
         <div className="contact-form-container">
           <form className="contact-form" onSubmit={handleSubmit}>
-            <div className="form-row">
-              <div className="form-group">
+            <div className="contact-form-row">
+              <div className="contact-form-group">
                 <label htmlFor="name">Name *</label>
                 <input
                   type="text"
@@ -89,7 +89,7 @@ export default function ContactPage() {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="contact-form-group">
                 <label htmlFor="email">Email *</label>
                 <input
                   type="email"
@@ -103,8 +103,8 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="form-row">
-              <div className="form-group">
+            <div className="contact-form-row">
+              <div className="contact-form-group">
                 <label htmlFor="phone">Phone</label>
                 <input
                   type="tel"
@@ -116,7 +116,7 @@ export default function ContactPage() {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="contact-form-group">
                 <label htmlFor="subject">Subject</label>
                 <input
                   type="text"
@@ -129,7 +129,7 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className="form-group full-width">
+            <div className="contact-form-group full-width">
               <label htmlFor="message">Message *</label>
               <textarea
                 id="message"

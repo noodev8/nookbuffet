@@ -20,69 +20,7 @@
   color: white;
 }
 
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.header-top h1 {
-  font-family: 'Oswald', sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-  text-transform: lowercase;
-}
-
-.user-info {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  font-size: 0.9rem;
-  opacity: 0.95;
-}
-
-.user-name {
-  font-weight: 600;
-}
-
-.user-role {
-  opacity: 0.85;
-  font-style: italic;
-}
-
-/* ========================================
-   MAIN NAVIGATION
-   ======================================== */
-.main-nav {
-  display: flex;
-  gap: 0.5rem;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.nav-item {
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  border: none;
-  padding: 1rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border-bottom: 3px solid transparent;
-  margin-bottom: -2px;
-}
-
-.nav-item:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-item.active {
-  color: white;
-  border-bottom-color: white;
-}
+/* header-top, user-info, main-nav, nav-item — defined in globals.css */
 
 /* ========================================
    PAGE HEADER

@@ -89,14 +89,14 @@
 /* ========================================
    PAGE HEADER
    ======================================== */
-.page-header {
+.staff-page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
 }
 
-.page-header h2 {
+.staff-page-header h2 {
   font-family: 'Oswald', sans-serif;
   font-size: 1.8rem;
   font-weight: 600;
@@ -497,7 +497,7 @@
     white-space: nowrap;
   }
 
-  .page-header {
+  .staff-page-header {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;

@@ -340,7 +340,7 @@ export default function StaffManagementPage() {
         </nav>
       </header>
 
-      <div className="page-header">
+      <div className="staff-page-header">
         <h2>Staff Members</h2>
         <button className="add-staff-button" onClick={() => setShowAddForm(true)}>
           + Add New Staff

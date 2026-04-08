@@ -46,6 +46,98 @@ img {
 }
 
 /* ========================================
+   SHARED ADMIN HEADER & NAVIGATION
+      ======================================== */
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.header-top h1 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  text-transform: lowercase;
+  color: white;
+}
+
+.user-info {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.9rem;
+  color: white;
+  opacity: 0.95;
+}
+
+.user-name {
+  font-weight: 600;
+}
+
+.user-role {
+  opacity: 0.85;
+  font-style: italic;
+}
+
+.main-nav {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-item {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.nav-item:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-item.active {
+  color: white;
+  border-bottom-color: white;
+}
+
+/* ========================================
+   ADMIN PAGE CONTAINERS & HEADER BACKGROUNDS
+      ======================================== */
+
+.staff-management-container,
+.reports-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.admin-header,
+.menu-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.staff-header,
+.reports-header {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.staff-page-header h2,
+.reports-page-header h2 {
+  color: white;
+}
+
+/* ========================================
    UTILITY CLASSES
    ======================================== */
 .container {

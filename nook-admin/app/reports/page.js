@@ -430,7 +430,7 @@ export default function ReportsPage() {
         </nav>
       </header>
 
-      <div className="page-header">
+      <div className="reports-page-header">
         <h2>Reports</h2>
       </div>
 

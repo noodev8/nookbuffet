@@ -201,7 +201,7 @@
   margin-right: auto;
 }
 
-.info-card {
+.about-info-card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 6px 25px rgba(0,0,0,0.2);
@@ -213,7 +213,7 @@
   text-align: left;
 }
 
-.info-card h3 {
+.about-info-card h3 {
   font-family: 'Oswald', sans-serif;
   font-size: 2rem;
   color: #333;
@@ -224,7 +224,7 @@
   font-weight: 600;
 }
 
-.info-card p {
+.about-info-card p {
   color: #333 !important;
   font-size: 0.95rem !important;
   line-height: 1.6 !important;
@@ -235,13 +235,13 @@
   z-index: 11;
 }
 
-.info-card .hours-list {
+.about-info-card .hours-list {
   list-style: none !important;
   padding: 0 !important;
   margin: 0 !important;
 }
 
-.info-card .hours-list li {
+.about-info-card .hours-list li {
   display: flex !important;
   justify-content: space-between !important;
   padding: 0.5rem 0 !important;
@@ -249,16 +249,16 @@
   color: #333 !important;
 }
 
-.info-card .hours-list li:last-child {
+.about-info-card .hours-list li:last-child {
   border-bottom: none !important;
 }
 
-.info-card .day {
+.about-info-card .day {
   font-weight: 500 !important;
   color: #333 !important;
 }
 
-.info-card .time {
+.about-info-card .time {
   color: #666 !important;
 }
 
@@ -431,7 +431,7 @@
   }
 
   .ordering-info h3,
-  .info-card h3,
+  .about-info-card h3,
   .buffet-contents-section h3,
   .social-feed-section h2 {
     font-size: 1.2rem;

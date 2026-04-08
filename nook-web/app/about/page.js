@@ -109,7 +109,7 @@ export default function AboutPage() {
             </div>
 
             <div className="info-cards-grid">
-              <div className="info-card">
+              <div className="about-info-card">
                 <h3>Contact Hours</h3>
                 <ul className="hours-list">
                   <li><span className="day">Monday</span><span className="time">10:00 - 15:00</span></li>
@@ -122,7 +122,7 @@ export default function AboutPage() {
                 </ul>
               </div>
 
-              <div className="info-card location-card">
+              <div className="about-info-card location-card">
                 <h3>Where to Find Us</h3>
                 <p>42 High Street<br />
                    Welshpool SY21 7JQ<br />
