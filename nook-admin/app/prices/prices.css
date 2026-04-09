@@ -1,0 +1,315 @@
+/* ========================================
+   PRICES MANAGEMENT PAGE
+   ======================================== */
+
+.prices-management-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  padding: 2rem;
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+.prices-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem 2rem 0 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  margin-bottom: 2rem;
+  color: white;
+}
+
+/* ========================================
+   PAGE HEADER / FILTER BAR
+   ======================================== */
+.page-header {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.branch-filter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.branch-filter-wrapper label {
+  font-weight: 600;
+  color: #333;
+}
+
+.branch-filter {
+  padding: 0.6rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+  min-width: 200px;
+}
+
+.branch-filter:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* ========================================
+   PRICES GRID
+   ======================================== */
+.prices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.price-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 3px solid transparent;
+}
+
+.price-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.price-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.price-card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #333;
+  flex: 1;
+}
+
+.branch-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.no-branch-badge {
+  background: #e0e0e0;
+  color: #666;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+
+/* ========================================
+   PRICE DISPLAY & EDIT
+   ======================================== */
+.price-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+}
+
+.price-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.price-label {
+  font-size: 0.9rem;
+  color: #999;
+  margin-left: 0.25rem;
+}
+
+.edit-price-button {
+  padding: 0.5rem 1.1rem;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  background: white;
+  color: #667eea;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-price-button:hover {
+  background: #667eea;
+  color: white;
+}
+
+.price-edit-form {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.price-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.price-input-prefix {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.price-input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  outline: none;
+}
+
+.price-input:focus {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.branch-select-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.branch-select-row label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.branch-select {
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.branch-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.save-button {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: #4caf50;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.save-button:hover { background: #45a049; transform: translateY(-1px); }
+.save-button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.cancel-button {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  color: #666;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-button:hover { border-color: #999; color: #333; }
+
+/* ========================================
+   LOADING / ERROR / EMPTY
+   ======================================== */
+.loading, .error, .empty-state {
+  background: white;
+  border-radius: 12px;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.loading { color: #667eea; font-size: 1.2rem; font-weight: 600; }
+.error   { color: #ff6b6b; font-size: 1.1rem; font-weight: 600; }
+.empty-state { color: #999; font-size: 1.1rem; }
+
+/* ========================================
+   LOGOUT BUTTON
+   ======================================== */
+.logout-button-bottom {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+  margin-top: 2rem;
+  width: 100%;
+  max-width: 300px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.logout-button-bottom:hover { transform: translateY(-2px); box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5); }
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+  .prices-management-container { padding: 1rem; }
+  .prices-header { padding: 1rem 1rem 0 1rem; }
+  .prices-grid { grid-template-columns: 1fr; }
+  .filter-section { flex-direction: column; align-items: flex-start; }
+  .branch-filter { width: 100%; }
+  .logout-button-bottom { max-width: 100%; }
+}

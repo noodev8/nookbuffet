@@ -86,10 +86,78 @@ const getAllBuffetVersions = async (branchId = null) => {
   }
 };
 
+// ===== GET ALL BUFFET VERSIONS FOR MANAGEMENT =====
+/**
+ * Get all buffet versions (including inactive) for admin management.
+ * Optionally filter by branch_id.
+ * Joins branches table to include the branch name.
+ *
+ * @param {number|null} branchId - Optional branch ID to filter by
+ * @returns {Promise<array>} Array of buffet versions with branch info
+ */
+const getAllBuffetVersionsForManagement = async (branchId = null) => {
+  try {
+    const params = [];
+    let whereClause = '';
+
+    if (branchId) {
+      params.push(branchId);
+      whereClause = `WHERE bv.branch_id = $1`;
+    }
+
+    const result = await query(
+      `SELECT bv.id, bv.title, bv.description, bv.price_per_person,
+              bv.is_active, bv.created_at, bv.branch_id, b.name as branch_name
+       FROM buffet_versions bv
+       LEFT JOIN branches b ON bv.branch_id = b.id
+       ${whereClause}
+       ORDER BY b.name NULLS LAST, bv.id`,
+      params
+    );
+
+    return result.rows;
+  } catch (error) {
+    console.error('Could not get buffet versions for management:', error);
+    throw new Error('Failed to get buffet versions for management');
+  }
+};
+
+// ===== UPDATE BUFFET VERSION =====
+/**
+ * Update the price_per_person and/or branch_id of a buffet version
+ *
+ * @param {number} id - The buffet version ID
+ * @param {number} pricePerPerson - The new price per person
+ * @param {number|null} branchId - The branch ID (or null for no branch)
+ * @returns {Promise<object>} The updated buffet version
+ */
+const updateBuffetVersion = async (id, pricePerPerson, branchId) => {
+  try {
+    const result = await query(
+      `UPDATE buffet_versions
+       SET price_per_person = $1, branch_id = $2
+       WHERE id = $3
+       RETURNING id, title, description, price_per_person, is_active, branch_id`,
+      [pricePerPerson, branchId ?? null, id]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Buffet version not found');
+    }
+
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not update buffet version:', error);
+    throw error;
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the controller
 module.exports = {
   getBuffetVersionById,
-  getAllBuffetVersions
+  getAllBuffetVersions,
+  getAllBuffetVersionsForManagement,
+  updateBuffetVersion
 };
 

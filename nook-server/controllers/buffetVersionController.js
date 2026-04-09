@@ -97,10 +97,85 @@ const getAllBuffetVersions = async (req, res) => {
   }
 };
 
+// ===== GET ALL BUFFET VERSIONS FOR MANAGEMENT =====
+/**
+ * Get all buffet versions for admin management (protected, manager/admin only)
+ * GET /api/buffet-versions/manage?branch_id=1
+ */
+const getAllBuffetVersionsForManagement = async (req, res) => {
+  try {
+    const { branch_id } = req.query;
+    const branchId = branch_id && !isNaN(branch_id) ? parseInt(branch_id) : null;
+
+    const versions = await buffetVersionModel.getAllBuffetVersionsForManagement(branchId);
+
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Got all buffet versions!',
+      data: versions,
+      count: versions.length
+    });
+  } catch (error) {
+    res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Could not get buffet versions'
+    });
+  }
+};
+
+// ===== UPDATE BUFFET VERSION =====
+/**
+ * Update price_per_person and branch_id for a buffet version (protected, manager/admin only)
+ * PATCH /api/buffet-versions/manage/:id
+ */
+const updateBuffetVersion = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    if (!id || isNaN(id)) {
+      return res.json({
+        return_code: 'INVALID_ID',
+        message: 'Please provide a valid buffet version ID'
+      });
+    }
+
+    const { price_per_person, branch_id } = req.body;
+
+    if (price_per_person === undefined || isNaN(parseFloat(price_per_person)) || parseFloat(price_per_person) < 0) {
+      return res.json({
+        return_code: 'INVALID_DATA',
+        message: 'price_per_person must be a valid positive number'
+      });
+    }
+
+    const branchId = branch_id ? parseInt(branch_id) : null;
+    const updated = await buffetVersionModel.updateBuffetVersion(id, parseFloat(price_per_person), branchId);
+
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Price updated successfully',
+      data: updated
+    });
+  } catch (error) {
+    if (error.message === 'Buffet version not found') {
+      return res.json({
+        return_code: 'NOT_FOUND',
+        message: 'Buffet version not found'
+      });
+    }
+    res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Could not update buffet version'
+    });
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the routes file
 module.exports = {
   getBuffetVersionById,
-  getAllBuffetVersions
+  getAllBuffetVersions,
+  getAllBuffetVersionsForManagement,
+  updateBuffetVersion
 };
 

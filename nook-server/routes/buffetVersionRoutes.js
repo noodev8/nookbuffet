@@ -57,13 +57,21 @@ const router = express.Router();     // Create a new router object
 // Import the buffet version controller - this has all the functions that handle buffet version requests
 const buffetVersionController = require('../controllers/buffetVersionController');
 
+// Import auth middleware for protected routes
+const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+
 // ===== ROUTE 1: GET ALL BUFFET VERSIONS =====
 // When someone visits /api/buffet-versions, run the getAllBuffetVersions function
 router.get('/', buffetVersionController.getAllBuffetVersions);
 
-// ===== ROUTE 2: GET ONE SPECIFIC BUFFET VERSION =====
-// When someone visits /api/buffet-versions/1 (or any number), run the getBuffetVersionById function
-// The :id is a parameter - it can be any number
+// ===== ROUTE 2: GET ALL BUFFET VERSIONS FOR MANAGEMENT (PROTECTED) =====
+// NOTE: Must come BEFORE /:id so "manage" isn't treated as an ID
+router.get('/manage', verifyToken, checkRole(['admin', 'manager']), buffetVersionController.getAllBuffetVersionsForManagement);
+
+// ===== ROUTE 3: UPDATE A BUFFET VERSION PRICE (PROTECTED) =====
+router.patch('/manage/:id', verifyToken, checkRole(['admin', 'manager']), buffetVersionController.updateBuffetVersion);
+
+// ===== ROUTE 4: GET ONE SPECIFIC BUFFET VERSION =====
 // NOTE: This must come AFTER any other specific routes
 router.get('/:id', buffetVersionController.getBuffetVersionById);
 
