@@ -104,7 +104,9 @@ CREATE TABLE public.branches (
     longitude numeric(11,8) NOT NULL,
     delivery_radius_miles integer DEFAULT 7,
     is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    delivery_time_start time without time zone DEFAULT '09:00:00'::time without time zone,
+    delivery_time_end time without time zone DEFAULT '10:00:00'::time without time zone
 );
 
 

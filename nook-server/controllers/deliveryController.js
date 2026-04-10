@@ -94,7 +94,9 @@ const validateDeliveryArea = async (req, res) => {
         branch: {
           id: nearestBranch.id,
           name: nearestBranch.name,
-          address: nearestBranch.address
+          address: nearestBranch.address,
+          deliveryTimeStart: nearestBranch.delivery_time_start,
+          deliveryTimeEnd: nearestBranch.delivery_time_end
         },
         distanceMiles: distanceResult.distanceMiles,
         durationMinutes: distanceResult.durationMinutes,

@@ -336,6 +336,7 @@ export default function StaffManagementPage() {
           <button className="nav-item" onClick={goToOrders}>Orders</button>
           <button className="nav-item" onClick={goToMenuManagement}>Menu Items</button>
           <button className="nav-item active">Staff Management</button>
+          <button className="nav-item" onClick={() => router.push('/branches')}>Delivery Times</button>
           <button className="nav-item" onClick={goToReports}>Reports</button>
         </nav>
       </header>

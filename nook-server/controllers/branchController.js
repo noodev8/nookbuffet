@@ -91,7 +91,9 @@ const findNearestBranch = async (req, res) => {
       data: {
         id: nearestBranch.id,
         name: nearestBranch.name,
-        address: nearestBranch.address
+        address: nearestBranch.address,
+        deliveryTimeStart: nearestBranch.delivery_time_start,
+        deliveryTimeEnd: nearestBranch.delivery_time_end
       }
     });
 
@@ -105,9 +107,70 @@ const findNearestBranch = async (req, res) => {
   }
 };
 
+// ===== UPDATE BRANCH TIMESLOT =====
+/**
+ * Updates the delivery/collection timeslot for a branch (manager only)
+ *
+ * @param {object} req - The request object (contains branchId in params, times in body)
+ * @param {object} res - The response object
+ */
+const updateBranchTimeslot = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { deliveryTimeStart, deliveryTimeEnd } = req.body;
+
+    if (!deliveryTimeStart || !deliveryTimeEnd) {
+      return res.json({
+        return_code: 'MISSING_FIELDS',
+        message: 'Both deliveryTimeStart and deliveryTimeEnd are required'
+      });
+    }
+
+    // Basic HH:MM format validation
+    const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!timeRegex.test(deliveryTimeStart) || !timeRegex.test(deliveryTimeEnd)) {
+      return res.json({
+        return_code: 'INVALID_FORMAT',
+        message: 'Times must be in HH:MM format (e.g. 09:00)'
+      });
+    }
+
+    if (deliveryTimeStart >= deliveryTimeEnd) {
+      return res.json({
+        return_code: 'INVALID_RANGE',
+        message: 'Start time must be before end time'
+      });
+    }
+
+    const updated = await branchModel.updateBranchTimeslot(id, deliveryTimeStart, deliveryTimeEnd);
+
+    if (!updated) {
+      return res.json({
+        return_code: 'NOT_FOUND',
+        message: 'Branch not found'
+      });
+    }
+
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Timeslot updated successfully',
+      data: updated
+    });
+
+  } catch (error) {
+    console.error('Error updating branch timeslot:', error);
+    res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Failed to update branch timeslot',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 // Export the functions so routes can use them
 module.exports = {
   getAllBranches,
-  findNearestBranch
+  findNearestBranch,
+  updateBranchTimeslot
 };
 

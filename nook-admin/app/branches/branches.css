@@ -1,0 +1,227 @@
+/* ========================================
+   BRANCHES MANAGEMENT PAGE STYLES
+   ======================================== */
+
+.branches-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 2rem;
+}
+
+/* ========================================
+   HEADER
+   ======================================== */
+.branches-header {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.header-top h1 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  text-transform: lowercase;
+  color: white;
+}
+
+.user-info { display: flex; gap: 0.5rem; align-items: center; font-size: 0.9rem; color: white; opacity: 0.95; }
+.user-name { font-weight: 600; }
+.user-role { opacity: 0.85; font-style: italic; }
+
+/* ========================================
+   NAVIGATION
+   ======================================== */
+.main-nav {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-item {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+.nav-item:hover { color: white; background: rgba(255, 255, 255, 0.05); }
+.nav-item.active { color: white; border-bottom-color: white; }
+
+/* ========================================
+   PAGE HEADER
+   ======================================== */
+.branches-page-header {
+  margin-bottom: 1.5rem;
+}
+.branches-page-header h2 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 0.25rem;
+}
+.page-subtitle { color: rgba(255,255,255,0.75); margin: 0; font-size: 0.95rem; }
+
+/* ========================================
+   SUCCESS BANNER
+   ======================================== */
+.success-banner {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  border-radius: 8px;
+  padding: 0.875rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+/* ========================================
+   BRANCHES LIST
+   ======================================== */
+.branches-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.branch-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+.branch-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+
+.branch-info { flex: 1; }
+.branch-name { margin: 0 0 0.25rem; font-size: 1.2rem; color: #333; }
+.branch-address { margin: 0 0 1rem; color: #666; font-size: 0.9rem; }
+
+.timeslot-display { display: flex; flex-direction: column; gap: 0.25rem; }
+.timeslot-label { font-size: 0.8rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+.timeslot-value { font-size: 1.05rem; font-weight: 600; color: #2e7d32; }
+
+.branch-actions { flex-shrink: 0; }
+
+.edit-timeslot-button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.edit-timeslot-button:hover { background: #5568d3; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.3); }
+
+/* ========================================
+   MODAL
+   ======================================== */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000; padding: 1rem;
+}
+.modal-content {
+  background: white; border-radius: 12px; padding: 2rem;
+  max-width: 460px; width: 100%;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.modal-header h2 { margin: 0; font-size: 1.3rem; color: #333; }
+.close-button {
+  background: none; border: none; font-size: 2rem; color: #999;
+  cursor: pointer; padding: 0; width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.3s ease;
+}
+.close-button:hover { color: #333; }
+
+/* ========================================
+   FORM
+   ======================================== */
+.timeslot-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.form-hint { margin: 0; font-size: 0.875rem; color: #666; line-height: 1.5; }
+.form-error {
+  background: #ffebee; color: #c62828;
+  padding: 0.875rem; border-radius: 8px;
+  font-size: 0.9rem; border-left: 4px solid #c62828;
+}
+.form-row { display: flex; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+.form-group label { font-weight: 600; color: #333; font-size: 0.9rem; }
+.form-group input[type="time"] {
+  padding: 0.875rem; border: 2px solid #e0e0e0;
+  border-radius: 8px; font-size: 1rem; transition: all 0.3s ease;
+}
+.form-group input[type="time"]:focus {
+  outline: none; border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+}
+.form-actions { display: flex; gap: 1rem; margin-top: 0.5rem; }
+.cancel-button, .submit-button {
+  flex: 1; padding: 0.875rem; border: none;
+  border-radius: 8px; font-size: 1rem; font-weight: 600;
+  cursor: pointer; transition: all 0.3s ease;
+}
+.cancel-button { background: #f5f5f5; color: #666; }
+.cancel-button:hover:not(:disabled) { background: #e0e0e0; }
+.submit-button { background: #667eea; color: white; }
+.submit-button:hover:not(:disabled) { background: #5568d3; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.3); }
+.cancel-button:disabled, .submit-button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ========================================
+   LOGOUT & STATES
+   ======================================== */
+.logout-button-bottom {
+  background: rgba(255,255,255,0.2); color: white;
+  border: 2px solid rgba(255,255,255,0.3);
+  padding: 0.875rem 2rem; font-size: 1rem; font-weight: 600;
+  border-radius: 8px; cursor: pointer; transition: all 0.3s ease;
+  display: block; margin: 2rem auto 0;
+}
+.logout-button-bottom:hover { background: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.5); }
+.loading, .error, .empty-state { text-align: center; padding: 3rem; color: white; font-size: 1.1rem; }
+.error { background: rgba(255,255,255,0.1); border-radius: 12px; color: #ffcdd2; }
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+  .branches-container { padding: 1rem; }
+  .branches-header { padding: 1rem; }
+  .header-top { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .main-nav { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .nav-item { padding: 0.875rem 1.25rem; font-size: 0.85rem; white-space: nowrap; }
+  .branches-list { grid-template-columns: 1fr; }
+  .branch-card { flex-direction: column; }
+  .branch-actions { width: 100%; }
+  .edit-timeslot-button { width: 100%; }
+  .form-row { flex-direction: column; }
+}

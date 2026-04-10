@@ -53,6 +53,7 @@ const express = require('express');
 const router = express.Router();
 
 const branchController = require('../controllers/branchController');
+const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
 // ===== ROUTE: GET ALL BRANCHES =====
 // When someone visits /api/branches, return all active branches
@@ -61,6 +62,10 @@ router.get('/', branchController.getAllBranches);
 // ===== ROUTE: FIND NEAREST BRANCH =====
 // When someone POSTs to /api/branches/nearest with an address, find the nearest branch
 router.post('/nearest', branchController.findNearestBranch);
+
+// ===== ROUTE: UPDATE BRANCH TIMESLOT (manager only) =====
+// PUT /api/branches/:id/timeslot  { deliveryTimeStart, deliveryTimeEnd }
+router.put('/:id/timeslot', verifyToken, checkRole(['manager']), branchController.updateBranchTimeslot);
 
 module.exports = router;
 

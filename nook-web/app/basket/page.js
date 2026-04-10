@@ -24,6 +24,9 @@ export default function BasketPage() {
   const [deliveryDate, setDeliveryDate] = useState('');
   const [deliveryTime, setDeliveryTime] = useState('');
 
+  // Branch timeslot state (set automatically from selected branch)
+  const [branchTimeslot, setBranchTimeslot] = useState(null); 
+
   // Branch validation state (for delivery)
   const [branchId, setBranchId] = useState(null);
   const [validatingAddress, setValidatingAddress] = useState(false);
@@ -72,6 +75,24 @@ export default function BasketPage() {
     fetchBranches();
   }, []);
 
+  // Handle timeslot when switching fulfillment type
+  useEffect(() => {
+    if (fulfillmentType === 'collection') {
+      // Collection has no fixed timeslot — clear it
+      setBranchTimeslot(null);
+      setDeliveryTime('');
+    } else if (fulfillmentType === 'delivery' && addressValidated && branchId) {
+      // Switching back to delivery with an already-validated address —
+      // restore the timeslot from the branches list immediately
+      const matchingBranch = branches.find(b => b.id === branchId);
+      if (matchingBranch?.delivery_time_start && matchingBranch?.delivery_time_end) {
+        setBranchTimeslot({ start: matchingBranch.delivery_time_start, end: matchingBranch.delivery_time_end });
+        setDeliveryTime(`${matchingBranch.delivery_time_start}-${matchingBranch.delivery_time_end}`);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fulfillmentType]);
+
   // Auto-validate address when delivery is selected and address is filled (debounced)
   useEffect(() => {
     if (fulfillmentType === 'delivery' && address.trim() && !addressValidated) {
@@ -117,6 +138,7 @@ export default function BasketPage() {
 
       if (result.return_code === 'SUCCESS' && result.data) {
         setCollectionBranchId(result.data.id.toString());
+        // Collection has no fixed timeslot — customer can collect anytime
       }
     } catch (error) {
       console.error('Error finding nearest branch:', error);
@@ -154,11 +176,22 @@ export default function BasketPage() {
 
       if (result.return_code === 'SUCCESS') {
         if (result.data.isWithinRange) {
-          setBranchId(result.data.branch.id);
+          const validatedBranchId = result.data.branch.id;
+          setBranchId(validatedBranchId);
           setAddressValidated(true);
           setAddressValidationMessage(`Your nearest branch is ${result.data.branch.name} (${result.data.distanceMiles.toFixed(1)} miles away)`);
+          // Look up the timeslot from the already-loaded branches list 
+          const matchingBranch = branches.find(b => b.id === validatedBranchId);
+          const timeStart = matchingBranch?.delivery_time_start || result.data.branch.deliveryTimeStart;
+          const timeEnd = matchingBranch?.delivery_time_end || result.data.branch.deliveryTimeEnd;
+          if (timeStart && timeEnd) {
+            setBranchTimeslot({ start: timeStart, end: timeEnd });
+            setDeliveryTime(`${timeStart}-${timeEnd}`);
+          }
         } else {
           setAddressValidationMessage(`Sorry, this address is outside our delivery area. The nearest branch is ${result.data.distanceMiles.toFixed(1)} miles away (maximum: ${result.data.deliveryRadius} miles).`);
+          setBranchTimeslot(null);
+          setDeliveryTime('');
         }
       } else {
         setAddressValidationMessage(`Address validation failed: ${result.message}`);
@@ -258,8 +291,8 @@ export default function BasketPage() {
       alert('Please select a date');
       return;
     }
-    if (!deliveryTime) {
-      alert('Please select a time');
+    if (fulfillmentType === 'delivery' && !deliveryTime) {
+      alert('No delivery timeslot available. Please validate your delivery address.');
       return;
     }
 
@@ -344,6 +377,16 @@ export default function BasketPage() {
     }
     
     setDeliveryDate(selectedDate);
+  };
+
+  // Format "HH:MM" to "H:MM AM/PM" for display
+  const formatTime = (time) => {
+    if (!time) return '';
+    const [hourStr, minute] = time.split(':');
+    const hour = parseInt(hourStr, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour}:${minute} ${ampm}`;
   };
 
   return (
@@ -602,38 +645,38 @@ export default function BasketPage() {
                     </>
                   )}
                 </div>
-                <div className="form-group">
-                  <label htmlFor="delivery-time">Time *</label>
-                  <select
-                    id="delivery-time"
-                    value={deliveryTime}
-                    onChange={(e) => setDeliveryTime(e.target.value)}
-                    className="form-input"
-                  >
-                    <option value="">Select a time</option>
-                    <option value="09:00">9:00 AM</option>
-                    <option value="09:30">9:30 AM</option>
-                    <option value="10:00">10:00 AM</option>
-                    <option value="10:30">10:30 AM</option>
-                    <option value="11:00">11:00 AM</option>
-                    <option value="11:30">11:30 AM</option>
-                    <option value="12:00">12:00 PM</option>
-                    <option value="12:30">12:30 PM</option>
-                    <option value="13:00">1:00 PM</option>
-                    <option value="13:30">1:30 PM</option>
-                    <option value="14:00">2:00 PM</option>
-                    <option value="14:30">2:30 PM</option>
-                    <option value="15:00">3:00 PM</option>
-                    <option value="15:30">3:30 PM</option>
-                    <option value="16:00">4:00 PM</option>
-                    <option value="16:30">4:30 PM</option>
-                    <option value="17:00">5:00 PM</option>
-                    <option value="17:30">5:30 PM</option>
-                    <option value="18:00">6:00 PM</option>
-                    <option value="18:30">6:30 PM</option>
-                    <option value="19:00">7:00 PM</option>
-                  </select>
-                </div>
+                {fulfillmentType === 'delivery' && (
+                  <div className="form-group">
+                    <label>Delivery Time</label>
+                    {branchTimeslot ? (
+                      <div style={{
+                        padding: '10px 14px',
+                        background: '#f0f7f0',
+                        border: '1px solid #28a745',
+                        borderRadius: '6px',
+                        color: '#1a5c1a',
+                        fontSize: '15px',
+                        fontWeight: '500'
+                      }}>
+                        {formatTime(branchTimeslot.start)} – {formatTime(branchTimeslot.end)}
+                        <div style={{ fontSize: '12px', color: '#555', fontWeight: 'normal', marginTop: '4px' }}>
+                          Set by your branch
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{
+                        padding: '10px 14px',
+                        background: '#f8f8f8',
+                        border: '1px solid #ccc',
+                        borderRadius: '6px',
+                        color: '#888',
+                        fontSize: '14px'
+                      }}>
+                        Validate your address to see your delivery timeslot
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

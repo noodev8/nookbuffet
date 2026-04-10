@@ -426,6 +426,7 @@ export default function ReportsPage() {
           <button className="nav-item" onClick={goToOrders}>Orders</button>
           <button className="nav-item" onClick={goToMenuManagement}>Menu Items</button>
           <button className="nav-item" onClick={goToStaffManagement}>Staff Management</button>
+          <button className="nav-item" onClick={() => router.push('/branches')}>Delivery Times</button>
           <button className="nav-item active">Reports</button>
         </nav>
       </header>

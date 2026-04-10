@@ -46,6 +46,8 @@ TABLE: branches - Restaurant locations (e.g., "Welshpool", "Shrewsbury")
   - longitude (numeric)
   - delivery_radius_miles (integer)
   - is_active (boolean)
+  - delivery_time_start (time) - branch-set delivery/collection start time (e.g., '09:00')
+  - delivery_time_end (time) - branch-set delivery/collection end time (e.g., '10:00')
 
 TABLE: buffet_versions - Types of buffets (e.g., "Standard Buffet", "Kids Buffet")
   - id (integer, primary key)
