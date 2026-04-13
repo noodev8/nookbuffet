@@ -155,6 +155,9 @@ export default function PricesManagementPage() {
             <button className="nav-item active">Prices</button>
           )}
           {user && user.role === 'manager' && (
+            <button className="nav-item" onClick={() => router.push('/menu-builder')}>Menu Builder</button>
+          )}
+          {user && user.role === 'manager' && (
             <button className="nav-item" onClick={() => router.push('/staff')}>Staff Management</button>
           )}
           {user && user.role === 'manager' && (

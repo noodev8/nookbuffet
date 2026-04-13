@@ -131,14 +131,14 @@ const getAllBuffetVersionsForManagement = async (branchId = null) => {
  * @param {number|null} branchId - The branch ID (or null for no branch)
  * @returns {Promise<object>} The updated buffet version
  */
-const updateBuffetVersion = async (id, pricePerPerson, branchId) => {
+const updateBuffetVersion = async (id, title, description, pricePerPerson, branchId) => {
   try {
     const result = await query(
       `UPDATE buffet_versions
-       SET price_per_person = $1, branch_id = $2
-       WHERE id = $3
+       SET title = $1, description = $2, price_per_person = $3, branch_id = $4
+       WHERE id = $5
        RETURNING id, title, description, price_per_person, is_active, branch_id`,
-      [pricePerPerson, branchId ?? null, id]
+      [title, description ?? null, pricePerPerson, branchId ?? null, id]
     );
 
     if (result.rows.length === 0) {
@@ -152,12 +152,39 @@ const updateBuffetVersion = async (id, pricePerPerson, branchId) => {
   }
 };
 
+// ===== CREATE BUFFET VERSION =====
+/**
+ * Create a new buffet version
+ *
+ * @param {string} title - The buffet version name
+ * @param {string} description - Description of the buffet
+ * @param {number} pricePerPerson - Price per person in GBP
+ * @param {number|null} branchId - Optional branch ID (null = all branches)
+ * @returns {Promise<object>} The newly created buffet version
+ */
+const createBuffetVersion = async (title, description, pricePerPerson, branchId) => {
+  try {
+    const result = await query(
+      `INSERT INTO buffet_versions (title, description, price_per_person, branch_id, is_active)
+       VALUES ($1, $2, $3, $4, true)
+       RETURNING id, title, description, price_per_person, is_active, created_at, branch_id`,
+      [title, description || null, pricePerPerson, branchId ?? null]
+    );
+
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not create buffet version:', error);
+    throw new Error('Failed to create buffet version');
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the controller
 module.exports = {
   getBuffetVersionById,
   getAllBuffetVersions,
   getAllBuffetVersionsForManagement,
-  updateBuffetVersion
+  updateBuffetVersion,
+  createBuffetVersion
 };
 

@@ -64,13 +64,25 @@ router.get('/', menuController.getAllMenuSections);
 router.get('/buffet-version/:id', menuController.getMenuSectionsByBuffetVersion);
 
 // ===== ROUTE 3: GET ALL MENU ITEMS FOR MANAGEMENT (PROTECTED) =====
-// When someone visits /api/menu/manage, run the getAllMenuItemsForManagement function
-// Only admin and manager roles can access this
 router.get('/manage', verifyToken, checkRole(['admin', 'manager']), menuController.getAllMenuItemsForManagement);
 
-// ===== ROUTE 4: UPDATE MENU ITEM STOCK STATUS (PROTECTED) =====
-// When someone makes a PATCH request to /api/menu/manage/1 (or any item ID), update the stock status
-// Only admin and manager roles can access this
+// ===== ROUTE 4: GET CATEGORIES FOR MANAGEMENT (PROTECTED) =====
+// GET /api/menu/manage/categories?buffet_version_id=1
+router.get('/manage/categories', verifyToken, checkRole(['admin', 'manager']), menuController.getCategoriesForManagement);
+
+// ===== ROUTE 5: CREATE A NEW CATEGORY (PROTECTED) =====
+router.post('/manage/categories', verifyToken, checkRole(['admin', 'manager']), menuController.createCategory);
+
+// ===== ROUTE 6: UPDATE AN EXISTING CATEGORY (PROTECTED) =====
+router.patch('/manage/categories/:id', verifyToken, checkRole(['admin', 'manager']), menuController.updateCategory);
+
+// ===== ROUTE 7: CREATE A NEW MENU ITEM (PROTECTED) =====
+router.post('/manage/items', verifyToken, checkRole(['admin', 'manager']), menuController.createMenuItem);
+
+// ===== ROUTE 8: UPDATE AN EXISTING MENU ITEM (PROTECTED) =====
+router.patch('/manage/items/:id', verifyToken, checkRole(['admin', 'manager']), menuController.updateMenuItem);
+
+// ===== ROUTE 9: UPDATE MENU ITEM STOCK STATUS (PROTECTED) =====
 router.patch('/manage/:id', verifyToken, checkRole(['admin', 'manager']), menuController.updateMenuItemStockStatus);
 
 // ===== EXPORTS =====

@@ -108,7 +108,7 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId, branchId = null) 
 
     if (branchId) {
       params.push(branchId);
-      itemsJoinCondition += ` AND mi.branch_id = $${params.length}`;
+      itemsJoinCondition += ` AND (mi.branch_id IS NULL OR mi.branch_id = $${params.length})`;
     }
 
     const result = await query(`
@@ -260,6 +260,141 @@ const getMenuItemsByIds = async (itemIds) => {
   }
 };
 
+// ===== GET CATEGORIES FOR MANAGEMENT =====
+/**
+ * Get all categories for a given buffet version (for management forms/dropdowns)
+ *
+ * @param {number} buffetVersionId - The buffet version ID
+ * @returns {Promise<array>} Array of categories
+ */
+const getCategoriesForManagement = async (buffetVersionId) => {
+  try {
+    const result = await query(
+      `SELECT id, name, description, position, is_required, is_active, buffet_version_id
+       FROM categories
+       WHERE buffet_version_id = $1 AND is_active = true
+       ORDER BY position, name`,
+      [buffetVersionId]
+    );
+    return result.rows;
+  } catch (error) {
+    console.error('Could not get categories for management:', error);
+    throw new Error('Failed to get categories');
+  }
+};
+
+// ===== UPDATE CATEGORY =====
+/**
+ * Update an existing category's details
+ *
+ * @param {number} id - Category ID
+ * @param {string} name - New name
+ * @param {string|null} description - New description
+ * @param {number} position - New sort position
+ * @param {boolean} isRequired - Whether required
+ * @returns {Promise<object>} The updated category
+ */
+const updateCategory = async (id, name, description, position, isRequired) => {
+  try {
+    const result = await query(
+      `UPDATE categories
+       SET name = $1, description = $2, position = $3, is_required = $4
+       WHERE id = $5
+       RETURNING id, name, description, buffet_version_id, position, is_required, is_active`,
+      [name, description ?? null, position ?? 0, isRequired ?? false, id]
+    );
+    if (result.rows.length === 0) throw new Error('Category not found');
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not update category:', error);
+    throw error;
+  }
+};
+
+// ===== UPDATE MENU ITEM =====
+/**
+ * Update an existing menu item's details
+ *
+ * @param {number} id - Menu item ID
+ * @param {string} name - New name
+ * @param {string|null} description - New description
+ * @param {number} categoryId - Category this item belongs to
+ * @param {string|null} dietaryInfo - Dietary info
+ * @param {string|null} allergens - Allergen info
+ * @param {boolean} isIncludedInBase - Whether included in base price
+ * @returns {Promise<object>} The updated menu item
+ */
+const updateMenuItem = async (id, name, description, categoryId, dietaryInfo, allergens, isIncludedInBase) => {
+  try {
+    const result = await query(
+      `UPDATE menu_items
+       SET name = $1, description = $2, category_id = $3, dietary_info = $4, allergens = $5, is_included_in_base = $6
+       WHERE id = $7
+       RETURNING id, name, description, category_id, dietary_info, allergens, is_included_in_base, is_active, branch_id`,
+      [name, description ?? null, categoryId, dietaryInfo ?? null, allergens ?? null, isIncludedInBase ?? true, id]
+    );
+    if (result.rows.length === 0) throw new Error('Menu item not found');
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not update menu item:', error);
+    throw error;
+  }
+};
+
+// ===== CREATE CATEGORY =====
+/**
+ * Create a new menu category under a buffet version
+ *
+ * @param {string} name - Category name
+ * @param {string|null} description - Category description
+ * @param {number} buffetVersionId - The buffet version this belongs to
+ * @param {number} position - Sort order position
+ * @param {boolean} isRequired - Whether this category is required
+ * @returns {Promise<object>} The newly created category
+ */
+const createCategory = async (name, description, buffetVersionId, position, isRequired) => {
+  try {
+    const result = await query(
+      `INSERT INTO categories (name, description, buffet_version_id, position, is_required, is_active)
+       VALUES ($1, $2, $3, $4, $5, true)
+       RETURNING id, name, description, buffet_version_id, position, is_required, is_active`,
+      [name, description ?? null, buffetVersionId, position ?? 0, isRequired ?? false]
+    );
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not create category:', error);
+    throw new Error('Failed to create category');
+  }
+};
+
+// ===== CREATE MENU ITEM =====
+/**
+ * Create a new menu item under a category
+ *
+ * @param {string} name - Item name
+ * @param {string|null} description - Item description
+ * @param {number} categoryId - The category this item belongs to
+ * @param {string|null} dietaryInfo - Dietary info (e.g., "Vegetarian")
+ * @param {string|null} allergens - Allergen info
+ * @param {boolean} isIncludedInBase - Whether included in base price
+ * @param {number|null} branchId - Optional branch restriction
+ * @returns {Promise<object>} The newly created menu item
+ */
+const createMenuItem = async (name, description, categoryId, dietaryInfo, allergens, isIncludedInBase, branchId) => {
+  try {
+    const result = await query(
+      `INSERT INTO menu_items (name, description, category_id, dietary_info, allergens, is_included_in_base, branch_id, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+       RETURNING id, name, description, category_id, dietary_info, allergens, is_included_in_base, branch_id, is_active`,
+      [name, description ?? null, categoryId, dietaryInfo ?? null, allergens ?? null, isIncludedInBase ?? true, branchId ?? null]
+    );
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not create menu item:', error);
+    throw new Error('Failed to create menu item');
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the controller
 module.exports = {
@@ -267,5 +402,10 @@ module.exports = {
   getMenuSectionsByBuffetVersion,
   getAllMenuItemsForManagement,
   updateMenuItemStockStatus,
-  getMenuItemsByIds
+  getMenuItemsByIds,
+  getCategoriesForManagement,
+  createCategory,
+  createMenuItem,
+  updateCategory,
+  updateMenuItem
 };

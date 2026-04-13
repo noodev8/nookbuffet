@@ -276,6 +276,9 @@ export default function AdminPage() {
             <button className="nav-item" onClick={() => router.push('/prices')}>Prices</button>
           )}
           {user && user.role === 'manager' && (
+            <button className="nav-item" onClick={() => router.push('/menu-builder')}>Menu Builder</button>
+          )}
+          {user && user.role === 'manager' && (
             <button className="nav-item" onClick={goToStaffManagement}>Staff Management</button>
           )}
           {user && user.role === 'manager' && (

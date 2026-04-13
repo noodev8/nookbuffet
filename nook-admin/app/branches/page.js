@@ -154,6 +154,7 @@ export default function BranchesPage() {
           <button className="nav-item" onClick={() => router.push('/')}>Orders</button>
           <button className="nav-item" onClick={() => router.push('/menu')}>Menu Items</button>
           <button className="nav-item" onClick={() => router.push('/prices')}>Prices</button>
+          <button className="nav-item" onClick={() => router.push('/menu-builder')}>Menu Builder</button>
           <button className="nav-item" onClick={() => router.push('/staff')}>Staff Management</button>
           <button className="nav-item active">Delivery Times</button>
           <button className="nav-item" onClick={() => router.push('/reports')}>Reports</button>

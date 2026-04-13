@@ -139,7 +139,11 @@ const updateBuffetVersion = async (req, res) => {
       });
     }
 
-    const { price_per_person, branch_id } = req.body;
+    const { title, description, price_per_person, branch_id } = req.body;
+
+    if (!title || typeof title !== 'string' || title.trim() === '') {
+      return res.json({ return_code: 'INVALID_DATA', message: 'title is required' });
+    }
 
     if (price_per_person === undefined || isNaN(parseFloat(price_per_person)) || parseFloat(price_per_person) < 0) {
       return res.json({
@@ -149,7 +153,9 @@ const updateBuffetVersion = async (req, res) => {
     }
 
     const branchId = branch_id ? parseInt(branch_id) : null;
-    const updated = await buffetVersionModel.updateBuffetVersion(id, parseFloat(price_per_person), branchId);
+    const updated = await buffetVersionModel.updateBuffetVersion(
+      id, title.trim(), description ? description.trim() : null, parseFloat(price_per_person), branchId
+    );
 
     res.json({
       return_code: 'SUCCESS',
@@ -170,12 +176,57 @@ const updateBuffetVersion = async (req, res) => {
   }
 };
 
+// ===== CREATE BUFFET VERSION =====
+/**
+ * Create a new buffet version (protected, manager/admin only)
+ * POST /api/buffet-versions/manage
+ */
+const createBuffetVersion = async (req, res) => {
+  try {
+    const { title, description, price_per_person, branch_id } = req.body;
+
+    if (!title || typeof title !== 'string' || title.trim() === '') {
+      return res.json({
+        return_code: 'INVALID_DATA',
+        message: 'title is required'
+      });
+    }
+
+    if (price_per_person === undefined || isNaN(parseFloat(price_per_person)) || parseFloat(price_per_person) < 0) {
+      return res.json({
+        return_code: 'INVALID_DATA',
+        message: 'price_per_person must be a valid positive number'
+      });
+    }
+
+    const branchId = branch_id ? parseInt(branch_id) : null;
+    const created = await buffetVersionModel.createBuffetVersion(
+      title.trim(),
+      description ? description.trim() : null,
+      parseFloat(price_per_person),
+      branchId
+    );
+
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Buffet version created successfully',
+      data: created
+    });
+  } catch (error) {
+    res.json({
+      return_code: 'SERVER_ERROR',
+      message: 'Could not create buffet version'
+    });
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the routes file
 module.exports = {
   getBuffetVersionById,
   getAllBuffetVersions,
   getAllBuffetVersionsForManagement,
-  updateBuffetVersion
+  updateBuffetVersion,
+  createBuffetVersion
 };
 
