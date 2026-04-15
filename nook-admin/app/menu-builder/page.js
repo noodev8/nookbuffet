@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import './menu-builder.css';
 
@@ -22,6 +22,20 @@ export default function MenuBuilderPage() {
   const [editingItemVersionId, setEditingItemVersionId] = useState('');
   const [editingItemCategories, setEditingItemCategories] = useState([]);
 
+  // Category filters
+  const [catSearch, setCatSearch] = useState('');
+  const [catFilterVersion, setCatFilterVersion] = useState('');
+  const [catFilterBranch, setCatFilterBranch] = useState('');
+
+  // Drag-to-reorder
+  const dragId = useRef(null);
+  const dragCounters = useRef({});
+
+  // Item filters
+  const [itemSearch, setItemSearch] = useState('');
+  const [itemFilterVersion, setItemFilterVersion] = useState('');
+  const [itemFilterCategory, setItemFilterCategory] = useState('');
+
   // Buffet version form
   const [vTitle, setVTitle] = useState('');
   const [vDescription, setVDescription] = useState('');
@@ -34,6 +48,60 @@ export default function MenuBuilderPage() {
   const [cBuffetVersionId, setCBuffetVersionId] = useState('');
   const [cPosition, setCPosition] = useState('');
   const [cIsRequired, setCIsRequired] = useState(false);
+  const [cImageUrl, setCImageUrl] = useState('');
+  const [cImageUrl2, setCImageUrl2] = useState('');
+  const [cImageUrl3, setCImageUrl3] = useState('');
+  const [cImageUrl4, setCImageUrl4] = useState('');
+
+  const webUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
+
+  const categoryImageOptions = [
+    { label: 'None', value: '' },
+    { label: 'Sandwiches', value: '/assets/sandwiches.png' },
+    { label: 'Sandwiches 2', value: '/assets/sandwiches2.png' },
+    { label: 'Sandwiches 3', value: '/assets/sandwiches3.png' },
+    { label: 'Wraps', value: '/assets/wraps.png' },
+    { label: 'Wraps 2', value: '/assets/wraps2.png' },
+    { label: 'Wraps 3', value: '/assets/wraps3.png' },
+    { label: 'Wraps 4', value: '/assets/wraps4.png' },
+    { label: 'Savoury', value: '/assets/savoury.png' },
+    { label: 'Savoury 2', value: '/assets/savoury2.png' },
+    { label: 'Savoury 3', value: '/assets/savoury3.png' },
+    { label: 'Savoury 4', value: '/assets/savoury4.png' },
+    { label: 'Dips & Sticks', value: '/assets/dipsandsticks.png' },
+    { label: 'Dips 2', value: '/assets/dips2.png' },
+    { label: 'Dips 3', value: '/assets/dips3.png' },
+    { label: 'Dips 4', value: '/assets/dips4.png' },
+    { label: 'Fruit', value: '/assets/fruit.png' },
+    { label: 'Fruit 2', value: '/assets/fruit2.png' },
+    { label: 'Fruit 3', value: '/assets/fruit3.png' },
+    { label: 'Fruit 5', value: '/assets/fruit5.png' },
+    { label: 'Cake', value: '/assets/cake.png' },
+    { label: 'Cake 2', value: '/assets/cake2.png' },
+    { label: 'Cake 3', value: '/assets/cake3.png' },
+    { label: 'Cake 4', value: '/assets/cake4.png' },
+    { label: 'Continental 1', value: '/assets/continental1.png' },
+    { label: 'Continental 2', value: '/assets/continental2.png' },
+    { label: 'Full Buffet 1', value: '/assets/fullbuffet1.png' },
+    { label: 'Full Buffet 2', value: '/assets/fullbuffet2.png' },
+    { label: 'Kids Cake', value: '/assets/kidscake.png' },
+    { label: 'Kids Crisps', value: '/assets/kidscrisps.png' },
+    { label: 'Food 2', value: '/assets/food2.png' },
+    { label: 'Nook', value: '/assets/nook.jpg' },
+  ];
+
+  // Helper to render a single image slot picker
+  const ImagePicker = ({ label, value, onChange }) => (
+    <div className="mb-img-slot">
+      <select className="mb-input mb-img-select" value={value || ''} onChange={e => onChange(e.target.value || null)}>
+        {categoryImageOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+      </select>
+      {value
+        ? <img draggable={false} src={`${webUrl}${value}`} alt="preview" className="mb-img-preview" />
+        : <div className="mb-img-empty">No image</div>
+      }
+    </div>
+  );
 
   // Menu item form
   const [iName, setIName] = useState('');
@@ -74,7 +142,12 @@ export default function MenuBuilderPage() {
 
     fetch(`${apiUrl}/api/menu`, { headers })
       .then(r => r.json())
-      .then(d => { if (d.return_code === 'SUCCESS') setAllCategories(d.data || []); })
+      .then(d => {
+        if (d.return_code === 'SUCCESS') {
+          const sorted = [...(d.data || [])].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
+          setAllCategories(sorted);
+        }
+      })
       .catch(() => {});
   }, [router, apiUrl]);
 
@@ -108,7 +181,7 @@ export default function MenuBuilderPage() {
   };
 
   const startEditCategory = (c) => {
-    setEditingCategory({ ...c });
+    setEditingCategory({ ...c, position: (c.position ?? 0) + 1 });
     setEditingVersion(null);
     setEditingItem(null);
   };
@@ -178,13 +251,17 @@ export default function MenuBuilderPage() {
         body: JSON.stringify({
           name: editingCategory.name.trim(),
           description: editingCategory.description?.trim() || null,
-          position: editingCategory.position !== undefined ? parseInt(editingCategory.position) : 0,
-          is_required: editingCategory.is_required === true
+          position: editingCategory.position !== undefined ? parseInt(editingCategory.position) - 1 : 0,
+          is_required: editingCategory.is_required === true,
+          image_url: editingCategory.image_url || null,
+          image_url_2: editingCategory.image_url_2 || null,
+          image_url_3: editingCategory.image_url_3 || null,
+          image_url_4: editingCategory.image_url_4 || null,
         })
       });
       const d = await res.json();
       if (d.return_code === 'SUCCESS') {
-        setAllCategories(prev => prev.map(c => c.id === d.data.id ? { ...c, ...d.data } : c));
+        setAllCategories(prev => sortCategories(prev.map(c => c.id === d.data.id ? { ...c, ...d.data } : c)));
         setEditingCategory(null);
         showSuccess(`"${d.data.name}" updated!`);
       } else { alert(d.message || 'Failed to update'); }
@@ -256,14 +333,19 @@ export default function MenuBuilderPage() {
         body: JSON.stringify({
           name: cName.trim(), description: cDescription.trim() || null,
           buffet_version_id: parseInt(cBuffetVersionId),
-          position: cPosition !== '' ? parseInt(cPosition) : 0,
-          is_required: cIsRequired
+          position: cPosition !== '' ? Math.max(0, parseInt(cPosition) - 1) : 0,
+          is_required: cIsRequired,
+          image_url: cImageUrl || null,
+          image_url_2: cImageUrl2 || null,
+          image_url_3: cImageUrl3 || null,
+          image_url_4: cImageUrl4 || null,
         })
       });
       const d = await res.json();
       if (d.return_code === 'SUCCESS') {
-        setAllCategories(prev => [...prev, { ...d.data, items: [] }]);
+        setAllCategories(prev => sortCategories([...prev, { ...d.data, items: [] }]));
         setCName(''); setCDescription(''); setCBuffetVersionId(''); setCPosition(''); setCIsRequired(false);
+        setCImageUrl(''); setCImageUrl2(''); setCImageUrl3(''); setCImageUrl4('');
         showSuccess(`Category "${d.data.name}" created!`);
       } else { alert(d.message || 'Failed to create category'); }
     } catch { alert('Failed to create category'); } finally { setSaving(false); }
@@ -305,7 +387,89 @@ export default function MenuBuilderPage() {
     router.push('/login');
   };
 
+  const sortCategories = (cats) =>
+    [...cats].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
+
+  const onDragStart = (e, catId) => {
+    dragId.current = catId;
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const onDragOver = (e) => { e.preventDefault(); };
+
+  const onDragEnter = (e, catId) => {
+    e.preventDefault();
+    dragCounters.current[catId] = (dragCounters.current[catId] || 0) + 1;
+    if (dragCounters.current[catId] === 1) {
+      e.currentTarget.classList.add('mb-drag-over');
+    }
+  };
+
+  const onDragLeave = (e, catId) => {
+    dragCounters.current[catId] = Math.max(0, (dragCounters.current[catId] || 1) - 1);
+    if (dragCounters.current[catId] === 0) {
+      e.currentTarget.classList.remove('mb-drag-over');
+    }
+  };
+
+  const onDragEnd = () => { dragId.current = null; };
+
+  const onDrop = async (e, targetCat) => {
+    e.preventDefault();
+    dragCounters.current[targetCat.id] = 0;
+    e.currentTarget.classList.remove('mb-drag-over');
+    const fromId = dragId.current;
+    dragId.current = null;
+    if (!fromId || fromId === targetCat.id) return;
+
+    const fromCat = allCategories.find(c => c.id === fromId);
+    if (!fromCat) return;
+
+    const fromPos = fromCat.position;
+    const toPos = targetCat.position;
+
+    const updated = allCategories.map(c => {
+      if (c.id === fromId) return { ...c, position: toPos };
+      if (c.id === targetCat.id) return { ...c, position: fromPos };
+      return c;
+    });
+
+    setAllCategories(sortCategories(updated));
+
+    try {
+      await fetch(`${apiUrl}/api/menu/manage/categories/reorder`, {
+        method: 'PATCH', headers: authHeaders(),
+        body: JSON.stringify([
+          { id: fromId, position: toPos },
+          { id: targetCat.id, position: fromPos }
+        ])
+      });
+    } catch { /* silently fail — UI already updated */ }
+  };
+
   if (!user) return null;
+
+  // Filtered categories
+  const filteredCategories = allCategories.filter(c => {
+    const bv = buffetVersions.find(v => v.id === c.buffet_version_id);
+    const matchesSearch = !catSearch || c.name.toLowerCase().includes(catSearch.toLowerCase());
+    const matchesVersion = !catFilterVersion || String(c.buffet_version_id) === catFilterVersion;
+    const matchesBranch = !catFilterBranch || String(bv?.branch_id) === catFilterBranch;
+    return matchesSearch && matchesVersion && matchesBranch;
+  });
+
+  // Filtered menu items
+  const filteredItems = menuItems.filter(item => {
+    const matchesSearch = !itemSearch || item.name.toLowerCase().includes(itemSearch.toLowerCase());
+    const matchesVersion = !itemFilterVersion || String(item.buffet_version_id) === itemFilterVersion;
+    const matchesCategory = !itemFilterCategory || String(item.category_id) === itemFilterCategory;
+    return matchesSearch && matchesVersion && matchesCategory;
+  });
+
+  // Unique categories available for the item filter dropdown (respect version filter)
+  const itemFilterCategoryOptions = allCategories.filter(c =>
+    !itemFilterVersion || String(c.buffet_version_id) === itemFilterVersion
+  );
 
   return (
     <div className="mb-container">
@@ -460,12 +624,27 @@ export default function MenuBuilderPage() {
               </div>
               <div className="mb-field">
                 <label>Sort Position</label>
-                <input className="mb-input" type="number" placeholder="0" min="0"
+                <input className="mb-input" type="number" placeholder="1" min="1"
                   value={cPosition} onChange={e => setCPosition(e.target.value)} />
               </div>
               <div className="mb-field mb-field-check">
                 <label><input type="checkbox" checked={cIsRequired} onChange={e => setCIsRequired(e.target.checked)} /> Required category</label>
               </div>
+              {(() => {
+                const selectedBv = buffetVersions.find(v => String(v.id) === String(cBuffetVersionId));
+                const createIsKids = selectedBv?.title?.toLowerCase().includes('kids');
+                return (
+                  <div className="mb-field mb-field-full">
+                    <label>Category Image{createIsKids ? '' : 's (4 slots shown on the website)'}</label>
+                    <div className={createIsKids ? '' : 'mb-img-grid'}>
+                      <ImagePicker label="Image 1" value={cImageUrl} onChange={setCImageUrl} />
+                      {!createIsKids && <ImagePicker label="Image 2" value={cImageUrl2} onChange={setCImageUrl2} />}
+                      {!createIsKids && <ImagePicker label="Image 3" value={cImageUrl3} onChange={setCImageUrl3} />}
+                      {!createIsKids && <ImagePicker label="Image 4" value={cImageUrl4} onChange={setCImageUrl4} />}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             <button className="mb-submit" type="submit" disabled={saving}>
               {saving ? 'Creating...' : 'Create Category'}
@@ -474,54 +653,114 @@ export default function MenuBuilderPage() {
 
           <div className="mb-existing">
             <h4 className="mb-existing-title">Existing Categories</h4>
-            {allCategories.length === 0
-              ? <p className="mb-empty">No categories yet</p>
-              : allCategories.map(c => {
-                  const bvName = buffetVersions.find(v => v.id === c.buffet_version_id)?.title || `Version ${c.buffet_version_id}`;
-                  return (
-                    <div key={c.id}>
-                      {editingCategory?.id === c.id ? (
-                        <form className="mb-edit-form" onSubmit={saveCategory}>
-                          <div className="mb-fields">
-                            <div className="mb-field">
-                              <label>Name *</label>
-                              <input className="mb-input" type="text" value={editingCategory.name}
-                                onChange={e => setEditingCategory(p => ({ ...p, name: e.target.value }))} />
-                            </div>
-                            <div className="mb-field">
-                              <label>Description</label>
-                              <input className="mb-input" type="text" value={editingCategory.description || ''}
-                                onChange={e => setEditingCategory(p => ({ ...p, description: e.target.value }))} />
-                            </div>
-                            <div className="mb-field">
-                              <label>Sort Position</label>
-                              <input className="mb-input" type="number" min="0" value={editingCategory.position ?? 0}
-                                onChange={e => setEditingCategory(p => ({ ...p, position: e.target.value }))} />
-                            </div>
-                            <div className="mb-field mb-field-check">
-                              <label>
-                                <input type="checkbox" checked={editingCategory.is_required === true}
-                                  onChange={e => setEditingCategory(p => ({ ...p, is_required: e.target.checked }))} />
-                                Required category
-                              </label>
-                            </div>
-                          </div>
-                          <div className="mb-edit-actions">
-                            <button className="mb-submit mb-submit-sm" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-                            <button className="mb-cancel-btn" type="button" onClick={() => setEditingCategory(null)}>Cancel</button>
-                          </div>
-                        </form>
-                      ) : (
-                        <div className="mb-existing-item">
-                          <span className="mb-existing-name">{c.name}</span>
-                          <span className="mb-badge">{bvName}</span>
-                          {c.is_required && <span className="mb-badge mb-badge-required">Required</span>}
-                          <button className="mb-edit-btn" onClick={() => startEditCategory(c)}>Edit</button>
+
+            <div className="mb-filters">
+              <input className="mb-filter-search" type="text" placeholder="Search categories..."
+                value={catSearch} onChange={e => setCatSearch(e.target.value)} />
+              <select className="mb-filter-select" value={catFilterBranch} onChange={e => { setCatFilterBranch(e.target.value); setCatFilterVersion(''); }}>
+                <option value="">All locations</option>
+                {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+              <select className="mb-filter-select" value={catFilterVersion} onChange={e => setCatFilterVersion(e.target.value)}>
+                <option value="">All buffet versions</option>
+                {buffetVersions
+                  .filter(v => !catFilterBranch || String(v.branch_id ?? 'null') === catFilterBranch)
+                  .map(v => <option key={v.id} value={v.id}>{v.title}</option>)}
+              </select>
+              {(catSearch || catFilterVersion || catFilterBranch) &&
+                <button className="mb-filter-clear" onClick={() => { setCatSearch(''); setCatFilterVersion(''); setCatFilterBranch(''); }}>Clear</button>
+              }
+              <span className="mb-filter-count">{filteredCategories.length} of {allCategories.length}</span>
+            </div>
+
+            {filteredCategories.length === 0
+              ? <p className="mb-empty">{allCategories.length === 0 ? 'No categories yet' : 'No categories match your filters'}</p>
+              : (() => {
+                  // Group filtered categories by buffet version, preserving position order within each group
+                  const versionIds = [...new Set(filteredCategories.map(c => c.buffet_version_id))];
+                  return versionIds.map(vId => {
+                    const bv = buffetVersions.find(v => v.id === vId);
+                    const bvName = bv?.title || `Version ${vId}`;
+                    const branchName = bv?.branch_name || null;
+                    const isKids = bv?.title?.toLowerCase().includes('kids');
+                    const groupCats = filteredCategories.filter(c => c.buffet_version_id === vId);
+                    return (
+                      <div key={vId} className="mb-version-group">
+                        <div className="mb-version-group-header">
+                          <span className="mb-version-group-title">{bvName}</span>
+                          {branchName
+                            ? <span className="mb-badge mb-badge-branch">{branchName}</span>
+                            : <span className="mb-badge mb-badge-all">All branches</span>}
+                          <span className="mb-drag-hint">Drag to reorder</span>
                         </div>
-                      )}
-                    </div>
-                  );
-                })
+                        {groupCats.map(c => (
+                          <div key={c.id}
+                            draggable={editingCategory?.id !== c.id}
+                            onDragStart={e => onDragStart(e, c.id)}
+                            onDragOver={onDragOver}
+                            onDragEnter={e => onDragEnter(e, c.id)}
+                            onDragLeave={e => onDragLeave(e, c.id)}
+                            onDragEnd={onDragEnd}
+                            onDrop={e => onDrop(e, c)}
+                          >
+                            {editingCategory?.id === c.id ? (
+                              <form className="mb-edit-form" onSubmit={saveCategory}>
+                                <div className="mb-fields">
+                                  <div className="mb-field">
+                                    <label>Name *</label>
+                                    <input className="mb-input" type="text" value={editingCategory.name}
+                                      onChange={e => setEditingCategory(p => ({ ...p, name: e.target.value }))} />
+                                  </div>
+                                  <div className="mb-field">
+                                    <label>Description</label>
+                                    <input className="mb-input" type="text" value={editingCategory.description || ''}
+                                      onChange={e => setEditingCategory(p => ({ ...p, description: e.target.value }))} />
+                                  </div>
+                                  <div className="mb-field mb-field-check">
+                                    <label>
+                                      <input type="checkbox" checked={editingCategory.is_required === true}
+                                        onChange={e => setEditingCategory(p => ({ ...p, is_required: e.target.checked }))} />
+                                      Required category
+                                    </label>
+                                  </div>
+                                  <div className="mb-field mb-field-full">
+                                    <label>Category Image{isKids ? '' : 's (4 slots shown on the website)'}</label>
+                                    <div className={isKids ? '' : 'mb-img-grid'}>
+                                      <ImagePicker label="Image 1" value={editingCategory.image_url} onChange={v => setEditingCategory(p => ({ ...p, image_url: v }))} />
+                                      {!isKids && <ImagePicker label="Image 2" value={editingCategory.image_url_2} onChange={v => setEditingCategory(p => ({ ...p, image_url_2: v }))} />}
+                                      {!isKids && <ImagePicker label="Image 3" value={editingCategory.image_url_3} onChange={v => setEditingCategory(p => ({ ...p, image_url_3: v }))} />}
+                                      {!isKids && <ImagePicker label="Image 4" value={editingCategory.image_url_4} onChange={v => setEditingCategory(p => ({ ...p, image_url_4: v }))} />}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="mb-edit-actions">
+                                  <button className="mb-submit mb-submit-sm" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+                                  <button className="mb-cancel-btn" type="button" onClick={() => setEditingCategory(null)}>Cancel</button>
+                                </div>
+                              </form>
+                            ) : (
+                              <div className="mb-existing-item">
+                                <span className="mb-drag-handle" title="Drag to reorder">::</span>
+                                <div className="mb-thumb-strip">
+                                  {(isKids ? [c.image_url] : [c.image_url, c.image_url_2, c.image_url_3, c.image_url_4]).map((img, i) =>
+                                    img
+                                      ? <img key={i} draggable={false} src={`${webUrl}${img}`} alt={`${c.name} ${i + 1}`} className="mb-img-thumb" />
+                                      : <div key={i} className="mb-img-thumb mb-img-thumb-empty" />
+                                  )}
+                                </div>
+                                <div className="mb-existing-info">
+                                  <span className="mb-existing-name">{c.name}</span>
+                                  {c.is_required && <span className="mb-badge mb-badge-required">Required</span>}
+                                </div>
+                                <button className="mb-edit-btn" onClick={() => startEditCategory(c)}>Edit</button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  });
+                })()
             }
           </div>
         </div>
@@ -576,9 +815,27 @@ export default function MenuBuilderPage() {
 
           <div className="mb-existing">
             <h4 className="mb-existing-title">Existing Menu Items</h4>
-            {menuItems.length === 0
-              ? <p className="mb-empty">No menu items yet</p>
-              : menuItems.map(item => (
+
+            <div className="mb-filters">
+              <input className="mb-filter-search" type="text" placeholder="Search items..."
+                value={itemSearch} onChange={e => setItemSearch(e.target.value)} />
+              <select className="mb-filter-select" value={itemFilterVersion} onChange={e => { setItemFilterVersion(e.target.value); setItemFilterCategory(''); }}>
+                <option value="">All buffet versions</option>
+                {buffetVersions.map(v => <option key={v.id} value={v.id}>{v.title}</option>)}
+              </select>
+              <select className="mb-filter-select" value={itemFilterCategory} onChange={e => setItemFilterCategory(e.target.value)}>
+                <option value="">All categories</option>
+                {itemFilterCategoryOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              {(itemSearch || itemFilterVersion || itemFilterCategory) &&
+                <button className="mb-filter-clear" onClick={() => { setItemSearch(''); setItemFilterVersion(''); setItemFilterCategory(''); }}>Clear</button>
+              }
+              <span className="mb-filter-count">{filteredItems.length} of {menuItems.length}</span>
+            </div>
+
+            {filteredItems.length === 0
+              ? <p className="mb-empty">{menuItems.length === 0 ? 'No menu items yet' : 'No items match your filters'}</p>
+              : filteredItems.map(item => (
                 <div key={item.id}>
                   {editingItem?.id === item.id ? (
                     <form className="mb-edit-form" onSubmit={saveItem}>

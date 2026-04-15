@@ -31,7 +31,12 @@ const getMenuSectionsQuery = (whereClause = '', params = []) => {
         c.name,                                 -- Category name (like "Sandwiches")
         c.description,                          -- Category description
         c.is_required,                          -- Is this category required to order?
+        c.position,                             -- Sort order position
         c.buffet_version_id,                    -- Which buffet version this belongs to
+        c.image_url,                            -- Image slot 1
+        c.image_url_2,                          -- Image slot 2
+        c.image_url_3,                          -- Image slot 3
+        c.image_url_4,                          -- Image slot 4
         bv.price_per_person,                    -- Price per person for this buffet
 
         -- Convert all menu items for this category into a JSON array
@@ -58,10 +63,10 @@ const getMenuSectionsQuery = (whereClause = '', params = []) => {
       LEFT JOIN menu_items mi ON c.id = mi.category_id AND mi.is_active = true
       -- Only get active categories, plus any additional filters passed in
       WHERE c.is_active = true ${whereClause}
-      -- Group by category 
-      GROUP BY c.id, c.name, c.description, c.is_required, c.buffet_version_id, bv.price_per_person
-      -- Sort by category ID
-      ORDER BY c.id;
+      -- Group by category
+      GROUP BY c.id, c.name, c.description, c.is_required, c.position, c.buffet_version_id, c.image_url, c.image_url_2, c.image_url_3, c.image_url_4, bv.price_per_person
+      -- Sort by position, then name alphabetically as a tiebreaker
+      ORDER BY c.position, c.name;
     `,
     params
   };
@@ -118,6 +123,10 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId, branchId = null) 
         c.description,
         c.is_required,
         c.buffet_version_id,
+        c.image_url,
+        c.image_url_2,
+        c.image_url_3,
+        c.image_url_4,
         bv.price_per_person,
         COALESCE(
           JSON_AGG(
@@ -137,8 +146,8 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId, branchId = null) 
       LEFT JOIN buffet_versions bv ON c.buffet_version_id = bv.id AND bv.is_active = true
       LEFT JOIN menu_items mi ON ${itemsJoinCondition}
       WHERE c.is_active = true AND c.buffet_version_id = $1
-      GROUP BY c.id, c.name, c.description, c.is_required, c.buffet_version_id, bv.price_per_person
-      ORDER BY c.id
+      GROUP BY c.id, c.name, c.description, c.is_required, c.buffet_version_id, c.image_url, c.image_url_2, c.image_url_3, c.image_url_4, bv.price_per_person
+      ORDER BY c.position, c.name
     `, params);
 
     return result.rows;
@@ -270,7 +279,7 @@ const getMenuItemsByIds = async (itemIds) => {
 const getCategoriesForManagement = async (buffetVersionId) => {
   try {
     const result = await query(
-      `SELECT id, name, description, position, is_required, is_active, buffet_version_id
+      `SELECT id, name, description, position, is_required, is_active, buffet_version_id, image_url, image_url_2, image_url_3, image_url_4
        FROM categories
        WHERE buffet_version_id = $1 AND is_active = true
        ORDER BY position, name`,
@@ -294,14 +303,14 @@ const getCategoriesForManagement = async (buffetVersionId) => {
  * @param {boolean} isRequired - Whether required
  * @returns {Promise<object>} The updated category
  */
-const updateCategory = async (id, name, description, position, isRequired) => {
+const updateCategory = async (id, name, description, position, isRequired, imageUrl, imageUrl2, imageUrl3, imageUrl4) => {
   try {
     const result = await query(
       `UPDATE categories
-       SET name = $1, description = $2, position = $3, is_required = $4
-       WHERE id = $5
-       RETURNING id, name, description, buffet_version_id, position, is_required, is_active`,
-      [name, description ?? null, position ?? 0, isRequired ?? false, id]
+       SET name = $1, description = $2, position = $3, is_required = $4, image_url = $5, image_url_2 = $6, image_url_3 = $7, image_url_4 = $8
+       WHERE id = $9
+       RETURNING id, name, description, buffet_version_id, position, is_required, is_active, image_url, image_url_2, image_url_3, image_url_4`,
+      [name, description ?? null, position ?? 0, isRequired ?? false, imageUrl ?? null, imageUrl2 ?? null, imageUrl3 ?? null, imageUrl4 ?? null, id]
     );
     if (result.rows.length === 0) throw new Error('Category not found');
     return result.rows[0];
@@ -352,13 +361,13 @@ const updateMenuItem = async (id, name, description, categoryId, dietaryInfo, al
  * @param {boolean} isRequired - Whether this category is required
  * @returns {Promise<object>} The newly created category
  */
-const createCategory = async (name, description, buffetVersionId, position, isRequired) => {
+const createCategory = async (name, description, buffetVersionId, position, isRequired, imageUrl, imageUrl2, imageUrl3, imageUrl4) => {
   try {
     const result = await query(
-      `INSERT INTO categories (name, description, buffet_version_id, position, is_required, is_active)
-       VALUES ($1, $2, $3, $4, $5, true)
-       RETURNING id, name, description, buffet_version_id, position, is_required, is_active`,
-      [name, description ?? null, buffetVersionId, position ?? 0, isRequired ?? false]
+      `INSERT INTO categories (name, description, buffet_version_id, position, is_required, is_active, image_url, image_url_2, image_url_3, image_url_4)
+       VALUES ($1, $2, $3, $4, $5, true, $6, $7, $8, $9)
+       RETURNING id, name, description, buffet_version_id, position, is_required, is_active, image_url, image_url_2, image_url_3, image_url_4`,
+      [name, description ?? null, buffetVersionId, position ?? 0, isRequired ?? false, imageUrl ?? null, imageUrl2 ?? null, imageUrl3 ?? null, imageUrl4 ?? null]
     );
     return result.rows[0];
   } catch (error) {
@@ -395,6 +404,22 @@ const createMenuItem = async (name, description, categoryId, dietaryInfo, allerg
   }
 };
 
+// ===== BULK UPDATE CATEGORY POSITIONS =====
+/**
+ * Update the position of multiple categories at once (used for drag-to-reorder)
+ * @param {Array<{id: number, position: number}>} updates
+ */
+const updateCategoryPositions = async (updates) => {
+  try {
+    for (const { id, position } of updates) {
+      await query('UPDATE categories SET position = $1 WHERE id = $2', [position, id]);
+    }
+  } catch (error) {
+    console.error('Could not update category positions:', error);
+    throw new Error('Failed to update category positions');
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the controller
 module.exports = {
@@ -407,5 +432,6 @@ module.exports = {
   createCategory,
   createMenuItem,
   updateCategory,
-  updateMenuItem
+  updateMenuItem,
+  updateCategoryPositions
 };

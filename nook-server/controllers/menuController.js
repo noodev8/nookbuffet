@@ -214,7 +214,7 @@ const getCategoriesForManagement = async (req, res) => {
  */
 const createCategory = async (req, res) => {
   try {
-    const { name, description, buffet_version_id, position, is_required } = req.body;
+    const { name, description, buffet_version_id, position, is_required, image_url, image_url_2, image_url_3, image_url_4 } = req.body;
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return res.json({ return_code: 'INVALID_DATA', message: 'name is required' });
@@ -228,7 +228,11 @@ const createCategory = async (req, res) => {
       description ? description.trim() : null,
       parseInt(buffet_version_id),
       position !== undefined ? parseInt(position) : 0,
-      is_required === true || is_required === 'true'
+      is_required === true || is_required === 'true',
+      image_url ? image_url.trim() : null,
+      image_url_2 ? image_url_2.trim() : null,
+      image_url_3 ? image_url_3.trim() : null,
+      image_url_4 ? image_url_4.trim() : null
     );
 
     res.json({ return_code: 'SUCCESS', message: 'Category created successfully', data: created });
@@ -281,7 +285,7 @@ const updateCategory = async (req, res) => {
     const id = parseInt(req.params.id);
     if (!id || isNaN(id)) return res.json({ return_code: 'INVALID_ID', message: 'Invalid category ID' });
 
-    const { name, description, position, is_required } = req.body;
+    const { name, description, position, is_required, image_url, image_url_2, image_url_3, image_url_4 } = req.body;
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return res.json({ return_code: 'INVALID_DATA', message: 'name is required' });
     }
@@ -289,7 +293,11 @@ const updateCategory = async (req, res) => {
     const updated = await menuModel.updateCategory(
       id, name.trim(), description ? description.trim() : null,
       position !== undefined ? parseInt(position) : 0,
-      is_required === true || is_required === 'true'
+      is_required === true || is_required === 'true',
+      image_url ? image_url.trim() : null,
+      image_url_2 ? image_url_2.trim() : null,
+      image_url_3 ? image_url_3.trim() : null,
+      image_url_4 ? image_url_4.trim() : null
     );
     res.json({ return_code: 'SUCCESS', message: 'Category updated successfully', data: updated });
   } catch (error) {
@@ -329,6 +337,26 @@ const updateMenuItem = async (req, res) => {
   }
 };
 
+// ===== REORDER CATEGORIES =====
+const reorderCategories = async (req, res) => {
+  try {
+    const updates = req.body;
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return res.json({ return_code: 'INVALID_DATA', message: 'Expected an array of {id, position}' });
+    }
+    for (const u of updates) {
+      if (!u.id || u.position === undefined) {
+        return res.json({ return_code: 'INVALID_DATA', message: 'Each item must have id and position' });
+      }
+    }
+    await menuModel.updateCategoryPositions(updates);
+    res.json({ return_code: 'SUCCESS', message: 'Order saved' });
+  } catch (error) {
+    console.error('Error reordering categories:', error);
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not save order' });
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the routes file
 module.exports = {
@@ -340,5 +368,6 @@ module.exports = {
   createCategory,
   createMenuItem,
   updateCategory,
-  updateMenuItem
+  updateMenuItem,
+  reorderCategories
 };

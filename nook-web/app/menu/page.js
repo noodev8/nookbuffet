@@ -10,7 +10,9 @@ export default function MenuPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const getCategoryImage = (categoryName, position = 0) => {
+  const getCategoryImage = (section, position = 0) => {
+    const customImages = [section.image_url, section.image_url_2, section.image_url_3, section.image_url_4];
+    if (customImages[position]) return customImages[position];
     const imageArrays = {
       'Sandwiches': ['/assets/sandwiches.png', '/assets/nook.jpg', '/assets/sandwiches2.png', '/assets/sandwiches3.png'],
       'Wraps': ['/assets/wraps.png', '/assets/wraps2.png', '/assets/wraps3.png', '/assets/wraps4.png'],
@@ -20,8 +22,7 @@ export default function MenuPage() {
       'Cake': ['/assets/cake3.png', '/assets/cake4.png','/assets/cake.png', '/assets/cake2.png'],
       'Continental Tray': ['/assets/savoury.png', '/assets/food2.png', '/assets/nook.jpg', '/assets/sandwiches.png'],
     };
-
-    const images = imageArrays[categoryName] || ['/assets/savoury.png', '/assets/food2.png', '/assets/nook.jpg', '/assets/sandwiches.png'];
+    const images = imageArrays[section.name] || ['/assets/savoury.png', '/assets/food2.png', '/assets/nook.jpg', '/assets/sandwiches.png'];
     return images[position] || images[0];
   };
 
@@ -112,7 +113,7 @@ export default function MenuPage() {
                     {[0, 1, 2, 3].map((index) => (
                       <Image
                         key={index}
-                        src={getCategoryImage(section.name, index)}
+                        src={getCategoryImage(section, index)}
                         alt={`${section.name} - Image ${index + 1}`}
                         className={`menu-image ${index === 3 ? 'fourth-image' : ''}`}
                         width={300}

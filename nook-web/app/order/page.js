@@ -85,7 +85,9 @@ function OrderPageContent() {
     return true;
   };
 
-  const getCategoryImage = (categoryName, position = 0) => {
+  const getCategoryImage = (section, position = 0) => {
+    const customImages = [section.image_url, section.image_url_2, section.image_url_3, section.image_url_4];
+    if (customImages[position]) return customImages[position];
     const imageArrays = {
       // Adult Buffet Categories (multiple images for grid)
       'Sandwiches': ['/assets/sandwiches.png', '/assets/nook.jpg', '/assets/sandwiches2.png', '/assets/sandwiches3.png'],
@@ -101,8 +103,7 @@ function OrderPageContent() {
       'Biscuits & Cakes': ['/assets/kidscake.png'],
       'Crisps': ['/assets/kidscrisps.png'],
     };
-
-    const images = imageArrays[categoryName] || ['/assets/savoury.png', '/assets/food2.png', '/assets/nook.jpg', '/assets/sandwiches.png'];
+    const images = imageArrays[section.name] || ['/assets/savoury.png', '/assets/food2.png', '/assets/nook.jpg', '/assets/sandwiches.png'];
     return images[position] || images[0];
   };
 
@@ -367,7 +368,7 @@ function OrderPageContent() {
                       <div className="section-content-with-image">
                         <div className="section-image-left">
                           <Image
-                            src={getCategoryImage(section.name, 0)}
+                            src={getCategoryImage(section, 0)}
                             alt={section.name}
                             className="section-single-image"
                             width={400}
@@ -514,7 +515,7 @@ function OrderPageContent() {
                           {[0, 1, 2, 3].map((index) => (
                             <Image
                               key={index}
-                              src={getCategoryImage(section.name, index)}
+                              src={getCategoryImage(section, index)}
                               alt={`${section.name} - Image ${index + 1}`}
                               className={`section-image-item ${index === 3 ? 'hide-on-mobile' : ''}`}
                               width={300}

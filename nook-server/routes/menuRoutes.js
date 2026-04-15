@@ -73,6 +73,9 @@ router.get('/manage/categories', verifyToken, checkRole(['admin', 'manager']), m
 // ===== ROUTE 5: CREATE A NEW CATEGORY (PROTECTED) =====
 router.post('/manage/categories', verifyToken, checkRole(['admin', 'manager']), menuController.createCategory);
 
+// ===== ROUTE 5b: REORDER CATEGORIES (PROTECTED) - must be before /:id =====
+router.patch('/manage/categories/reorder', verifyToken, checkRole(['admin', 'manager']), menuController.reorderCategories);
+
 // ===== ROUTE 6: UPDATE AN EXISTING CATEGORY (PROTECTED) =====
 router.patch('/manage/categories/:id', verifyToken, checkRole(['admin', 'manager']), menuController.updateCategory);
 
