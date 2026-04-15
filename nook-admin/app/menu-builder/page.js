@@ -434,7 +434,9 @@ export default function MenuBuilderPage() {
       return c;
     });
 
+    const scrollY = window.scrollY;
     setAllCategories(sortCategories(updated));
+    requestAnimationFrame(() => window.scrollTo(0, scrollY));
 
     try {
       await fetch(`${apiUrl}/api/menu/manage/categories/reorder`, {

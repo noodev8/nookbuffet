@@ -106,10 +106,10 @@ router.get('/:id', verifyToken, checkRole(['staff', 'admin', 'manager']), orderC
 router.post('/', orderController.createOrder);
 
 // ===== ROUTE: UPDATE ORDER STATUS (PROTECTED) =====
-// When someone PATCHes /api/orders/:id/status, run the updateOrderStatus function
-// PATCH is used because its updating existing data
-// All authenticated users (staff, admin, manager) can update order status
 router.patch('/:id/status', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.updateOrderStatus);
+
+// ===== ROUTE: UPDATE STAFF NOTES (PROTECTED) =====
+router.patch('/:id/staff-notes', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.updateStaffNotes);
 
 // Export the router so server.js can use it
 module.exports = router;

@@ -352,13 +352,31 @@ const getOrderById = async (req, res) => {
   }
 };
 
+// ===== UPDATE STAFF NOTES =====
+const updateStaffNotes = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    if (!orderId || isNaN(orderId)) {
+      return res.json({ return_code: 'INVALID_ID', message: 'Invalid order ID' });
+    }
+    const { staff_notes } = req.body;
+    const updated = await orderModel.updateStaffNotes(orderId, staff_notes);
+    if (!updated) return res.json({ return_code: 'NOT_FOUND', message: 'Order not found' });
+    res.json({ return_code: 'SUCCESS', message: 'Staff notes updated', data: updated });
+  } catch (error) {
+    console.error('Error updating staff notes:', error);
+    res.json({ return_code: 'SERVER_ERROR', message: 'Failed to update staff notes' });
+  }
+};
+
 // Export the functions so routes can use them
 module.exports = {
   createOrder,
   getAllOrders,
   getOrderById,
   updateOrderStatus,
-  getEarliestOrderDate
+  getEarliestOrderDate,
+  updateStaffNotes
 };
 
 

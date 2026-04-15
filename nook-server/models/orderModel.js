@@ -244,7 +244,7 @@ const getAllOrders = async (branchId = null) => {
     SELECT
       o.id, o.order_number, o.customer_email, o.customer_phone,
       o.fulfillment_type, o.fulfillment_address, o.fulfillment_date, o.fulfillment_time,
-      o.total_price, o.status, o.payment_status, o.payment_method, o.notes,
+      o.total_price, o.status, o.payment_status, o.payment_method, o.notes, o.staff_notes,
       o.created_at, o.updated_at, o.branch_id, b.name as branch_name,
 
       -- Aggregate all buffets for this order into a JSON array
@@ -374,7 +374,7 @@ const getOrderById = async (orderId) => {
     SELECT
       o.id, o.order_number, o.customer_email, o.customer_phone,
       o.fulfillment_type, o.fulfillment_address, o.fulfillment_date, o.fulfillment_time,
-      o.total_price, o.status, o.payment_status, o.payment_method, o.notes,
+      o.total_price, o.status, o.payment_status, o.payment_method, o.notes, o.staff_notes,
       o.created_at, o.updated_at, o.branch_id, b.name as branch_name,
 
       -- Aggregate all buffets for this order into a JSON array
@@ -470,12 +470,12 @@ const getOrderById = async (orderId) => {
  * @param {number} customerId - The customer's ID from the JWT
  * @returns {array} All orders for that customer with complete details
  */
-const getOrdersByCustomerId = async (customerId) => {
+const getOrdersByCustomerId = async (customerId, customerEmail) => {
   const ordersSQL = `
     SELECT
       o.id, o.order_number, o.customer_email, o.customer_phone,
       o.fulfillment_type, o.fulfillment_address, o.fulfillment_date, o.fulfillment_time,
-      o.total_price, o.status, o.payment_status, o.payment_method, o.notes,
+      o.total_price, o.status, o.payment_status, o.payment_method, o.notes, o.staff_notes,
       o.created_at, o.updated_at, o.branch_id, b.name as branch_name,
 
       COALESCE(
@@ -553,11 +553,21 @@ const getOrdersByCustomerId = async (customerId) => {
     FROM orders o
     LEFT JOIN branches b ON o.branch_id = b.id
     WHERE o.customer_id = $1
+       OR o.customer_email = $2
     ORDER BY o.created_at DESC
   `;
 
-  const result = await query(ordersSQL, [customerId]);
+  const result = await query(ordersSQL, [customerId, customerEmail]);
   return result.rows;
+};
+
+// ===== UPDATE STAFF NOTES =====
+const updateStaffNotes = async (orderId, staffNotes) => {
+  const result = await query(
+    `UPDATE orders SET staff_notes = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, staff_notes`,
+    [staffNotes || null, orderId]
+  );
+  return result.rows[0];
 };
 
 // Export the functions so other files can use them
@@ -566,6 +576,7 @@ module.exports = {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
-  getOrdersByCustomerId
+  getOrdersByCustomerId,
+  updateStaffNotes
 };
 

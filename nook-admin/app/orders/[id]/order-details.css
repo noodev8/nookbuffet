@@ -538,3 +538,56 @@
     color: #333 !important;
   }
 }
+
+/* Staff Notes */
+.staff-notes-hint {
+  font-size: 0.85rem;
+  color: #718096;
+  margin: -0.5rem 0 1rem 0;
+}
+
+.staff-notes-textarea {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.staff-notes-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.staff-notes-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.staff-notes-save-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.staff-notes-save-btn:hover:not(:disabled) { background: #5a67d8; }
+.staff-notes-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.staff-notes-saved {
+  color: #38a169;
+  font-size: 0.9rem;
+  font-weight: 600;
+}

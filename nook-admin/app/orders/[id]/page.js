@@ -13,6 +13,9 @@ export default function OrderDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [staffNotes, setStaffNotes] = useState('');
+  const [staffNotesSaving, setStaffNotesSaving] = useState(false);
+  const [staffNotesSaved, setStaffNotesSaved] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -60,6 +63,7 @@ export default function OrderDetailsPage() {
 
         if (data.return_code === 'SUCCESS') {
           setOrder(data.data);
+          setStaffNotes(data.data.staff_notes || '');
         } else if (data.return_code === 'NOT_FOUND') {
           setError('Order not found');
         } else {
@@ -180,6 +184,32 @@ export default function OrderDetailsPage() {
     window.location.href = '/';
   };
 
+  const saveStaffNotes = async () => {
+    setStaffNotesSaving(true);
+    setStaffNotesSaved(false);
+    try {
+      const token = localStorage.getItem('admin_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      const response = await fetch(`${apiUrl}/api/orders/${orderId}/staff-notes`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ staff_notes: staffNotes })
+      });
+      const data = await response.json();
+      if (data.return_code === 'SUCCESS') {
+        setOrder(prev => ({ ...prev, staff_notes: staffNotes }));
+        setStaffNotesSaved(true);
+        setTimeout(() => setStaffNotesSaved(false), 3000);
+      } else {
+        alert('Failed to save notes: ' + data.message);
+      }
+    } catch (err) {
+      alert('Failed to save notes. Please try again.');
+    } finally {
+      setStaffNotesSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="order-details-container">
@@ -257,6 +287,25 @@ export default function OrderDetailsPage() {
           <button className="print-btn" onClick={handlePrint}>Print</button>
           <button className="done-btn" onClick={markOrderAsDone}>Mark as Done</button>
           <button className="cancel-btn" onClick={cancelOrder}>Cancel Order</button>
+        </div>
+
+        {/* Staff Notes */}
+        <div className="detail-section staff-notes-section">
+          <h3>Staff Notes</h3>
+          <p className="staff-notes-hint">These notes are visible to the customer in their order history.</p>
+          <textarea
+            className="staff-notes-textarea"
+            placeholder="Add a note for the customer, e.g. &quot;We have swapped your wraps for sandwiches today&quot;"
+            value={staffNotes}
+            onChange={e => setStaffNotes(e.target.value)}
+            rows={4}
+          />
+          <div className="staff-notes-actions">
+            <button className="staff-notes-save-btn" onClick={saveStaffNotes} disabled={staffNotesSaving}>
+              {staffNotesSaving ? 'Saving...' : 'Save Note'}
+            </button>
+            {staffNotesSaved && <span className="staff-notes-saved">Saved</span>}
+          </div>
         </div>
 
         {/* Customer Details */}

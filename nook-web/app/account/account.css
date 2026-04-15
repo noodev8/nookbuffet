@@ -214,6 +214,30 @@
   font-size: 0.8rem;
 }
 
+/* Staff note on order card */
+.order-staff-note {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 1.5rem;
+  background: rgba(255, 220, 100, 0.08);
+  border-top: 1px solid rgba(255, 220, 100, 0.2);
+}
+
+.order-staff-note-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #e0b84a;
+}
+
+.order-staff-note-text {
+  font-size: 0.95rem;
+  color: #f0d88a;
+  line-height: 1.5;
+}
+
 /* Order card footer with reorder button */
 .order-card-footer {
   padding: 1rem 1.5rem;

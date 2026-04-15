@@ -232,9 +232,10 @@ const updateProfile = async (req, res) => {
 const getMyOrders = async (req, res) => {
   try {
     const customerId = req.user.id;
+    const customerEmail = req.user.email;
 
     // Fetch all orders for this customer from the database
-    const orders = await orderModel.getOrdersByCustomerId(customerId);
+    const orders = await orderModel.getOrdersByCustomerId(customerId, customerEmail);
 
     return res.json({
       return_code: 'SUCCESS',

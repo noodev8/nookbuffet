@@ -216,6 +216,12 @@ export default function AccountPage() {
                           <span>{orderedDate}</span>
                         </div>
                       </div>
+                      {order.staff_notes && (
+                        <div className="order-staff-note">
+                          <span className="order-staff-note-label">Note from us:</span>
+                          <span className="order-staff-note-text">{order.staff_notes}</span>
+                        </div>
+                      )}
                       <div className="order-card-footer">
                         <button className="order-reorder-button" onClick={() => handleReorder(order)}>
                           Reorder
