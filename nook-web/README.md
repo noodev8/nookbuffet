@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Nook Web
 
-## Getting Started
+The customer-facing website for Nook Buffet. This is what customers use to browse the menu, build their order, and pay.
 
-First, run the development server:
+## What it does
+
+Lets customers pick a buffet, choose their food, add upgrades, and check out. They can also create an account to view their order history and reorder.
+
+## Tech
+
+- Next.js (App Router)
+- React
+- Stripe for payments
+- Tailwind CSS
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd nook-web
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create a `.env.local` file with your API URL and Stripe key:
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```
+NEXT_PUBLIC_API_URL=http://localhost:3013
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_...
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Dev
+npm run dev
 
-## Learn More
+# Production build
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+Runs on port 3000 by default.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Pages
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Page | What it does |
+|---|---|
+| `/` | Home page |
+| `/menu` | Full menu display |
+| `/select-buffet` | Pick a buffet type and location |
+| `/order` | Build your buffet order |
+| `/upgrade` | Add upgrades to your order |
+| `/basket` | Review your order |
+| `/checkout` | Pay and confirm |
+| `/account` | Order history and profile |
+| `/login` | Customer login |
+| `/register` | Create an account |
+| `/about` | About page |
+| `/contact` | Contact form |
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The server (`nook-server`) needs to be running for anything to work. Make sure `NEXT_PUBLIC_API_URL` points to it.
