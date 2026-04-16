@@ -14,7 +14,7 @@ export default function BranchesPage() {
   // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingBranch, setEditingBranch] = useState(null);
-  const [formData, setFormData] = useState({ deliveryTimeStart: '', deliveryTimeEnd: '' });
+  const [formData, setFormData] = useState({ deliveryTimeStart: '', deliveryTimeEnd: '', deliveryRadius: '' });
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -68,7 +68,8 @@ export default function BranchesPage() {
     setEditingBranch(branch);
     setFormData({
       deliveryTimeStart: branch.delivery_time_start || '09:00',
-      deliveryTimeEnd: branch.delivery_time_end || '10:00'
+      deliveryTimeEnd: branch.delivery_time_end || '10:00',
+      deliveryRadius: branch.delivery_radius_miles ?? 7
     });
     setFormError('');
     setSuccessMessage('');
@@ -80,7 +81,7 @@ export default function BranchesPage() {
     setFormError('');
   };
 
-  const handleSaveTimeslot = async (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     setFormLoading(true);
     setFormError('');
@@ -88,29 +89,35 @@ export default function BranchesPage() {
     try {
       const token = localStorage.getItem('admin_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 
-      const response = await fetch(`${apiUrl}/api/branches/${editingBranch.id}/timeslot`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
+      const [timeslotRes, radiusRes] = await Promise.all([
+        fetch(`${apiUrl}/api/branches/${editingBranch.id}/timeslot`, {
+          method: 'PUT', headers,
+          body: JSON.stringify({ deliveryTimeStart: formData.deliveryTimeStart, deliveryTimeEnd: formData.deliveryTimeEnd })
+        }),
+        fetch(`${apiUrl}/api/branches/${editingBranch.id}/delivery-radius`, {
+          method: 'PATCH', headers,
+          body: JSON.stringify({ deliveryRadius: formData.deliveryRadius })
+        })
+      ]);
 
-      const data = await response.json();
+      const [timeslotData, radiusData] = await Promise.all([timeslotRes.json(), radiusRes.json()]);
 
-      if (data.return_code === 'SUCCESS') {
+      if (timeslotData.return_code === 'SUCCESS' && radiusData.return_code === 'SUCCESS') {
         setShowEditModal(false);
-        setSuccessMessage(`Timeslot for ${editingBranch.name} updated successfully`);
+        setSuccessMessage(`Delivery radius and timeslots updated for ${editingBranch.name}`);
         fetchBranches();
         setTimeout(() => setSuccessMessage(''), 4000);
       } else {
-        setFormError(data.message || 'Failed to update timeslot');
+        const errorMsg = timeslotData.return_code !== 'SUCCESS'
+          ? `Timeslot: ${timeslotData.message}`
+          : `Radius: ${radiusData.message}`;
+        setFormError(errorMsg || 'Failed to save changes');
       }
     } catch (err) {
-      console.error('Error updating timeslot:', err);
-      setFormError('Failed to update timeslot. Please try again.');
+      console.error('Error saving branch:', err);
+      setFormError('Failed to save. Please try again.');
     } finally {
       setFormLoading(false);
     }
@@ -185,10 +192,14 @@ export default function BranchesPage() {
                     {formatTime(branch.delivery_time_start)} – {formatTime(branch.delivery_time_end)}
                   </span>
                 </div>
+                <div className="timeslot-display">
+                  <span className="timeslot-label">Delivery Radius:</span>
+                  <span className="timeslot-value">{branch.delivery_radius_miles ?? 7} miles</span>
+                </div>
               </div>
               <div className="branch-actions">
                 <button className="edit-timeslot-button" onClick={() => handleEditClick(branch)}>
-                  Edit Timeslot
+                  Edit
                 </button>
               </div>
             </div>
@@ -200,10 +211,10 @@ export default function BranchesPage() {
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Edit Timeslot — {editingBranch.name}</h2>
+              <h2>Edit — {editingBranch.name}</h2>
               <button className="close-button" onClick={() => setShowEditModal(false)}>×</button>
             </div>
-            <form onSubmit={handleSaveTimeslot} className="timeslot-form">
+            <form onSubmit={handleSave} className="timeslot-form">
               {formError && <div className="form-error">{formError}</div>}
               <p className="form-hint">
                 Customers in this branch's area will automatically be assigned this delivery window.
@@ -211,33 +222,27 @@ export default function BranchesPage() {
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="deliveryTimeStart">Start Time</label>
-                  <input
-                    type="time"
-                    id="deliveryTimeStart"
-                    name="deliveryTimeStart"
-                    value={formData.deliveryTimeStart}
-                    onChange={handleFormChange}
-                    required
-                  />
+                  <input type="time" id="deliveryTimeStart" name="deliveryTimeStart"
+                    value={formData.deliveryTimeStart} onChange={handleFormChange} required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="deliveryTimeEnd">End Time</label>
-                  <input
-                    type="time"
-                    id="deliveryTimeEnd"
-                    name="deliveryTimeEnd"
-                    value={formData.deliveryTimeEnd}
-                    onChange={handleFormChange}
-                    required
-                  />
+                  <input type="time" id="deliveryTimeEnd" name="deliveryTimeEnd"
+                    value={formData.deliveryTimeEnd} onChange={handleFormChange} required />
                 </div>
+              </div>
+              <div className="form-group">
+                <label htmlFor="deliveryRadius">Delivery Radius (miles)</label>
+                <input type="number" id="deliveryRadius" name="deliveryRadius"
+                  value={formData.deliveryRadius} onChange={handleFormChange}
+                  min="0.1" step="0.1" required />
               </div>
               <div className="form-actions">
                 <button type="button" className="cancel-button" onClick={() => setShowEditModal(false)} disabled={formLoading}>
                   Cancel
                 </button>
                 <button type="submit" className="submit-button" disabled={formLoading}>
-                  {formLoading ? 'Saving...' : 'Save Timeslot'}
+                  {formLoading ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>

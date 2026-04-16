@@ -167,10 +167,38 @@ const updateBranchTimeslot = async (req, res) => {
   }
 };
 
+// ===== UPDATE DELIVERY RADIUS =====
+const updateDeliveryRadius = async (req, res) => {
+  try {
+    const branchId = req.params.id;
+    const { deliveryRadius } = req.body;
+
+    if (!branchId || isNaN(branchId)) {
+      return res.json({ return_code: 'INVALID_ID', message: 'Invalid branch ID' });
+    }
+
+    const radius = parseFloat(deliveryRadius);
+    if (isNaN(radius) || radius <= 0) {
+      return res.json({ return_code: 'VALIDATION_ERROR', message: 'Delivery radius must be a positive number' });
+    }
+
+    const updated = await branchModel.updateDeliveryRadius(branchId, radius);
+    if (!updated) {
+      return res.json({ return_code: 'NOT_FOUND', message: 'Branch not found' });
+    }
+
+    res.json({ return_code: 'SUCCESS', message: 'Delivery radius updated', data: updated });
+  } catch (error) {
+    console.error('Error updating delivery radius:', error);
+    res.json({ return_code: 'SERVER_ERROR', message: 'Failed to update delivery radius' });
+  }
+};
+
 // Export the functions so routes can use them
 module.exports = {
   getAllBranches,
   findNearestBranch,
-  updateBranchTimeslot
+  updateBranchTimeslot,
+  updateDeliveryRadius
 };
 

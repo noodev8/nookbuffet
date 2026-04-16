@@ -67,5 +67,8 @@ router.post('/nearest', branchController.findNearestBranch);
 // PUT /api/branches/:id/timeslot  { deliveryTimeStart, deliveryTimeEnd }
 router.put('/:id/timeslot', verifyToken, checkRole(['manager']), branchController.updateBranchTimeslot);
 
+// PATCH /api/branches/:id/delivery-radius  { deliveryRadius }
+router.patch('/:id/delivery-radius', verifyToken, checkRole(['manager']), branchController.updateDeliveryRadius);
+
 module.exports = router;
 

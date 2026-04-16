@@ -93,9 +93,27 @@ const updateBranchTimeslot = async (branchId, deliveryTimeStart, deliveryTimeEnd
   return result.rows[0] || null;
 };
 
+/**
+ * Update a branch's delivery radius
+ * @param {number} branchId - The branch ID
+ * @param {number} radiusMiles - Delivery radius in miles
+ * @returns {object} - Updated branch data or null
+ */
+const updateDeliveryRadius = async (branchId, radiusMiles) => {
+  const sql = `
+    UPDATE branches
+    SET delivery_radius_miles = $1
+    WHERE id = $2
+    RETURNING id, name, delivery_radius_miles
+  `;
+  const result = await query(sql, [radiusMiles, branchId]);
+  return result.rows[0] || null;
+};
+
 module.exports = {
   getAllActiveBranches,
   getBranchById,
   findNearestBranch,
-  updateBranchTimeslot
+  updateBranchTimeslot,
+  updateDeliveryRadius
 };
