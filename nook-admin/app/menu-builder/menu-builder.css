@@ -300,12 +300,6 @@
 }
 .mb-drag-handle:active { cursor: grabbing; }
 
-/* Row being dragged over — drop target highlight */
-/* outline instead of border so there's no layout shift / scroll jump */
-.mb-drag-over .mb-existing-item {
-  outline: 2px dashed #6c7ae0;
-  background: #eef0fd;
-}
 
 /* ========================================
    SEARCH & FILTERS

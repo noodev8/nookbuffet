@@ -1,8 +1,95 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import './menu-builder.css';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// ===== SORTABLE CATEGORY ROW =====
+function SortableCategory({ c, editingCategory, isKids, webUrl, saveCategory, setEditingCategory, startEditCategory, saving, ImagePicker }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: c.id,
+    disabled: editingCategory?.id === c.id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 10 : 'auto',
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {editingCategory?.id === c.id ? (
+        <form className="mb-edit-form" onSubmit={saveCategory}>
+          <div className="mb-fields">
+            <div className="mb-field">
+              <label>Name *</label>
+              <input className="mb-input" type="text" value={editingCategory.name}
+                onChange={e => setEditingCategory(p => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div className="mb-field">
+              <label>Description</label>
+              <input className="mb-input" type="text" value={editingCategory.description || ''}
+                onChange={e => setEditingCategory(p => ({ ...p, description: e.target.value }))} />
+            </div>
+            <div className="mb-field mb-field-check">
+              <label>
+                <input type="checkbox" checked={editingCategory.is_required === true}
+                  onChange={e => setEditingCategory(p => ({ ...p, is_required: e.target.checked }))} />
+                Required category
+              </label>
+            </div>
+            <div className="mb-field mb-field-full">
+              <label>Category Image{isKids ? '' : 's (4 slots shown on the website)'}</label>
+              <div className={isKids ? '' : 'mb-img-grid'}>
+                <ImagePicker label="Image 1" value={editingCategory.image_url} onChange={v => setEditingCategory(p => ({ ...p, image_url: v }))} />
+                {!isKids && <ImagePicker label="Image 2" value={editingCategory.image_url_2} onChange={v => setEditingCategory(p => ({ ...p, image_url_2: v }))} />}
+                {!isKids && <ImagePicker label="Image 3" value={editingCategory.image_url_3} onChange={v => setEditingCategory(p => ({ ...p, image_url_3: v }))} />}
+                {!isKids && <ImagePicker label="Image 4" value={editingCategory.image_url_4} onChange={v => setEditingCategory(p => ({ ...p, image_url_4: v }))} />}
+              </div>
+            </div>
+          </div>
+          <div className="mb-edit-actions">
+            <button className="mb-submit mb-submit-sm" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+            <button className="mb-cancel-btn" type="button" onClick={() => setEditingCategory(null)}>Cancel</button>
+          </div>
+        </form>
+      ) : (
+        <div className="mb-existing-item">
+          <span className="mb-drag-handle" {...attributes} {...listeners} title="Drag to reorder">::</span>
+          <div className="mb-thumb-strip">
+            {(isKids ? [c.image_url] : [c.image_url, c.image_url_2, c.image_url_3, c.image_url_4]).map((img, i) =>
+              img
+                ? <img key={i} draggable={false} src={`${webUrl}${img}`} alt={`${c.name} ${i + 1}`} className="mb-img-thumb" />
+                : <div key={i} className="mb-img-thumb mb-img-thumb-empty" />
+            )}
+          </div>
+          <div className="mb-existing-info">
+            <span className="mb-existing-name">{c.name}</span>
+            {c.is_required && <span className="mb-badge mb-badge-required">Required</span>}
+          </div>
+          <button className="mb-edit-btn" onClick={() => startEditCategory(c)}>Edit</button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MenuBuilderPage() {
   const router = useRouter();
@@ -27,9 +114,11 @@ export default function MenuBuilderPage() {
   const [catFilterVersion, setCatFilterVersion] = useState('');
   const [catFilterBranch, setCatFilterBranch] = useState('');
 
-  // Drag-to-reorder
-  const dragId = useRef(null);
-  const dragCounters = useRef({});
+  // Drag-to-reorder sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
+  );
 
   // Item filters
   const [itemSearch, setItemSearch] = useState('');
@@ -390,60 +479,28 @@ export default function MenuBuilderPage() {
   const sortCategories = (cats) =>
     [...cats].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
 
-  const onDragStart = (e, catId) => {
-    dragId.current = catId;
-    e.dataTransfer.effectAllowed = 'move';
-  };
+  const handleDragEnd = async ({ active, over }) => {
+    if (!over || active.id === over.id) return;
 
-  const onDragOver = (e) => { e.preventDefault(); };
-
-  const onDragEnter = (e, catId) => {
-    e.preventDefault();
-    dragCounters.current[catId] = (dragCounters.current[catId] || 0) + 1;
-    if (dragCounters.current[catId] === 1) {
-      e.currentTarget.classList.add('mb-drag-over');
-    }
-  };
-
-  const onDragLeave = (e, catId) => {
-    dragCounters.current[catId] = Math.max(0, (dragCounters.current[catId] || 1) - 1);
-    if (dragCounters.current[catId] === 0) {
-      e.currentTarget.classList.remove('mb-drag-over');
-    }
-  };
-
-  const onDragEnd = () => { dragId.current = null; };
-
-  const onDrop = async (e, targetCat) => {
-    e.preventDefault();
-    dragCounters.current[targetCat.id] = 0;
-    e.currentTarget.classList.remove('mb-drag-over');
-    const fromId = dragId.current;
-    dragId.current = null;
-    if (!fromId || fromId === targetCat.id) return;
-
-    const fromCat = allCategories.find(c => c.id === fromId);
-    if (!fromCat) return;
+    const fromCat = allCategories.find(c => c.id === active.id);
+    const toCat = allCategories.find(c => c.id === over.id);
+    if (!fromCat || !toCat) return;
 
     const fromPos = fromCat.position;
-    const toPos = targetCat.position;
+    const toPos = toCat.position;
 
-    const updated = allCategories.map(c => {
-      if (c.id === fromId) return { ...c, position: toPos };
-      if (c.id === targetCat.id) return { ...c, position: fromPos };
+    setAllCategories(prev => sortCategories(prev.map(c => {
+      if (c.id === active.id) return { ...c, position: toPos };
+      if (c.id === over.id) return { ...c, position: fromPos };
       return c;
-    });
-
-    const scrollY = window.scrollY;
-    setAllCategories(sortCategories(updated));
-    requestAnimationFrame(() => window.scrollTo(0, scrollY));
+    })));
 
     try {
       await fetch(`${apiUrl}/api/menu/manage/categories/reorder`, {
         method: 'PATCH', headers: authHeaders(),
         body: JSON.stringify([
-          { id: fromId, position: toPos },
-          { id: targetCat.id, position: fromPos }
+          { id: active.id, position: toPos },
+          { id: over.id, position: fromPos },
         ])
       });
     } catch { /* silently fail — UI already updated */ }
@@ -695,70 +752,24 @@ export default function MenuBuilderPage() {
                             : <span className="mb-badge mb-badge-all">All branches</span>}
                           <span className="mb-drag-hint">Drag to reorder</span>
                         </div>
-                        {groupCats.map(c => (
-                          <div key={c.id}
-                            draggable={editingCategory?.id !== c.id}
-                            onDragStart={e => onDragStart(e, c.id)}
-                            onDragOver={onDragOver}
-                            onDragEnter={e => onDragEnter(e, c.id)}
-                            onDragLeave={e => onDragLeave(e, c.id)}
-                            onDragEnd={onDragEnd}
-                            onDrop={e => onDrop(e, c)}
-                          >
-                            {editingCategory?.id === c.id ? (
-                              <form className="mb-edit-form" onSubmit={saveCategory}>
-                                <div className="mb-fields">
-                                  <div className="mb-field">
-                                    <label>Name *</label>
-                                    <input className="mb-input" type="text" value={editingCategory.name}
-                                      onChange={e => setEditingCategory(p => ({ ...p, name: e.target.value }))} />
-                                  </div>
-                                  <div className="mb-field">
-                                    <label>Description</label>
-                                    <input className="mb-input" type="text" value={editingCategory.description || ''}
-                                      onChange={e => setEditingCategory(p => ({ ...p, description: e.target.value }))} />
-                                  </div>
-                                  <div className="mb-field mb-field-check">
-                                    <label>
-                                      <input type="checkbox" checked={editingCategory.is_required === true}
-                                        onChange={e => setEditingCategory(p => ({ ...p, is_required: e.target.checked }))} />
-                                      Required category
-                                    </label>
-                                  </div>
-                                  <div className="mb-field mb-field-full">
-                                    <label>Category Image{isKids ? '' : 's (4 slots shown on the website)'}</label>
-                                    <div className={isKids ? '' : 'mb-img-grid'}>
-                                      <ImagePicker label="Image 1" value={editingCategory.image_url} onChange={v => setEditingCategory(p => ({ ...p, image_url: v }))} />
-                                      {!isKids && <ImagePicker label="Image 2" value={editingCategory.image_url_2} onChange={v => setEditingCategory(p => ({ ...p, image_url_2: v }))} />}
-                                      {!isKids && <ImagePicker label="Image 3" value={editingCategory.image_url_3} onChange={v => setEditingCategory(p => ({ ...p, image_url_3: v }))} />}
-                                      {!isKids && <ImagePicker label="Image 4" value={editingCategory.image_url_4} onChange={v => setEditingCategory(p => ({ ...p, image_url_4: v }))} />}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="mb-edit-actions">
-                                  <button className="mb-submit mb-submit-sm" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-                                  <button className="mb-cancel-btn" type="button" onClick={() => setEditingCategory(null)}>Cancel</button>
-                                </div>
-                              </form>
-                            ) : (
-                              <div className="mb-existing-item">
-                                <span className="mb-drag-handle" title="Drag to reorder">::</span>
-                                <div className="mb-thumb-strip">
-                                  {(isKids ? [c.image_url] : [c.image_url, c.image_url_2, c.image_url_3, c.image_url_4]).map((img, i) =>
-                                    img
-                                      ? <img key={i} draggable={false} src={`${webUrl}${img}`} alt={`${c.name} ${i + 1}`} className="mb-img-thumb" />
-                                      : <div key={i} className="mb-img-thumb mb-img-thumb-empty" />
-                                  )}
-                                </div>
-                                <div className="mb-existing-info">
-                                  <span className="mb-existing-name">{c.name}</span>
-                                  {c.is_required && <span className="mb-badge mb-badge-required">Required</span>}
-                                </div>
-                                <button className="mb-edit-btn" onClick={() => startEditCategory(c)}>Edit</button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                          <SortableContext items={groupCats.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                            {groupCats.map(c => (
+                              <SortableCategory
+                                key={c.id}
+                                c={c}
+                                editingCategory={editingCategory}
+                                isKids={isKids}
+                                webUrl={webUrl}
+                                saveCategory={saveCategory}
+                                setEditingCategory={setEditingCategory}
+                                startEditCategory={startEditCategory}
+                                saving={saving}
+                                ImagePicker={ImagePicker}
+                              />
+                            ))}
+                          </SortableContext>
+                        </DndContext>
                       </div>
                     );
                   });
