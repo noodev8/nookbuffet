@@ -247,6 +247,119 @@
 .mb-item-inactive { opacity: 0.55; }
 
 /* ========================================
+   UPGRADES TAB
+   ======================================== */
+.mb-upgrade-block {
+  margin-bottom: 0.75rem;
+  border: 1px solid #e0e4ff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mb-upgrade-panel {
+  background: #f5f6ff;
+  border-top: 1px solid #e0e4ff;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.mb-upgrade-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mb-upgrade-section-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #667eea;
+}
+
+/* Buffet version link row */
+.mb-upgrade-bv-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.75rem;
+  background: white;
+  border-radius: 7px;
+  border: 1px solid #e8e8f0;
+}
+
+.mb-link-toggle {
+  margin-left: auto;
+  padding: 0.3rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid;
+  transition: all 0.2s;
+}
+.mb-link-toggle.linked   { background: #fee2e2; border-color: #f87171; color: #dc2626; }
+.mb-link-toggle.linked:hover:not(:disabled) { background: #dc2626; color: white; }
+.mb-link-toggle.unlinked { background: #d1fae5; border-color: #34d399; color: #059669; }
+.mb-link-toggle.unlinked:hover:not(:disabled) { background: #059669; color: white; }
+.mb-link-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Category block */
+.mb-upgrade-cat-block {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #dde1f7;
+  overflow: hidden;
+  margin-bottom: 0.4rem;
+}
+
+.mb-ucat-row { border-radius: 0; background: #f0f2ff; }
+
+/* Items panel within a category */
+.mb-upgrade-items-panel {
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background: #fafafa;
+  border-top: 1px solid #e8eaff;
+}
+
+/* Inline add forms */
+.mb-inline-add-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0.5rem;
+  background: #f0f2ff;
+  border-radius: 6px;
+  margin-top: 0.25rem;
+}
+
+.mb-inline-add-form--cat {
+  background: #e8eaff;
+  padding: 0.75rem;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: 0.5rem;
+}
+
+.mb-inline-add-form .mb-input { flex: 1; min-width: 140px; }
+
+.mb-inline-add-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #667eea;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ========================================
    LOGOUT
    ======================================== */
 .logout-button-bottom {

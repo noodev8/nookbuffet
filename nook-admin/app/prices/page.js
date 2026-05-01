@@ -17,6 +17,8 @@ export default function PricesManagementPage() {
   const [editBranchId, setEditBranchId] = useState('');
   const [saving, setSaving] = useState(false);
 
+
+
   // Auth check + fetch branches on mount
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -244,6 +246,7 @@ export default function PricesManagementPage() {
                 </button>
               </div>
             )}
+
           </div>
         ))}
       </div>

@@ -98,7 +98,7 @@ export default function MenuBuilderPage() {
   const [buffetVersions, setBuffetVersions] = useState([]);
   const [allCategories, setAllCategories] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
-  const [activeTab, setActiveTab] = useState('versions'); // 'versions' | 'categories' | 'items'
+  const [activeTab, setActiveTab] = useState('versions'); // 'versions' | 'categories' | 'items' | 'upgrades'
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -124,6 +124,20 @@ export default function MenuBuilderPage() {
   const [itemSearch, setItemSearch] = useState('');
   const [itemFilterVersion, setItemFilterVersion] = useState('');
   const [itemFilterCategory, setItemFilterCategory] = useState('');
+
+  // ===== UPGRADES STATE =====
+  const [allUpgrades, setAllUpgrades] = useState([]);
+  const [upgradesLoading, setUpgradesLoading] = useState(false);
+  const [expandedUpgradeId, setExpandedUpgradeId] = useState(null);
+  const [editingUpgrade, setEditingUpgrade] = useState(null); // { id, name, description, price_per_person }
+  const [newUpgrade, setNewUpgrade] = useState({ name: '', description: '', price: '' });
+  const [upgradeBuffetLinks, setUpgradeBuffetLinks] = useState({}); // { [upgradeId]: [{id,title,is_linked}] }
+  const [togglingBufLink, setTogglingBufLink] = useState(null); // 'upgradeId_buffetId'
+  const [expandedCatId, setExpandedCatId] = useState(null);
+  const [editingUCat, setEditingUCat] = useState(null); // { id, upgrade_id, name, description, num_choices, is_required }
+  const [newUCat, setNewUCat] = useState({ upgradeId: null, name: '', description: '', numChoices: '', isRequired: false });
+  const [editingUItem, setEditingUItem] = useState(null); // { id, upgrade_category_id, name, description }
+  const [newUItem, setNewUItem] = useState({ catId: null, name: '', description: '' });
 
   // Buffet version form
   const [vTitle, setVTitle] = useState('');
@@ -470,6 +484,176 @@ export default function MenuBuilderPage() {
     } catch { alert('Failed to create menu item'); } finally { setSaving(false); }
   };
 
+  // ===== UPGRADE HELPERS =====
+  const loadUpgrades = async () => {
+    setUpgradesLoading(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage`, { headers: { 'Authorization': `Bearer ${token()}` } });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') setAllUpgrades(d.data || []);
+    } catch { /* silently fail */ }
+    finally { setUpgradesLoading(false); }
+  };
+
+  const loadUpgradeBuffetLinks = async (upgradeId) => {
+    if (upgradeBuffetLinks[upgradeId]) return;
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage/${upgradeId}/buffets`, { headers: { 'Authorization': `Bearer ${token()}` } });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') setUpgradeBuffetLinks(prev => ({ ...prev, [upgradeId]: d.data }));
+    } catch { /* silently fail */ }
+  };
+
+  const toggleExpandUpgrade = (id) => {
+    const opening = expandedUpgradeId !== id;
+    setExpandedUpgradeId(opening ? id : null);
+    setExpandedCatId(null);
+    setEditingUCat(null); setEditingUItem(null);
+    setNewUCat(p => ({ ...p, upgradeId: null }));
+    setNewUItem(p => ({ ...p, catId: null }));
+    if (opening) loadUpgradeBuffetLinks(id);
+  };
+
+  const toggleBufLink = async (upgradeId, buffetId, currentlyLinked) => {
+    const key = `${upgradeId}_${buffetId}`;
+    setTogglingBufLink(key);
+    try {
+      const method = currentlyLinked ? 'DELETE' : 'POST';
+      const res = await fetch(`${apiUrl}/api/upgrades/manage/buffet/${buffetId}/upgrade/${upgradeId}`, {
+        method, headers: { 'Authorization': `Bearer ${token()}` }
+      });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setUpgradeBuffetLinks(prev => ({
+          ...prev,
+          [upgradeId]: prev[upgradeId].map(bv => bv.id === buffetId ? { ...bv, is_linked: !currentlyLinked } : bv)
+        }));
+      }
+    } catch { /* silently fail */ }
+    finally { setTogglingBufLink(null); }
+  };
+
+  const submitUpgrade = async (e) => {
+    e.preventDefault();
+    if (!newUpgrade.name.trim()) { alert('Name is required'); return; }
+    if (!newUpgrade.price || isNaN(parseFloat(newUpgrade.price))) { alert('A valid price is required'); return; }
+    setSaving(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ name: newUpgrade.name.trim(), description: newUpgrade.description.trim() || null, price_per_person: parseFloat(newUpgrade.price) })
+      });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setAllUpgrades(prev => [...prev, d.data].sort((a, b) => a.name.localeCompare(b.name)));
+        setNewUpgrade({ name: '', description: '', price: '' });
+        showSuccess(`Upgrade "${d.data.name}" created!`);
+      } else { alert(d.message || 'Failed to create upgrade'); }
+    } catch { alert('Failed to create upgrade'); } finally { setSaving(false); }
+  };
+
+  const saveUpgrade = async (e) => {
+    e.preventDefault();
+    if (!editingUpgrade.name?.trim()) { alert('Name is required'); return; }
+    setSaving(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage/${editingUpgrade.id}`, {
+        method: 'PATCH', headers: authHeaders(),
+        body: JSON.stringify({ name: editingUpgrade.name.trim(), description: editingUpgrade.description?.trim() || null, price_per_person: parseFloat(editingUpgrade.price_per_person) })
+      });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setAllUpgrades(prev => prev.map(u => u.id === d.data.id ? { ...u, ...d.data } : u));
+        setEditingUpgrade(null);
+        showSuccess(`"${d.data.name}" updated!`);
+      } else { alert(d.message || 'Failed to update'); }
+    } catch { alert('Failed to update upgrade'); } finally { setSaving(false); }
+  };
+
+  const submitUCat = async (e) => {
+    e.preventDefault();
+    if (!newUCat.name.trim()) { alert('Category name is required'); return; }
+    setSaving(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage/${newUCat.upgradeId}/categories`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ name: newUCat.name.trim(), description: newUCat.description.trim() || null, num_choices: newUCat.numChoices ? parseInt(newUCat.numChoices) : null, is_required: newUCat.isRequired })
+      });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setAllUpgrades(prev => prev.map(u => u.id === newUCat.upgradeId ? { ...u, categories: [...u.categories, d.data] } : u));
+        setNewUCat(p => ({ ...p, name: '', description: '', numChoices: '', isRequired: false }));
+        showSuccess(`Category "${d.data.name}" created!`);
+      } else { alert(d.message || 'Failed to create category'); }
+    } catch { alert('Failed to create category'); } finally { setSaving(false); }
+  };
+
+  const saveUCat = async (e) => {
+    e.preventDefault();
+    if (!editingUCat.name?.trim()) { alert('Name is required'); return; }
+    setSaving(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage/categories/${editingUCat.id}`, {
+        method: 'PATCH', headers: authHeaders(),
+        body: JSON.stringify({ name: editingUCat.name.trim(), description: editingUCat.description?.trim() || null, num_choices: editingUCat.num_choices ? parseInt(editingUCat.num_choices) : null, is_required: editingUCat.is_required })
+      });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setAllUpgrades(prev => prev.map(u => u.id === d.data.upgrade_id
+          ? { ...u, categories: u.categories.map(c => c.id === d.data.id ? { ...c, ...d.data } : c) }
+          : u
+        ));
+        setEditingUCat(null);
+        showSuccess(`"${d.data.name}" updated!`);
+      } else { alert(d.message || 'Failed to update'); }
+    } catch { alert('Failed to update category'); } finally { setSaving(false); }
+  };
+
+  const submitUItem = async (e) => {
+    e.preventDefault();
+    if (!newUItem.name.trim()) { alert('Item name is required'); return; }
+    setSaving(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage/categories/${newUItem.catId}/items`, {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ name: newUItem.name.trim(), description: newUItem.description.trim() || null })
+      });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setAllUpgrades(prev => prev.map(u => ({
+          ...u,
+          categories: u.categories.map(c => c.id === newUItem.catId ? { ...c, items: [...c.items, d.data] } : c)
+        })));
+        setNewUItem(p => ({ ...p, name: '', description: '' }));
+        showSuccess(`Item "${d.data.name}" created!`);
+      } else { alert(d.message || 'Failed to create item'); }
+    } catch { alert('Failed to create item'); } finally { setSaving(false); }
+  };
+
+  const saveUItem = async (e) => {
+    e.preventDefault();
+    if (!editingUItem.name?.trim()) { alert('Name is required'); return; }
+    setSaving(true);
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage/items/${editingUItem.id}`, {
+        method: 'PATCH', headers: authHeaders(),
+        body: JSON.stringify({ name: editingUItem.name.trim(), description: editingUItem.description?.trim() || null })
+      });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setAllUpgrades(prev => prev.map(u => ({
+          ...u,
+          categories: u.categories.map(c => c.id === d.data.upgrade_category_id
+            ? { ...c, items: c.items.map(i => i.id === d.data.id ? { ...i, ...d.data } : i) }
+            : c
+          )
+        })));
+        setEditingUItem(null);
+        showSuccess(`"${d.data.name}" updated!`);
+      } else { alert(d.message || 'Failed to update'); }
+    } catch { alert('Failed to update item'); } finally { setSaving(false); }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
@@ -568,6 +752,9 @@ export default function MenuBuilderPage() {
         </button>
         <button className={`mb-tab ${activeTab === 'items' ? 'active' : ''}`} onClick={() => setActiveTab('items')}>
           Menu Items
+        </button>
+        <button className={`mb-tab ${activeTab === 'upgrades' ? 'active' : ''}`} onClick={() => { setActiveTab('upgrades'); if (allUpgrades.length === 0) loadUpgrades(); }}>
+          Upgrades
         </button>
       </div>
 
@@ -903,6 +1090,239 @@ export default function MenuBuilderPage() {
                       {item.dietary_info && <span className="mb-badge mb-badge-dietary">{item.dietary_info}</span>}
                       {!item.is_active && <span className="mb-badge mb-badge-inactive">Out of stock</span>}
                       <button className="mb-edit-btn" onClick={() => startEditItem(item)}>Edit</button>
+                    </div>
+                  )}
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      )}
+
+      {/* ===== UPGRADES TAB ===== */}
+      {activeTab === 'upgrades' && (
+        <div className="mb-card">
+          <h3 className="mb-card-title">Add New Upgrade</h3>
+          <form className="mb-form" onSubmit={submitUpgrade}>
+            <div className="mb-fields">
+              <div className="mb-field">
+                <label>Name *</label>
+                <input className="mb-input" type="text" placeholder="e.g. Continental"
+                  value={newUpgrade.name} onChange={e => setNewUpgrade(p => ({ ...p, name: e.target.value }))} />
+              </div>
+              <div className="mb-field">
+                <label>Price per person (£) *</label>
+                <input className="mb-input" type="number" step="0.01" min="0" placeholder="0.00"
+                  value={newUpgrade.price} onChange={e => setNewUpgrade(p => ({ ...p, price: e.target.value }))} />
+              </div>
+              <div className="mb-field">
+                <label>Description</label>
+                <input className="mb-input" type="text" placeholder="Optional"
+                  value={newUpgrade.description} onChange={e => setNewUpgrade(p => ({ ...p, description: e.target.value }))} />
+              </div>
+            </div>
+            <button className="mb-submit" type="submit" disabled={saving}>{saving ? 'Creating...' : 'Create Upgrade'}</button>
+          </form>
+
+          <div className="mb-existing">
+            <h4 className="mb-existing-title">Existing Upgrades</h4>
+            {upgradesLoading
+              ? <p className="mb-empty">Loading...</p>
+              : allUpgrades.length === 0
+              ? <p className="mb-empty">No upgrades yet</p>
+              : allUpgrades.map(upgrade => (
+                <div key={upgrade.id} className="mb-upgrade-block">
+                  {/* Upgrade row */}
+                  {editingUpgrade?.id === upgrade.id ? (
+                    <form className="mb-edit-form" onSubmit={saveUpgrade}>
+                      <div className="mb-fields">
+                        <div className="mb-field">
+                          <label>Name *</label>
+                          <input className="mb-input" type="text" value={editingUpgrade.name}
+                            onChange={e => setEditingUpgrade(p => ({ ...p, name: e.target.value }))} />
+                        </div>
+                        <div className="mb-field">
+                          <label>Price per person (£) *</label>
+                          <input className="mb-input" type="number" step="0.01" min="0" value={editingUpgrade.price_per_person}
+                            onChange={e => setEditingUpgrade(p => ({ ...p, price_per_person: e.target.value }))} />
+                        </div>
+                        <div className="mb-field">
+                          <label>Description</label>
+                          <input className="mb-input" type="text" value={editingUpgrade.description || ''}
+                            onChange={e => setEditingUpgrade(p => ({ ...p, description: e.target.value }))} />
+                        </div>
+                      </div>
+                      <div className="mb-edit-actions">
+                        <button className="mb-submit mb-submit-sm" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+                        <button className="mb-cancel-btn" type="button" onClick={() => setEditingUpgrade(null)}>Cancel</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="mb-existing-item">
+                      <span className="mb-existing-name">{upgrade.name}</span>
+                      <span className="mb-existing-detail">£{parseFloat(upgrade.price_per_person).toFixed(2)}/person</span>
+                      {upgrade.categories.length > 0 && <span className="mb-badge">{upgrade.categories.length} {upgrade.categories.length === 1 ? 'category' : 'categories'}</span>}
+                      <button className="mb-edit-btn" onClick={() => { setEditingUpgrade({ ...upgrade }); setExpandedUpgradeId(null); }}>Edit</button>
+                      <button className="mb-edit-btn" onClick={() => toggleExpandUpgrade(upgrade.id)}>
+                        {expandedUpgradeId === upgrade.id ? 'Collapse' : 'Manage'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Expanded upgrade panel */}
+                  {expandedUpgradeId === upgrade.id && (
+                    <div className="mb-upgrade-panel">
+
+                      {/* Buffet version links */}
+                      <div className="mb-upgrade-section">
+                        <h5 className="mb-upgrade-section-title">Available on buffet versions</h5>
+                        {!upgradeBuffetLinks[upgrade.id]
+                          ? <p className="mb-empty">Loading...</p>
+                          : upgradeBuffetLinks[upgrade.id].length === 0
+                          ? <p className="mb-empty">No buffet versions exist yet</p>
+                          : upgradeBuffetLinks[upgrade.id].map(bv => (
+                            <div key={bv.id} className="mb-upgrade-bv-row">
+                              <span className="mb-existing-name">{bv.title}</span>
+                              <button
+                                className={`mb-link-toggle ${bv.is_linked ? 'linked' : 'unlinked'}`}
+                                onClick={() => toggleBufLink(upgrade.id, bv.id, bv.is_linked)}
+                                disabled={togglingBufLink === `${upgrade.id}_${bv.id}`}
+                              >
+                                {togglingBufLink === `${upgrade.id}_${bv.id}` ? '...' : bv.is_linked ? 'Remove' : 'Add'}
+                              </button>
+                            </div>
+                          ))
+                        }
+                      </div>
+
+                      {/* Categories */}
+                      <div className="mb-upgrade-section">
+                        <h5 className="mb-upgrade-section-title">Categories</h5>
+                        {upgrade.categories.length === 0 && <p className="mb-empty">No categories yet — add one below</p>}
+                        {upgrade.categories.map(cat => (
+                          <div key={cat.id} className="mb-upgrade-cat-block">
+                            {editingUCat?.id === cat.id ? (
+                              <form className="mb-edit-form" onSubmit={saveUCat}>
+                                <div className="mb-fields">
+                                  <div className="mb-field">
+                                    <label>Name *</label>
+                                    <input className="mb-input" type="text" value={editingUCat.name}
+                                      onChange={e => setEditingUCat(p => ({ ...p, name: e.target.value }))} />
+                                  </div>
+                                  <div className="mb-field">
+                                    <label>Description</label>
+                                    <input className="mb-input" type="text" value={editingUCat.description || ''}
+                                      onChange={e => setEditingUCat(p => ({ ...p, description: e.target.value }))} />
+                                  </div>
+                                  <div className="mb-field">
+                                    <label>Max choices</label>
+                                    <input className="mb-input" type="number" min="1" placeholder="No limit"
+                                      value={editingUCat.num_choices || ''}
+                                      onChange={e => setEditingUCat(p => ({ ...p, num_choices: e.target.value }))} />
+                                  </div>
+                                  <div className="mb-field mb-field-check">
+                                    <label><input type="checkbox" checked={editingUCat.is_required}
+                                      onChange={e => setEditingUCat(p => ({ ...p, is_required: e.target.checked }))} /> Required</label>
+                                  </div>
+                                </div>
+                                <div className="mb-edit-actions">
+                                  <button className="mb-submit mb-submit-sm" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+                                  <button className="mb-cancel-btn" type="button" onClick={() => setEditingUCat(null)}>Cancel</button>
+                                </div>
+                              </form>
+                            ) : (
+                              <div className="mb-existing-item mb-ucat-row">
+                                <span className="mb-existing-name">{cat.name}</span>
+                                {cat.is_required && <span className="mb-badge mb-badge-required">Required</span>}
+                                {cat.num_choices && <span className="mb-badge">Max {cat.num_choices}</span>}
+                                <span className="mb-existing-detail">{cat.items.length} item{cat.items.length !== 1 ? 's' : ''}</span>
+                                <button className="mb-edit-btn" onClick={() => { setEditingUCat({ ...cat }); setExpandedCatId(null); }}>Edit</button>
+                                <button className="mb-edit-btn" onClick={() => { setExpandedCatId(expandedCatId === cat.id ? null : cat.id); setNewUItem(p => ({ ...p, catId: cat.id })); }}>
+                                  {expandedCatId === cat.id ? 'Collapse' : 'Items'}
+                                </button>
+                              </div>
+                            )}
+
+                            {/* Items within category */}
+                            {expandedCatId === cat.id && (
+                              <div className="mb-upgrade-items-panel">
+                                {cat.items.length === 0 && <p className="mb-empty">No items yet</p>}
+                                {cat.items.map(item => (
+                                  <div key={item.id}>
+                                    {editingUItem?.id === item.id ? (
+                                      <form className="mb-edit-form" onSubmit={saveUItem}>
+                                        <div className="mb-fields">
+                                          <div className="mb-field">
+                                            <label>Name *</label>
+                                            <input className="mb-input" type="text" value={editingUItem.name}
+                                              onChange={e => setEditingUItem(p => ({ ...p, name: e.target.value }))} />
+                                          </div>
+                                          <div className="mb-field">
+                                            <label>Description</label>
+                                            <input className="mb-input" type="text" value={editingUItem.description || ''}
+                                              onChange={e => setEditingUItem(p => ({ ...p, description: e.target.value }))} />
+                                          </div>
+                                        </div>
+                                        <div className="mb-edit-actions">
+                                          <button className="mb-submit mb-submit-sm" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+                                          <button className="mb-cancel-btn" type="button" onClick={() => setEditingUItem(null)}>Cancel</button>
+                                        </div>
+                                      </form>
+                                    ) : (
+                                      <div className="mb-existing-item">
+                                        <span className="mb-existing-name">{item.name}</span>
+                                        {item.description && <span className="mb-existing-detail">{item.description}</span>}
+                                        <button className="mb-edit-btn" onClick={() => setEditingUItem({ ...item })}>Edit</button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                                {/* Add item form */}
+                                <form className="mb-inline-add-form" onSubmit={submitUItem}>
+                                  <input className="mb-input" type="text" placeholder="New item name *"
+                                    value={newUItem.catId === cat.id ? newUItem.name : ''}
+                                    onChange={e => setNewUItem({ catId: cat.id, name: e.target.value, description: newUItem.catId === cat.id ? newUItem.description : '' })} />
+                                  <input className="mb-input" type="text" placeholder="Description (optional)"
+                                    value={newUItem.catId === cat.id ? newUItem.description : ''}
+                                    onChange={e => setNewUItem(p => ({ ...p, description: e.target.value }))} />
+                                  <button className="mb-submit mb-submit-sm" type="submit" disabled={saving || newUItem.catId !== cat.id}>Add Item</button>
+                                </form>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        {/* Add category form */}
+                        <form className="mb-inline-add-form mb-inline-add-form--cat" onSubmit={submitUCat}>
+                          <h6 className="mb-inline-add-title">Add Category</h6>
+                          <div className="mb-fields">
+                            <div className="mb-field">
+                              <input className="mb-input" type="text" placeholder="Category name *"
+                                value={newUCat.upgradeId === upgrade.id ? newUCat.name : ''}
+                                onChange={e => setNewUCat({ upgradeId: upgrade.id, name: e.target.value, description: newUCat.upgradeId === upgrade.id ? newUCat.description : '', numChoices: newUCat.upgradeId === upgrade.id ? newUCat.numChoices : '', isRequired: newUCat.upgradeId === upgrade.id ? newUCat.isRequired : false })} />
+                            </div>
+                            <div className="mb-field">
+                              <input className="mb-input" type="text" placeholder="Description (optional)"
+                                value={newUCat.upgradeId === upgrade.id ? newUCat.description : ''}
+                                onChange={e => setNewUCat(p => ({ ...p, description: e.target.value }))} />
+                            </div>
+                            <div className="mb-field">
+                              <input className="mb-input" type="number" min="1" placeholder="Max choices (optional)"
+                                value={newUCat.upgradeId === upgrade.id ? newUCat.numChoices : ''}
+                                onChange={e => setNewUCat(p => ({ ...p, numChoices: e.target.value }))} />
+                            </div>
+                            <div className="mb-field mb-field-check">
+                              <label>
+                                <input type="checkbox"
+                                  checked={newUCat.upgradeId === upgrade.id ? newUCat.isRequired : false}
+                                  onChange={e => setNewUCat(p => ({ ...p, isRequired: e.target.checked }))} />
+                                Required
+                              </label>
+                            </div>
+                          </div>
+                          <button className="mb-submit mb-submit-sm" type="submit" disabled={saving || newUCat.upgradeId !== upgrade.id}>Add Category</button>
+                        </form>
+                      </div>
                     </div>
                   )}
                 </div>
