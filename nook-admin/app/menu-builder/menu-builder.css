@@ -480,28 +480,198 @@
 /* Full-width field override for the image grid row */
 .mb-field-full { grid-column: 1 / -1; }
 
-/* Four-column grid of image slots */
-.mb-img-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+/* Stack image slots (4 per category) side by side compactly */
+.mb-img-slots-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
 }
 
-/* One slot: dropdown + preview stacked */
-.mb-img-slot { display: flex; flex-direction: column; gap: 0.4rem; }
-.mb-img-select { font-size: 0.82rem !important; padding: 0.35rem 0.5rem !important; }
-
-/* Preview inside a slot */
-.mb-img-preview {
-  width: 100%;
-  height: 80px;
-  object-fit: cover;
+/* ---- Compact trigger row ---- */
+.mb-img-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  background: #f0f2ff;
+  border: 1px solid #c5cdf7;
   border-radius: 8px;
-  border: 2px solid #c5cdf7;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s;
+  min-width: 140px;
+}
+.mb-img-trigger:hover { background: #e4e8ff; border-color: #667eea; }
+
+.mb-img-trigger-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #667eea;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
-/* Placeholder when no image is chosen */
+.mb-img-trigger-thumb {
+  width: 36px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 1px solid #c5cdf7;
+  flex-shrink: 0;
+}
+
+.mb-img-trigger-empty {
+  width: 36px;
+  height: 36px;
+  border-radius: 5px;
+  border: 1px dashed #c5cdf7;
+  background: #e8e8f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: #aaa;
+  flex-shrink: 0;
+}
+
+.mb-img-trigger-caret {
+  font-size: 0.65rem;
+  color: #667eea;
+  margin-left: auto;
+}
+
+/* ---- Modal overlay ---- */
+.mb-img-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mb-img-modal {
+  background: white;
+  border-radius: 14px;
+  padding: 1.25rem;
+  width: min(620px, 92vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+}
+
+.mb-img-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.mb-img-modal-close {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #888;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+.mb-img-modal-close:hover { background: #f0f0f0; color: #333; }
+
+/* ---- Grid inside the modal ---- */
+.mb-img-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  overflow-y: auto;
+  max-height: 55vh;
+  padding: 4px;
+}
+
+.mb-img-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.mb-img-picker-item:hover { background: #eef0ff; border-color: #c5cdf7; }
+.mb-img-picker-item.selected { border-color: #667eea; background: #eef0ff; }
+
+.mb-img-picker-thumb {
+  width: 68px;
+  height: 68px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+.mb-img-picker-none {
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e8e8f0;
+  border-radius: 6px;
+  color: #999;
+  font-size: 1.6rem;
+  font-weight: 300;
+}
+
+.mb-img-picker-label {
+  font-size: 0.62rem;
+  color: #555;
+  text-align: center;
+  max-width: 76px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.mb-img-picker-upload-btn { border-style: dashed; border-color: #c5cdf7; }
+.mb-img-picker-upload-btn .mb-img-picker-none { background: #f0f2ff; color: #667eea; font-size: 2rem; }
+.mb-img-picker-upload-btn:hover { border-color: #667eea; background: #eef0ff; }
+
+/* Delete button shown on uploaded images — always visible */
+.mb-img-delete-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+  z-index: 2;
+}
+.mb-img-delete-btn:hover:not(:disabled) { background: #dc2626; transform: scale(1.1); }
+.mb-img-delete-btn:disabled { background: #aaa; cursor: not-allowed; }
+
+/* Placeholder when no image is chosen — kept for any other uses */
 .mb-img-empty {
   width: 100%;
   height: 80px;

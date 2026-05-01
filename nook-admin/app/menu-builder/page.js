@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import './menu-builder.css';
 import {
@@ -18,8 +18,126 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+// ===== IMAGE PICKER GRID =====
+// Compact trigger (label + current image) that opens a modal grid for picking/uploading.
+function ImagePickerGrid({ label, value, onChange, webUrl, apiUrl, imageOptions, onNewImage, onDeleteImage }) {
+  const [open, setOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [deleting, setDeleting] = useState(null); // filename being deleted
+  const fileRef = useRef(null);
+
+  const selectedOpt = imageOptions.find(o => o.value === value);
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      const res = await fetch(`${apiUrl}/api/uploads/image`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` },
+        body: formData
+      });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        onNewImage({ label: file.name.replace(/\.[^.]+$/, ''), value: d.url });
+        onChange(d.url);
+        setOpen(false);
+      } else {
+        alert(d.message || 'Upload failed');
+      }
+    } catch { alert('Upload failed. Check server is running.'); }
+    finally { setUploading(false); e.target.value = ''; }
+  };
+
+  const pick = (v) => { onChange(v); setOpen(false); };
+
+  const handleDelete = async (e, url) => {
+    e.stopPropagation();
+    const filename = url.split('/').pop();
+    if (!confirm(`Delete image "${filename}"? This cannot be undone.`)) return;
+    setDeleting(filename);
+    try {
+      const res = await fetch(`${apiUrl}/api/uploads/image/${encodeURIComponent(filename)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('admin_token')}` }
+      });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        if (value === url) onChange(null); // clear if it was selected
+        onDeleteImage(url);
+      } else {
+        alert(d.message || 'Delete failed');
+      }
+    } catch { alert('Delete failed. Check server is running.'); }
+    finally { setDeleting(null); }
+  };
+
+  return (
+    <>
+      {/* Compact trigger row */}
+      <div className="mb-img-trigger" onClick={() => setOpen(true)} title="Click to choose image">
+        <span className="mb-img-trigger-label">{label}</span>
+        {value
+          ? <img src={`${webUrl}${value}`} alt={selectedOpt?.label || ''} className="mb-img-trigger-thumb" />
+          : <div className="mb-img-trigger-empty">No image</div>
+        }
+        <span className="mb-img-trigger-caret">▼</span>
+      </div>
+
+      {/* Modal */}
+      {open && (
+        <div className="mb-img-modal-overlay" onClick={() => setOpen(false)}>
+          <div className="mb-img-modal" onClick={e => e.stopPropagation()}>
+            <div className="mb-img-modal-header">
+              <span>{label} — Choose image</span>
+              <button className="mb-img-modal-close" onClick={() => setOpen(false)}>✕</button>
+            </div>
+            <div className="mb-img-picker-grid">
+              {/* None */}
+              <div className={`mb-img-picker-item${!value ? ' selected' : ''}`} onClick={() => pick(null)} title="None">
+                <div className="mb-img-picker-none">–</div>
+                <span className="mb-img-picker-label">None</span>
+              </div>
+              {/* Existing images */}
+              {imageOptions.filter(o => o.value).map(opt => {
+                const isUploaded = opt.value.startsWith('/assets/uploads/');
+                const isDeleting = deleting === opt.value.split('/').pop();
+                return (
+                  <div key={opt.value} className={`mb-img-picker-item${value === opt.value ? ' selected' : ''}`}
+                    onClick={() => pick(opt.value)} title={opt.label} style={{ position: 'relative' }}>
+                    <img src={`${webUrl}${opt.value}`} alt={opt.label} className="mb-img-picker-thumb"
+                      style={{ opacity: isDeleting ? 0.4 : 1 }} />
+                    <span className="mb-img-picker-label">{opt.label}</span>
+                    {isUploaded && (
+                      <button className="mb-img-delete-btn" disabled={isDeleting}
+                        onClick={(e) => handleDelete(e, opt.value)} title="Delete image">
+                        {isDeleting ? '…' : '✕'}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+              {/* Upload new */}
+              <div className="mb-img-picker-item mb-img-picker-upload-btn"
+                onClick={() => !uploading && fileRef.current?.click()} title="Upload new image">
+                <div className="mb-img-picker-none">{uploading ? '…' : '+'}</div>
+                <span className="mb-img-picker-label">{uploading ? 'Uploading…' : 'Upload'}</span>
+                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                  style={{ display: 'none' }} onChange={handleFileChange} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ===== SORTABLE CATEGORY ROW =====
-function SortableCategory({ c, editingCategory, isKids, webUrl, saveCategory, setEditingCategory, startEditCategory, saving, ImagePicker }) {
+function SortableCategory({ c, editingCategory, isKids, webUrl, saveCategory, setEditingCategory, startEditCategory, saving, imgPickerConfig }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: c.id,
     disabled: editingCategory?.id === c.id,
@@ -57,11 +175,11 @@ function SortableCategory({ c, editingCategory, isKids, webUrl, saveCategory, se
             </div>
             <div className="mb-field mb-field-full">
               <label>Category Image{isKids ? '' : 's (4 slots shown on the website)'}</label>
-              <div className={isKids ? '' : 'mb-img-grid'}>
-                <ImagePicker label="Image 1" value={editingCategory.image_url} onChange={v => setEditingCategory(p => ({ ...p, image_url: v }))} />
-                {!isKids && <ImagePicker label="Image 2" value={editingCategory.image_url_2} onChange={v => setEditingCategory(p => ({ ...p, image_url_2: v }))} />}
-                {!isKids && <ImagePicker label="Image 3" value={editingCategory.image_url_3} onChange={v => setEditingCategory(p => ({ ...p, image_url_3: v }))} />}
-                {!isKids && <ImagePicker label="Image 4" value={editingCategory.image_url_4} onChange={v => setEditingCategory(p => ({ ...p, image_url_4: v }))} />}
+              <div className="mb-img-slots-stack">
+                <ImagePickerGrid label="Image 1" value={editingCategory.image_url} onChange={v => setEditingCategory(p => ({ ...p, image_url: v }))} {...imgPickerConfig} />
+                {!isKids && <ImagePickerGrid label="Image 2" value={editingCategory.image_url_2} onChange={v => setEditingCategory(p => ({ ...p, image_url_2: v }))} {...imgPickerConfig} />}
+                {!isKids && <ImagePickerGrid label="Image 3" value={editingCategory.image_url_3} onChange={v => setEditingCategory(p => ({ ...p, image_url_3: v }))} {...imgPickerConfig} />}
+                {!isKids && <ImagePickerGrid label="Image 4" value={editingCategory.image_url_4} onChange={v => setEditingCategory(p => ({ ...p, image_url_4: v }))} {...imgPickerConfig} />}
               </div>
             </div>
           </div>
@@ -157,6 +275,7 @@ export default function MenuBuilderPage() {
   const [cImageUrl4, setCImageUrl4] = useState('');
 
   const webUrl = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 
   const categoryImageOptions = [
     { label: 'None', value: '' },
@@ -193,18 +312,14 @@ export default function MenuBuilderPage() {
     { label: 'Nook', value: '/assets/nook.jpg' },
   ];
 
-  // Helper to render a single image slot picker
-  const ImagePicker = ({ label, value, onChange }) => (
-    <div className="mb-img-slot">
-      <select className="mb-input mb-img-select" value={value || ''} onChange={e => onChange(e.target.value || null)}>
-        {categoryImageOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-      </select>
-      {value
-        ? <img draggable={false} src={`${webUrl}${value}`} alt="preview" className="mb-img-preview" />
-        : <div className="mb-img-empty">No image</div>
-      }
-    </div>
-  );
+  // Track newly uploaded images so they appear in all pickers this session
+  const [customImages, setCustomImages] = useState([]);
+  const handleNewImage = (img) => setCustomImages(prev => [...prev, img]);
+  const handleDeleteImage = (url) => setCustomImages(prev => prev.filter(img => img.value !== url));
+  const allImageOptions = [...categoryImageOptions, ...customImages];
+
+  // Config object passed to every ImagePickerGrid instance
+  const imgPickerConfig = { webUrl, apiUrl, imageOptions: allImageOptions, onNewImage: handleNewImage, onDeleteImage: handleDeleteImage };
 
   // Menu item form
   const [iName, setIName] = useState('');
@@ -214,8 +329,6 @@ export default function MenuBuilderPage() {
   const [iDietaryInfo, setIDietaryInfo] = useState('');
   const [iAllergens, setIAllergens] = useState('');
   const [categoriesForItem, setCategoriesForItem] = useState([]);
-
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 
   // Auth check + fetch branches + fetch buffet versions
   useEffect(() => {
@@ -882,11 +995,11 @@ export default function MenuBuilderPage() {
                 return (
                   <div className="mb-field mb-field-full">
                     <label>Category Image{createIsKids ? '' : 's (4 slots shown on the website)'}</label>
-                    <div className={createIsKids ? '' : 'mb-img-grid'}>
-                      <ImagePicker label="Image 1" value={cImageUrl} onChange={setCImageUrl} />
-                      {!createIsKids && <ImagePicker label="Image 2" value={cImageUrl2} onChange={setCImageUrl2} />}
-                      {!createIsKids && <ImagePicker label="Image 3" value={cImageUrl3} onChange={setCImageUrl3} />}
-                      {!createIsKids && <ImagePicker label="Image 4" value={cImageUrl4} onChange={setCImageUrl4} />}
+                    <div className="mb-img-slots-stack">
+                      <ImagePickerGrid label="Image 1" value={cImageUrl} onChange={setCImageUrl} {...imgPickerConfig} />
+                      {!createIsKids && <ImagePickerGrid label="Image 2" value={cImageUrl2} onChange={setCImageUrl2} {...imgPickerConfig} />}
+                      {!createIsKids && <ImagePickerGrid label="Image 3" value={cImageUrl3} onChange={setCImageUrl3} {...imgPickerConfig} />}
+                      {!createIsKids && <ImagePickerGrid label="Image 4" value={cImageUrl4} onChange={setCImageUrl4} {...imgPickerConfig} />}
                     </div>
                   </div>
                 );
@@ -952,7 +1065,7 @@ export default function MenuBuilderPage() {
                                 setEditingCategory={setEditingCategory}
                                 startEditCategory={startEditCategory}
                                 saving={saving}
-                                ImagePicker={ImagePicker}
+                                imgPickerConfig={imgPickerConfig}
                               />
                             ))}
                           </SortableContext>
