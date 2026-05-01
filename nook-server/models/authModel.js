@@ -194,6 +194,24 @@ const updateUser = async (userId, userData) => {
   return result.rows[0];
 };
 
+// ===== UPDATE ADMIN PROFILE (SELF-SERVICE) =====
+// Allows an admin to update their own name, phone, and default address
+const updateAdminProfile = async (userId, data) => {
+  const sql = `
+    UPDATE admin_users
+    SET full_name = $1, phone = $2, default_address = $3, updated_at = CURRENT_TIMESTAMP
+    WHERE id = $4
+    RETURNING id, username, email, full_name, role, phone, default_address, branch_id
+  `;
+  const result = await query(sql, [
+    data.full_name || null,
+    data.phone     || null,
+    data.default_address || null,
+    userId
+  ]);
+  return result.rows[0];
+};
+
 // ===== DELETE USER =====
 // Delete a user from the database
 // Managers can delete staff members
@@ -253,6 +271,7 @@ module.exports = {
   usernameExists,
   getUserById,
   updateUser,
+  updateAdminProfile,
   deleteUser,
   saveTwoFaCode,
   findUserByIdWithCode,

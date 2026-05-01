@@ -52,6 +52,17 @@ export default function BasketPage() {
         setCollectionBranchId(firstBranchId.toString());
       }
     }
+
+    // Pre-fill customer details if they're logged in
+    const customerData = localStorage.getItem('customer');
+    if (customerData) {
+      try {
+        const customer = JSON.parse(customerData);
+        if (customer.email) setEmail(customer.email);
+        if (customer.phone) setPhone(customer.phone);
+        if (customer.default_address) setAddress(customer.default_address);
+      } catch (_) {}
+    }
   }, []);
 
   // Fetch branches for collection dropdown when page loads

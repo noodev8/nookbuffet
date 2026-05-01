@@ -41,6 +41,12 @@ export default function AccountPage() {
     }
     try {
       const customer = JSON.parse(stored);
+      // Admin accounts have full_name instead of first_name/last_name - split it for the form
+      if (customer.accountType === 'staff' && customer.full_name && !customer.first_name) {
+        const parts = customer.full_name.trim().split(' ');
+        customer.first_name = parts[0] || '';
+        customer.last_name = parts.slice(1).join(' ') || '';
+      }
       const safe = { ...EMPTY_CUSTOMER, ...customer, phone: customer.phone || '', default_address: customer.default_address || '' };
       setProfile(safe);
       setEditData(safe);
@@ -122,10 +128,17 @@ export default function AccountPage() {
 
       if (data.return_code === 'SUCCESS') {
         // Update the profile in state and localStorage
-        const safe = { ...EMPTY_CUSTOMER, ...data.customer, phone: data.customer.phone || '', default_address: data.customer.default_address || '' };
+        // Fall back to editData if the server didn't return the customer object
+        const updated = data.customer || editData;
+        const safe = { ...EMPTY_CUSTOMER, ...updated, phone: updated.phone || '', default_address: updated.default_address || '' };
         setProfile(safe);
-        localStorage.setItem('customer', JSON.stringify(data.customer));
+        localStorage.setItem('customer', JSON.stringify(updated));
         setEditing(false);
+      } else if (data.return_code === 'UNAUTHORIZED' || data.return_code === 'NOT_FOUND') {
+        // Token expired or account no longer exists - clear storage and send them to log in again
+        localStorage.removeItem('customer_token');
+        localStorage.removeItem('customer');
+        router.push('/login');
       } else {
         setSaveError(data.message || 'Failed to save changes. Please try again.');
       }

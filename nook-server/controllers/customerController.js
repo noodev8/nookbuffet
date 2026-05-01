@@ -10,6 +10,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const customerModel = require('../models/customerModel');
 const orderModel = require('../models/orderModel');
+const authModel = require('../models/authModel');
 
 const SALT_ROUNDS = 12;
 
@@ -176,7 +177,6 @@ const login = async (req, res) => {
  */
 const updateProfile = async (req, res) => {
   try {
-    const customerId = req.user.id;
     const { first_name, last_name, email, phone, default_address } = req.body;
 
     // Email is required
@@ -187,16 +187,41 @@ const updateProfile = async (req, res) => {
       });
     }
 
+    // ===== ADMIN ACCOUNT =====
+    if (req.user.type !== 'customer') {
+      const fullName = [first_name?.trim(), last_name?.trim()].filter(Boolean).join(' ');
+      const adminUser = await authModel.updateAdminProfile(req.user.id, {
+        full_name:       fullName || null,
+        phone:           phone?.trim()           || null,
+        default_address: default_address?.trim() || null
+      });
+      if (!adminUser) {
+        return res.json({ return_code: 'NOT_FOUND', message: 'Admin account not found' });
+      }
+      return res.json({
+        return_code: 'SUCCESS',
+        message: 'Profile updated successfully',
+        customer: {
+          ...adminUser,
+          first_name: first_name?.trim() || null,
+          last_name:  last_name?.trim()  || null,
+          accountType: 'staff'
+        }
+      });
+    }
+
+    // ===== CUSTOMER ACCOUNT =====
+    const customerId = req.user.id;
+
     // If they changed their email, make sure it isn't taken by someone else
     const existing = await customerModel.findByEmail(email.toLowerCase().trim());
-    if (existing && existing.id !== customerId) {
+    if (existing && parseInt(existing.id) !== parseInt(customerId)) {
       return res.json({
         return_code: 'EMAIL_TAKEN',
         message: 'This email is already in use by another account'
       });
     }
 
-    // Save the updated details
     const customer = await customerModel.updateCustomer(customerId, {
       first_name:      first_name?.trim()      || null,
       last_name:       last_name?.trim()       || null,
@@ -205,7 +230,10 @@ const updateProfile = async (req, res) => {
       default_address: default_address?.trim() || null
     });
 
-    // Send back the updated customer
+    if (!customer) {
+      return res.json({ return_code: 'NOT_FOUND', message: 'Customer account not found' });
+    }
+
     return res.json({
       return_code: 'SUCCESS',
       message: 'Profile updated successfully',
