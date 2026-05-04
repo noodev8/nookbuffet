@@ -167,6 +167,9 @@ export default function BasketPage() {
     setAddressValidationMessage('');
     setBranchId(null);
 
+    // The branch is determined by the buffet version the customer chose
+    const requiredBranchId = orders.find(o => o.branchId)?.branchId;
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
       const response = await fetch(`${apiUrl}/api/delivery/validate-area`, {
@@ -188,10 +191,20 @@ export default function BasketPage() {
       if (result.return_code === 'SUCCESS') {
         if (result.data.isWithinRange) {
           const validatedBranchId = result.data.branch.id;
+
+          // Make sure the delivery branch matches the buffet's branch
+          if (requiredBranchId && validatedBranchId !== requiredBranchId) {
+            const requiredBranchName = branches.find(b => b.id === requiredBranchId)?.name || 'the selected';
+            setAddressValidationMessage(`Sorry, this address is not within the ${requiredBranchName} delivery area. Your selected buffet can only be delivered from ${requiredBranchName}.`);
+            setBranchTimeslot(null);
+            setDeliveryTime('');
+            return;
+          }
+
           setBranchId(validatedBranchId);
           setAddressValidated(true);
-          setAddressValidationMessage(`Your nearest branch is ${result.data.branch.name} (${result.data.distanceMiles.toFixed(1)} miles away)`);
-          // Look up the timeslot from the already-loaded branches list 
+          setAddressValidationMessage(`Within delivery range of ${result.data.branch.name} (${result.data.distanceMiles.toFixed(1)} miles away)`);
+          // Look up the timeslot from the already-loaded branches list
           const matchingBranch = branches.find(b => b.id === validatedBranchId);
           const timeStart = matchingBranch?.delivery_time_start || result.data.branch.deliveryTimeStart;
           const timeEnd = matchingBranch?.delivery_time_end || result.data.branch.deliveryTimeEnd;
@@ -602,24 +615,55 @@ export default function BasketPage() {
               </div>
 
               {/* Branch selection for collection orders */}
-              {fulfillmentType === 'collection' && (
-                <div className="form-group">
-                  <label htmlFor="collection-branch">Collection Branch *</label>
-                  <select
-                    id="collection-branch"
-                    value={collectionBranchId}
-                    onChange={(e) => setCollectionBranchId(e.target.value)}
-                    className="form-input"
-                  >
-                    <option value="">Select a branch</option>
-                    {branches.map((branch) => (
-                      <option key={branch.id} value={branch.id}>
-                        {branch.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              {fulfillmentType === 'collection' && (() => {
+                const requiredBranchId = orders.find(o => o.branchId)?.branchId;
+                const requiredBranch = requiredBranchId
+                  ? branches.find(b => b.id === requiredBranchId)
+                  : null;
+
+                if (requiredBranch) {
+                  // Branch is locked to the buffet's branch — show it as read-only
+                  return (
+                    <div className="form-group">
+                      <label>Collection Branch</label>
+                      <div style={{
+                        padding: '10px 14px',
+                        background: '#f0f7f0',
+                        border: '1px solid #28a745',
+                        borderRadius: '6px',
+                        color: '#1a5c1a',
+                        fontSize: '15px',
+                        fontWeight: '500'
+                      }}>
+                        {requiredBranch.name}
+                        <div style={{ fontSize: '12px', color: '#555', fontWeight: 'normal', marginTop: '4px' }}>
+                          Collection location is set by your chosen buffet
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Fallback: no required branch, show the free dropdown
+                return (
+                  <div className="form-group">
+                    <label htmlFor="collection-branch">Collection Branch *</label>
+                    <select
+                      id="collection-branch"
+                      value={collectionBranchId}
+                      onChange={(e) => setCollectionBranchId(e.target.value)}
+                      className="form-input"
+                    >
+                      <option value="">Select a branch</option>
+                      {branches.map((branch) => (
+                        <option key={branch.id} value={branch.id}>
+                          {branch.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
               <div className="form-row">
                 <div className="form-group">
                   <label htmlFor="delivery-date">Date *</label>
