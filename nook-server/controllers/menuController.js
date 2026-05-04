@@ -67,11 +67,9 @@ const getMenuSectionsByBuffetVersion = async (req, res) => {
       });
     }
 
-    // Optional branch filter via query param e.g. /api/menu/buffet-version/1?branch_id=2
-    const branchId = req.query.branch_id ? parseInt(req.query.branch_id) : null;
-
     // Ask the model to get menu sections for this buffet version from the database
-    const sections = await menuModel.getMenuSectionsByBuffetVersion(buffetVersionId, branchId);
+    // Branch is determined by the buffet version itself, so no branch filter needed here
+    const sections = await menuModel.getMenuSectionsByBuffetVersion(buffetVersionId);
 
     // Send the menu data back to the website
     res.json({

@@ -252,6 +252,8 @@ export default function MenuManagementPage() {
               value={selectedBranch}
               onChange={(e) => {
                 setSelectedBranch(e.target.value);
+                setSelectedBuffetVersion('all');
+                setBuffetVersions([]);
                 setFilterCategory('all');
               }}
               className="category-filter"

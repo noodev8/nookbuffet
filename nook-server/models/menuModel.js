@@ -106,16 +106,9 @@ const getAllMenuSections = async () => {
  * @param {number|null} branchId - Optional branch ID to filter menu items by
  * @returns {Promise<array>} Array of menu sections for that buffet version
  */
-const getMenuSectionsByBuffetVersion = async (buffetVersionId, branchId = null) => {
+const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
   try {
-    const params = [buffetVersionId];
-    let itemsJoinCondition = 'c.id = mi.category_id AND mi.is_active = true';
-
-    if (branchId) {
-      params.push(branchId);
-      itemsJoinCondition += ` AND (mi.branch_id IS NULL OR mi.branch_id = $${params.length})`;
-    }
-
+    // The buffet version already determines the branch, so no item-level branch filter needed
     const result = await query(`
       SELECT
         c.id,
@@ -144,11 +137,11 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId, branchId = null) 
         ) as items
       FROM categories c
       LEFT JOIN buffet_versions bv ON c.buffet_version_id = bv.id AND bv.is_active = true
-      LEFT JOIN menu_items mi ON ${itemsJoinCondition}
+      LEFT JOIN menu_items mi ON c.id = mi.category_id AND mi.is_active = true
       WHERE c.is_active = true AND c.buffet_version_id = $1
       GROUP BY c.id, c.name, c.description, c.is_required, c.buffet_version_id, c.image_url, c.image_url_2, c.image_url_3, c.image_url_4, bv.price_per_person
       ORDER BY c.position, c.name
-    `, params);
+    `, [buffetVersionId]);
 
     return result.rows;
   } catch (error) {
@@ -172,7 +165,8 @@ const getAllMenuItemsForManagement = async (branchId = null) => {
 
     if (branchId) {
       params.push(branchId);
-      whereClause = `WHERE mi.branch_id = $1`;
+      // Filter by the buffet version's branch, not the item's branch_id
+      whereClause = `WHERE bv.branch_id = $1`;
     }
 
     const result = await query(`
@@ -183,7 +177,7 @@ const getAllMenuItemsForManagement = async (branchId = null) => {
         mi.is_active,
         mi.allergens,
         mi.dietary_info,
-        mi.branch_id,
+        bv.branch_id,
         b.name as branch_name,
         c.id as category_id,
         c.name as category_name,
@@ -193,7 +187,7 @@ const getAllMenuItemsForManagement = async (branchId = null) => {
       FROM menu_items mi
       JOIN categories c ON mi.category_id = c.id
       LEFT JOIN buffet_versions bv ON c.buffet_version_id = bv.id
-      LEFT JOIN branches b ON mi.branch_id = b.id
+      LEFT JOIN branches b ON bv.branch_id = b.id
       ${whereClause}
       ORDER BY b.name, bv.id, c.position, c.name, mi.name
     `, params);
