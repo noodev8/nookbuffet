@@ -16,6 +16,7 @@ export default function BasketPage() {
   // Business details state
   const [businessName, setBusinessName] = useState('');
   const [address, setAddress] = useState('');
+  const [postcode, setPostcode] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -104,29 +105,27 @@ export default function BasketPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fulfillmentType]);
 
-  // Auto-validate address when delivery is selected and address is filled (debounced)
+  // Auto-validate address when delivery is selected and address + postcode are filled (debounced)
   useEffect(() => {
-    if (fulfillmentType === 'delivery' && address.trim() && !addressValidated) {
-      // Debounce: wait 1 second after user stops typing before validating
+    if (fulfillmentType === 'delivery' && address.trim() && postcode.trim() && !addressValidated) {
       const timeoutId = setTimeout(() => {
         validateDeliveryArea();
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fulfillmentType, address]);
+  }, [fulfillmentType, address, postcode]);
 
   // Auto-select nearest branch when collection is selected and address is filled (debounced)
   useEffect(() => {
-    if (fulfillmentType === 'collection' && address.trim()) {
-      // Debounce: wait 1 second after user stops typing before finding nearest branch
+    if (fulfillmentType === 'collection' && address.trim() && postcode.trim()) {
       const timeoutId = setTimeout(() => {
         findNearestBranchForCollection();
       }, 1000);
       return () => clearTimeout(timeoutId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fulfillmentType, address]);
+  }, [fulfillmentType, address, postcode]);
 
   // Find nearest branch for collection orders
   const findNearestBranchForCollection = async () => {
@@ -137,7 +136,7 @@ export default function BasketPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address })
+        body: JSON.stringify({ address: `${address.trim()}, ${postcode.trim()}` })
       });
 
       if (!response.ok) {
@@ -158,9 +157,11 @@ export default function BasketPage() {
 
   // Validate delivery area and get branch ID
   const validateDeliveryArea = async () => {
-    if (!address.trim()) {
+    if (!address.trim() || !postcode.trim()) {
       return;
     }
+
+    const fullAddress = `${address.trim()}, ${postcode.trim()}`;
 
     setValidatingAddress(true);
     setAddressValidated(false);
@@ -177,7 +178,7 @@ export default function BasketPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address })
+        body: JSON.stringify({ address: fullAddress })
       });
 
       if (!response.ok) {
@@ -303,6 +304,10 @@ export default function BasketPage() {
       alert('Please enter an address');
       return;
     }
+    if (!postcode.trim()) {
+      alert('Please enter a postcode');
+      return;
+    }
     if (!email.trim()) {
       alert('Please enter an email address');
       return;
@@ -345,7 +350,7 @@ export default function BasketPage() {
     const updatedOrders = orders.map(order => ({
       ...order,
       businessName,
-      address,
+      address: `${address.trim()}, ${postcode.trim()}`,
       email,
       phone,
       fulfillmentType,
@@ -537,12 +542,29 @@ export default function BasketPage() {
                   value={address}
                   onChange={(e) => {
                     setAddress(e.target.value);
-                    setAddressValidated(false); // Reset validation when address changes
-                    setAddressValidationMessage(''); // Clear message when typing
+                    setAddressValidated(false);
+                    setAddressValidationMessage('');
                     setBranchId(null);
                   }}
-                  placeholder="Enter your address"
+                  placeholder="Street address"
                   className="form-input"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="postcode">Postcode *</label>
+                <input
+                  id="postcode"
+                  type="text"
+                  value={postcode}
+                  onChange={(e) => {
+                    setPostcode(e.target.value);
+                    setAddressValidated(false);
+                    setAddressValidationMessage('');
+                    setBranchId(null);
+                  }}
+                  placeholder="e.g. SY1 1AA"
+                  className="form-input"
+                  style={{ maxWidth: '160px' }}
                 />
                 {fulfillmentType === 'delivery' && validatingAddress && (
                   <div style={{ marginTop: '5px', color: '#007bff', fontSize: '14px' }}>
