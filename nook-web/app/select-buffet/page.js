@@ -87,10 +87,10 @@ export default function SelectBuffetPage() {
           )}
 
           {/* Beta Warning Banner */}
-          <div className="beta-warning-banner">
+          {/* <div className="beta-warning-banner">
             <strong>BETA VERSION - TESTING ONLY</strong>
             <p>This is a test version of our ordering system. No real orders will be processed and no payments will be charged.</p>
-          </div>
+          </div> */}
 
           {loading && (
             <div className="loading-state">

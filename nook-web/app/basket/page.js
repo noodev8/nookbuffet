@@ -425,10 +425,10 @@ export default function BasketPage() {
           <h1 className="basket-title">Your Basket</h1>
 
           {/* Beta Warning Banner */}
-          <div className="beta-warning-banner">
+          {/* <div className="beta-warning-banner">
             <strong>BETA VERSION - TESTING ONLY</strong>
             <p>This is a test version of a ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
-          </div>
+          </div> */}
 
           {/* Orders Summary Section */}
           <div className="basket-section">

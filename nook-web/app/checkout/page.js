@@ -289,10 +289,10 @@ function CheckoutContent() {
           <h1 className="checkout-title">Complete Your Order</h1>
 
           {/* Big warning banner at the top - this is just for testing, not real orders */}
-          <div className="beta-warning-banner">
+          {/* <div className="beta-warning-banner">
             <strong>BETA VERSION - TESTING ONLY</strong>
             <p>This is a test version of a ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
-          </div>
+          </div> */}
 
           {/* Show all the buffets they're ordering */}
           <div className="checkout-section">
