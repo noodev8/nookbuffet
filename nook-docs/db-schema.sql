@@ -2,10 +2,10 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 16.11 (Ubuntu 16.11-0ubuntu0.24.04.1)
+-- Dumped from database version 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1)
 -- Dumped by pg_dump version 17.1
 
--- Started on 2026-03-02 11:14:09
+-- Started on 2026-05-07 12:50:11
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -51,14 +51,16 @@ CREATE TABLE public.admin_users (
     last_login timestamp without time zone,
     branch_id integer,
     two_fa_code character varying(6),
-    two_fa_expires_at timestamp without time zone
+    two_fa_expires_at timestamp without time zone,
+    phone character varying(50),
+    default_address text
 );
 
 
 ALTER TABLE public.admin_users OWNER TO nook_prod_user;
 
 --
--- TOC entry 3609 (class 0 OID 0)
+-- TOC entry 3613 (class 0 OID 0)
 -- Dependencies: 228
 -- Name: COLUMN admin_users.role; Type: COMMENT; Schema: public; Owner: nook_prod_user
 --
@@ -83,7 +85,7 @@ CREATE SEQUENCE public.admin_users_id_seq
 ALTER SEQUENCE public.admin_users_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3610 (class 0 OID 0)
+-- TOC entry 3614 (class 0 OID 0)
 -- Dependencies: 227
 -- Name: admin_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -102,7 +104,7 @@ CREATE TABLE public.branches (
     address text NOT NULL,
     latitude numeric(10,8) NOT NULL,
     longitude numeric(11,8) NOT NULL,
-    delivery_radius_miles integer DEFAULT 7,
+    delivery_radius_miles numeric(5,1) DEFAULT 7,
     is_active boolean DEFAULT true,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     delivery_time_start time without time zone DEFAULT '09:00:00'::time without time zone,
@@ -129,7 +131,7 @@ CREATE SEQUENCE public.branches_id_seq
 ALTER SEQUENCE public.branches_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3611 (class 0 OID 0)
+-- TOC entry 3615 (class 0 OID 0)
 -- Dependencies: 229
 -- Name: branches_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -170,7 +172,7 @@ CREATE SEQUENCE public.buffet_upgrades_id_seq
 ALTER SEQUENCE public.buffet_upgrades_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3612 (class 0 OID 0)
+-- TOC entry 3616 (class 0 OID 0)
 -- Dependencies: 235
 -- Name: buffet_upgrades_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -213,7 +215,7 @@ CREATE SEQUENCE public.buffet_versions_id_seq
 ALTER SEQUENCE public.buffet_versions_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3613 (class 0 OID 0)
+-- TOC entry 3617 (class 0 OID 0)
 -- Dependencies: 215
 -- Name: buffet_versions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -234,7 +236,11 @@ CREATE TABLE public.categories (
     is_active boolean DEFAULT true,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     buffet_version_id integer,
-    "position" integer
+    "position" integer,
+    image_url character varying(500),
+    image_url_2 character varying(500),
+    image_url_3 character varying(500),
+    image_url_4 character varying(500)
 );
 
 
@@ -257,7 +263,7 @@ CREATE SEQUENCE public.categories_id_seq
 ALTER SEQUENCE public.categories_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3614 (class 0 OID 0)
+-- TOC entry 3618 (class 0 OID 0)
 -- Dependencies: 217
 -- Name: categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -305,7 +311,7 @@ CREATE SEQUENCE public.customers_id_seq
 ALTER SEQUENCE public.customers_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3615 (class 0 OID 0)
+-- TOC entry 3619 (class 0 OID 0)
 -- Dependencies: 245
 -- Name: customers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -327,7 +333,8 @@ CREATE TABLE public.menu_items (
     allergens text,
     dietary_info character varying(255),
     is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    branch_id integer
 );
 
 
@@ -350,7 +357,7 @@ CREATE SEQUENCE public.menu_items_id_seq
 ALTER SEQUENCE public.menu_items_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3616 (class 0 OID 0)
+-- TOC entry 3620 (class 0 OID 0)
 -- Dependencies: 219
 -- Name: menu_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -393,7 +400,7 @@ CREATE SEQUENCE public.order_buffet_upgrade_items_id_seq
 ALTER SEQUENCE public.order_buffet_upgrade_items_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3617 (class 0 OID 0)
+-- TOC entry 3621 (class 0 OID 0)
 -- Dependencies: 243
 -- Name: order_buffet_upgrade_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -438,7 +445,7 @@ CREATE SEQUENCE public.order_buffet_upgrades_id_seq
 ALTER SEQUENCE public.order_buffet_upgrades_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3618 (class 0 OID 0)
+-- TOC entry 3622 (class 0 OID 0)
 -- Dependencies: 237
 -- Name: order_buffet_upgrades_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -484,7 +491,7 @@ CREATE SEQUENCE public.order_buffets_id_seq
 ALTER SEQUENCE public.order_buffets_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3619 (class 0 OID 0)
+-- TOC entry 3623 (class 0 OID 0)
 -- Dependencies: 223
 -- Name: order_buffets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -526,7 +533,7 @@ CREATE SEQUENCE public.order_config_id_seq
 ALTER SEQUENCE public.order_config_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3620 (class 0 OID 0)
+-- TOC entry 3624 (class 0 OID 0)
 -- Dependencies: 231
 -- Name: order_config_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -570,7 +577,7 @@ CREATE SEQUENCE public.order_items_id_seq
 ALTER SEQUENCE public.order_items_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3621 (class 0 OID 0)
+-- TOC entry 3625 (class 0 OID 0)
 -- Dependencies: 225
 -- Name: order_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -599,17 +606,18 @@ CREATE TABLE public.orders (
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     completed_at timestamp without time zone,
     fulfillment_date date,
-    fulfillment_time character varying(10),
+    fulfillment_time character varying(20),
     branch_id integer,
     stripe_payment_intent_id character varying(255),
-    customer_id integer
+    customer_id integer,
+    staff_notes text
 );
 
 
 ALTER TABLE public.orders OWNER TO nook_prod_user;
 
 --
--- TOC entry 3622 (class 0 OID 0)
+-- TOC entry 3626 (class 0 OID 0)
 -- Dependencies: 222
 -- Name: COLUMN orders.fulfillment_date; Type: COMMENT; Schema: public; Owner: nook_prod_user
 --
@@ -618,7 +626,7 @@ COMMENT ON COLUMN public.orders.fulfillment_date IS 'The date when the order sho
 
 
 --
--- TOC entry 3623 (class 0 OID 0)
+-- TOC entry 3627 (class 0 OID 0)
 -- Dependencies: 222
 -- Name: COLUMN orders.fulfillment_time; Type: COMMENT; Schema: public; Owner: nook_prod_user
 --
@@ -643,7 +651,7 @@ CREATE SEQUENCE public.orders_id_seq
 ALTER SEQUENCE public.orders_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3624 (class 0 OID 0)
+-- TOC entry 3628 (class 0 OID 0)
 -- Dependencies: 221
 -- Name: orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -688,7 +696,7 @@ CREATE SEQUENCE public.upgrade_categories_id_seq
 ALTER SEQUENCE public.upgrade_categories_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3625 (class 0 OID 0)
+-- TOC entry 3629 (class 0 OID 0)
 -- Dependencies: 239
 -- Name: upgrade_categories_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -714,7 +722,7 @@ CREATE TABLE public.upgrade_items (
 ALTER TABLE public.upgrade_items OWNER TO nook_prod_user;
 
 --
--- TOC entry 3626 (class 0 OID 0)
+-- TOC entry 3630 (class 0 OID 0)
 -- Dependencies: 242
 -- Name: TABLE upgrade_items; Type: COMMENT; Schema: public; Owner: nook_prod_user
 --
@@ -739,7 +747,7 @@ CREATE SEQUENCE public.upgrade_items_id_seq
 ALTER SEQUENCE public.upgrade_items_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3627 (class 0 OID 0)
+-- TOC entry 3631 (class 0 OID 0)
 -- Dependencies: 241
 -- Name: upgrade_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -765,7 +773,7 @@ CREATE TABLE public.upgrades (
 ALTER TABLE public.upgrades OWNER TO nook_prod_user;
 
 --
--- TOC entry 3628 (class 0 OID 0)
+-- TOC entry 3632 (class 0 OID 0)
 -- Dependencies: 234
 -- Name: TABLE upgrades; Type: COMMENT; Schema: public; Owner: nook_prod_user
 --
@@ -774,7 +782,7 @@ COMMENT ON TABLE public.upgrades IS 'Available upgrade options that can be added
 
 
 --
--- TOC entry 3629 (class 0 OID 0)
+-- TOC entry 3633 (class 0 OID 0)
 -- Dependencies: 234
 -- Name: COLUMN upgrades.name; Type: COMMENT; Schema: public; Owner: nook_prod_user
 --
@@ -783,7 +791,7 @@ COMMENT ON COLUMN public.upgrades.name IS 'Display name of the upgrade';
 
 
 --
--- TOC entry 3630 (class 0 OID 0)
+-- TOC entry 3634 (class 0 OID 0)
 -- Dependencies: 234
 -- Name: COLUMN upgrades.price_per_person; Type: COMMENT; Schema: public; Owner: nook_prod_user
 --
@@ -808,7 +816,7 @@ CREATE SEQUENCE public.upgrades_id_seq
 ALTER SEQUENCE public.upgrades_id_seq OWNER TO nook_prod_user;
 
 --
--- TOC entry 3631 (class 0 OID 0)
+-- TOC entry 3635 (class 0 OID 0)
 -- Dependencies: 233
 -- Name: upgrades_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
 --
@@ -833,7 +841,7 @@ ALTER TABLE ONLY public.branches ALTER COLUMN id SET DEFAULT nextval('public.bra
 
 
 --
--- TOC entry 3362 (class 2604 OID 22919)
+-- TOC entry 3364 (class 2604 OID 22919)
 -- Name: buffet_upgrades id; Type: DEFAULT; Schema: public; Owner: nook_prod_user
 --
 
@@ -857,7 +865,7 @@ ALTER TABLE ONLY public.categories ALTER COLUMN id SET DEFAULT nextval('public.c
 
 
 --
--- TOC entry 3376 (class 2604 OID 24183)
+-- TOC entry 3378 (class 2604 OID 24183)
 -- Name: customers id; Type: DEFAULT; Schema: public; Owner: nook_prod_user
 --
 
@@ -873,7 +881,7 @@ ALTER TABLE ONLY public.menu_items ALTER COLUMN id SET DEFAULT nextval('public.m
 
 
 --
--- TOC entry 3374 (class 2604 OID 22990)
+-- TOC entry 3376 (class 2604 OID 22990)
 -- Name: order_buffet_upgrade_items id; Type: DEFAULT; Schema: public; Owner: nook_prod_user
 --
 
@@ -881,7 +889,7 @@ ALTER TABLE ONLY public.order_buffet_upgrade_items ALTER COLUMN id SET DEFAULT n
 
 
 --
--- TOC entry 3365 (class 2604 OID 22941)
+-- TOC entry 3367 (class 2604 OID 22941)
 -- Name: order_buffet_upgrades id; Type: DEFAULT; Schema: public; Owner: nook_prod_user
 --
 
@@ -897,7 +905,7 @@ ALTER TABLE ONLY public.order_buffets ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- TOC entry 3356 (class 2604 OID 22895)
+-- TOC entry 3358 (class 2604 OID 22895)
 -- Name: order_config id; Type: DEFAULT; Schema: public; Owner: nook_prod_user
 --
 
@@ -921,7 +929,7 @@ ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.order
 
 
 --
--- TOC entry 3367 (class 2604 OID 22955)
+-- TOC entry 3369 (class 2604 OID 22955)
 -- Name: upgrade_categories id; Type: DEFAULT; Schema: public; Owner: nook_prod_user
 --
 
@@ -929,7 +937,7 @@ ALTER TABLE ONLY public.upgrade_categories ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
--- TOC entry 3371 (class 2604 OID 22973)
+-- TOC entry 3373 (class 2604 OID 22973)
 -- Name: upgrade_items id; Type: DEFAULT; Schema: public; Owner: nook_prod_user
 --
 
@@ -937,7 +945,7 @@ ALTER TABLE ONLY public.upgrade_items ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- TOC entry 3359 (class 2604 OID 22908)
+-- TOC entry 3361 (class 2604 OID 22908)
 -- Name: upgrades id; Type: DEFAULT; Schema: public; Owner: nook_prod_user
 --
 
@@ -945,7 +953,7 @@ ALTER TABLE ONLY public.upgrades ALTER COLUMN id SET DEFAULT nextval('public.upg
 
 
 --
--- TOC entry 3403 (class 2606 OID 22799)
+-- TOC entry 3405 (class 2606 OID 22799)
 -- Name: admin_users admin_users_email_key; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -954,7 +962,7 @@ ALTER TABLE ONLY public.admin_users
 
 
 --
--- TOC entry 3405 (class 2606 OID 22795)
+-- TOC entry 3407 (class 2606 OID 22795)
 -- Name: admin_users admin_users_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -963,7 +971,7 @@ ALTER TABLE ONLY public.admin_users
 
 
 --
--- TOC entry 3407 (class 2606 OID 22797)
+-- TOC entry 3409 (class 2606 OID 22797)
 -- Name: admin_users admin_users_username_key; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -972,7 +980,7 @@ ALTER TABLE ONLY public.admin_users
 
 
 --
--- TOC entry 3412 (class 2606 OID 22870)
+-- TOC entry 3414 (class 2606 OID 22870)
 -- Name: branches branches_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -981,7 +989,7 @@ ALTER TABLE ONLY public.branches
 
 
 --
--- TOC entry 3420 (class 2606 OID 22925)
+-- TOC entry 3422 (class 2606 OID 22925)
 -- Name: buffet_upgrades buffet_upgrades_buffet_version_id_upgrade_id_key; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -990,7 +998,7 @@ ALTER TABLE ONLY public.buffet_upgrades
 
 
 --
--- TOC entry 3422 (class 2606 OID 22923)
+-- TOC entry 3424 (class 2606 OID 22923)
 -- Name: buffet_upgrades buffet_upgrades_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -999,7 +1007,7 @@ ALTER TABLE ONLY public.buffet_upgrades
 
 
 --
--- TOC entry 3382 (class 2606 OID 21933)
+-- TOC entry 3384 (class 2606 OID 21933)
 -- Name: buffet_versions buffet_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1008,7 +1016,7 @@ ALTER TABLE ONLY public.buffet_versions
 
 
 --
--- TOC entry 3384 (class 2606 OID 21945)
+-- TOC entry 3386 (class 2606 OID 21945)
 -- Name: categories categories_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1017,7 +1025,7 @@ ALTER TABLE ONLY public.categories
 
 
 --
--- TOC entry 3439 (class 2606 OID 24193)
+-- TOC entry 3441 (class 2606 OID 24193)
 -- Name: customers customers_email_key; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1026,7 +1034,7 @@ ALTER TABLE ONLY public.customers
 
 
 --
--- TOC entry 3441 (class 2606 OID 24191)
+-- TOC entry 3443 (class 2606 OID 24191)
 -- Name: customers customers_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1035,7 +1043,7 @@ ALTER TABLE ONLY public.customers
 
 
 --
--- TOC entry 3386 (class 2606 OID 21962)
+-- TOC entry 3388 (class 2606 OID 21962)
 -- Name: menu_items menu_items_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1044,7 +1052,7 @@ ALTER TABLE ONLY public.menu_items
 
 
 --
--- TOC entry 3437 (class 2606 OID 22993)
+-- TOC entry 3439 (class 2606 OID 22993)
 -- Name: order_buffet_upgrade_items order_buffet_upgrade_items_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1053,7 +1061,7 @@ ALTER TABLE ONLY public.order_buffet_upgrade_items
 
 
 --
--- TOC entry 3427 (class 2606 OID 22944)
+-- TOC entry 3429 (class 2606 OID 22944)
 -- Name: order_buffet_upgrades order_buffet_upgrades_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1062,7 +1070,7 @@ ALTER TABLE ONLY public.order_buffet_upgrades
 
 
 --
--- TOC entry 3397 (class 2606 OID 22504)
+-- TOC entry 3399 (class 2606 OID 22504)
 -- Name: order_buffets order_buffets_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1071,7 +1079,7 @@ ALTER TABLE ONLY public.order_buffets
 
 
 --
--- TOC entry 3414 (class 2606 OID 22903)
+-- TOC entry 3416 (class 2606 OID 22903)
 -- Name: order_config order_config_config_key_key; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1080,7 +1088,7 @@ ALTER TABLE ONLY public.order_config
 
 
 --
--- TOC entry 3416 (class 2606 OID 22901)
+-- TOC entry 3418 (class 2606 OID 22901)
 -- Name: order_config order_config_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1089,7 +1097,7 @@ ALTER TABLE ONLY public.order_config
 
 
 --
--- TOC entry 3401 (class 2606 OID 22523)
+-- TOC entry 3403 (class 2606 OID 22523)
 -- Name: order_items order_items_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1098,7 +1106,7 @@ ALTER TABLE ONLY public.order_items
 
 
 --
--- TOC entry 3392 (class 2606 OID 22494)
+-- TOC entry 3394 (class 2606 OID 22494)
 -- Name: orders orders_order_number_key; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1107,7 +1115,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- TOC entry 3394 (class 2606 OID 22492)
+-- TOC entry 3396 (class 2606 OID 22492)
 -- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1116,7 +1124,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- TOC entry 3430 (class 2606 OID 22962)
+-- TOC entry 3432 (class 2606 OID 22962)
 -- Name: upgrade_categories upgrade_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1125,7 +1133,7 @@ ALTER TABLE ONLY public.upgrade_categories
 
 
 --
--- TOC entry 3433 (class 2606 OID 22979)
+-- TOC entry 3435 (class 2606 OID 22979)
 -- Name: upgrade_items upgrade_items_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1134,7 +1142,7 @@ ALTER TABLE ONLY public.upgrade_items
 
 
 --
--- TOC entry 3418 (class 2606 OID 22914)
+-- TOC entry 3420 (class 2606 OID 22914)
 -- Name: upgrades upgrades_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1143,7 +1151,7 @@ ALTER TABLE ONLY public.upgrades
 
 
 --
--- TOC entry 3408 (class 1259 OID 23011)
+-- TOC entry 3410 (class 1259 OID 23011)
 -- Name: idx_admin_users_branch_id; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1151,7 +1159,7 @@ CREATE INDEX idx_admin_users_branch_id ON public.admin_users USING btree (branch
 
 
 --
--- TOC entry 3409 (class 1259 OID 22800)
+-- TOC entry 3411 (class 1259 OID 22800)
 -- Name: idx_admin_users_email; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1159,7 +1167,7 @@ CREATE INDEX idx_admin_users_email ON public.admin_users USING btree (email);
 
 
 --
--- TOC entry 3410 (class 1259 OID 22801)
+-- TOC entry 3412 (class 1259 OID 22801)
 -- Name: idx_admin_users_username; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1167,7 +1175,7 @@ CREATE INDEX idx_admin_users_username ON public.admin_users USING btree (usernam
 
 
 --
--- TOC entry 3423 (class 1259 OID 22936)
+-- TOC entry 3425 (class 1259 OID 22936)
 -- Name: idx_buffet_upgrades_buffet_version; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1175,7 +1183,7 @@ CREATE INDEX idx_buffet_upgrades_buffet_version ON public.buffet_upgrades USING 
 
 
 --
--- TOC entry 3442 (class 1259 OID 24194)
+-- TOC entry 3444 (class 1259 OID 24194)
 -- Name: idx_customers_email; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1183,7 +1191,7 @@ CREATE INDEX idx_customers_email ON public.customers USING btree (email);
 
 
 --
--- TOC entry 3434 (class 1259 OID 23043)
+-- TOC entry 3436 (class 1259 OID 23043)
 -- Name: idx_order_buffet_upgrade_items_order_id; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1191,7 +1199,7 @@ CREATE INDEX idx_order_buffet_upgrade_items_order_id ON public.order_buffet_upgr
 
 
 --
--- TOC entry 3435 (class 1259 OID 22999)
+-- TOC entry 3437 (class 1259 OID 22999)
 -- Name: idx_order_buffet_upgrade_items_upgrade; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1199,7 +1207,7 @@ CREATE INDEX idx_order_buffet_upgrade_items_upgrade ON public.order_buffet_upgra
 
 
 --
--- TOC entry 3424 (class 1259 OID 22950)
+-- TOC entry 3426 (class 1259 OID 22950)
 -- Name: idx_order_buffet_upgrades_order_buffet; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1207,7 +1215,7 @@ CREATE INDEX idx_order_buffet_upgrades_order_buffet ON public.order_buffet_upgra
 
 
 --
--- TOC entry 3425 (class 1259 OID 23055)
+-- TOC entry 3427 (class 1259 OID 23055)
 -- Name: idx_order_buffet_upgrades_order_id; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1215,7 +1223,7 @@ CREATE INDEX idx_order_buffet_upgrades_order_id ON public.order_buffet_upgrades 
 
 
 --
--- TOC entry 3395 (class 1259 OID 22536)
+-- TOC entry 3397 (class 1259 OID 22536)
 -- Name: idx_order_buffets_order_id; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1223,7 +1231,7 @@ CREATE INDEX idx_order_buffets_order_id ON public.order_buffets USING btree (ord
 
 
 --
--- TOC entry 3398 (class 1259 OID 22537)
+-- TOC entry 3400 (class 1259 OID 22537)
 -- Name: idx_order_items_order_buffet_id; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1231,7 +1239,7 @@ CREATE INDEX idx_order_items_order_buffet_id ON public.order_items USING btree (
 
 
 --
--- TOC entry 3399 (class 1259 OID 23049)
+-- TOC entry 3401 (class 1259 OID 23049)
 -- Name: idx_order_items_order_id; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1239,7 +1247,7 @@ CREATE INDEX idx_order_items_order_id ON public.order_items USING btree (order_i
 
 
 --
--- TOC entry 3387 (class 1259 OID 22876)
+-- TOC entry 3389 (class 1259 OID 22876)
 -- Name: idx_orders_branch_id; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1247,7 +1255,7 @@ CREATE INDEX idx_orders_branch_id ON public.orders USING btree (branch_id);
 
 
 --
--- TOC entry 3388 (class 1259 OID 22534)
+-- TOC entry 3390 (class 1259 OID 22534)
 -- Name: idx_orders_customer_email; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1255,7 +1263,7 @@ CREATE INDEX idx_orders_customer_email ON public.orders USING btree (customer_em
 
 
 --
--- TOC entry 3389 (class 1259 OID 24200)
+-- TOC entry 3391 (class 1259 OID 24200)
 -- Name: idx_orders_customer_id; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1263,7 +1271,7 @@ CREATE INDEX idx_orders_customer_id ON public.orders USING btree (customer_id);
 
 
 --
--- TOC entry 3390 (class 1259 OID 22535)
+-- TOC entry 3392 (class 1259 OID 22535)
 -- Name: idx_orders_status; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1271,7 +1279,7 @@ CREATE INDEX idx_orders_status ON public.orders USING btree (status);
 
 
 --
--- TOC entry 3428 (class 1259 OID 22968)
+-- TOC entry 3430 (class 1259 OID 22968)
 -- Name: idx_upgrade_categories_upgrade; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1279,7 +1287,7 @@ CREATE INDEX idx_upgrade_categories_upgrade ON public.upgrade_categories USING b
 
 
 --
--- TOC entry 3431 (class 1259 OID 22985)
+-- TOC entry 3433 (class 1259 OID 22985)
 -- Name: idx_upgrade_items_category; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
 
@@ -1287,7 +1295,7 @@ CREATE INDEX idx_upgrade_items_category ON public.upgrade_items USING btree (upg
 
 
 --
--- TOC entry 3452 (class 2606 OID 23006)
+-- TOC entry 3456 (class 2606 OID 23006)
 -- Name: admin_users admin_users_branch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1296,7 +1304,7 @@ ALTER TABLE ONLY public.admin_users
 
 
 --
--- TOC entry 3453 (class 2606 OID 22926)
+-- TOC entry 3457 (class 2606 OID 22926)
 -- Name: buffet_upgrades buffet_upgrades_buffet_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1305,7 +1313,7 @@ ALTER TABLE ONLY public.buffet_upgrades
 
 
 --
--- TOC entry 3454 (class 2606 OID 22931)
+-- TOC entry 3458 (class 2606 OID 22931)
 -- Name: buffet_upgrades buffet_upgrades_upgrade_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1314,7 +1322,16 @@ ALTER TABLE ONLY public.buffet_upgrades
 
 
 --
--- TOC entry 3443 (class 2606 OID 21946)
+-- TOC entry 3445 (class 2606 OID 24452)
+-- Name: buffet_versions buffet_versions_branch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
+--
+
+ALTER TABLE ONLY public.buffet_versions
+    ADD CONSTRAINT buffet_versions_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id);
+
+
+--
+-- TOC entry 3446 (class 2606 OID 21946)
 -- Name: categories categories_buffet_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1323,7 +1340,16 @@ ALTER TABLE ONLY public.categories
 
 
 --
--- TOC entry 3444 (class 2606 OID 21963)
+-- TOC entry 3447 (class 2606 OID 24425)
+-- Name: menu_items menu_items_branch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
+--
+
+ALTER TABLE ONLY public.menu_items
+    ADD CONSTRAINT menu_items_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id);
+
+
+--
+-- TOC entry 3448 (class 2606 OID 21963)
 -- Name: menu_items menu_items_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1332,7 +1358,7 @@ ALTER TABLE ONLY public.menu_items
 
 
 --
--- TOC entry 3459 (class 2606 OID 22994)
+-- TOC entry 3463 (class 2606 OID 22994)
 -- Name: order_buffet_upgrade_items order_buffet_upgrade_items_order_buffet_upgrade_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1341,7 +1367,7 @@ ALTER TABLE ONLY public.order_buffet_upgrade_items
 
 
 --
--- TOC entry 3460 (class 2606 OID 23038)
+-- TOC entry 3464 (class 2606 OID 23038)
 -- Name: order_buffet_upgrade_items order_buffet_upgrade_items_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1350,7 +1376,7 @@ ALTER TABLE ONLY public.order_buffet_upgrade_items
 
 
 --
--- TOC entry 3455 (class 2606 OID 22945)
+-- TOC entry 3459 (class 2606 OID 22945)
 -- Name: order_buffet_upgrades order_buffet_upgrades_order_buffet_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1359,7 +1385,7 @@ ALTER TABLE ONLY public.order_buffet_upgrades
 
 
 --
--- TOC entry 3456 (class 2606 OID 23050)
+-- TOC entry 3460 (class 2606 OID 23050)
 -- Name: order_buffet_upgrades order_buffet_upgrades_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1368,7 +1394,7 @@ ALTER TABLE ONLY public.order_buffet_upgrades
 
 
 --
--- TOC entry 3447 (class 2606 OID 22510)
+-- TOC entry 3451 (class 2606 OID 22510)
 -- Name: order_buffets order_buffets_buffet_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1377,7 +1403,7 @@ ALTER TABLE ONLY public.order_buffets
 
 
 --
--- TOC entry 3448 (class 2606 OID 22505)
+-- TOC entry 3452 (class 2606 OID 22505)
 -- Name: order_buffets order_buffets_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1386,7 +1412,7 @@ ALTER TABLE ONLY public.order_buffets
 
 
 --
--- TOC entry 3449 (class 2606 OID 22529)
+-- TOC entry 3453 (class 2606 OID 22529)
 -- Name: order_items order_items_menu_item_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1395,7 +1421,7 @@ ALTER TABLE ONLY public.order_items
 
 
 --
--- TOC entry 3450 (class 2606 OID 22524)
+-- TOC entry 3454 (class 2606 OID 22524)
 -- Name: order_items order_items_order_buffet_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1404,7 +1430,7 @@ ALTER TABLE ONLY public.order_items
 
 
 --
--- TOC entry 3451 (class 2606 OID 23044)
+-- TOC entry 3455 (class 2606 OID 23044)
 -- Name: order_items order_items_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1413,7 +1439,7 @@ ALTER TABLE ONLY public.order_items
 
 
 --
--- TOC entry 3445 (class 2606 OID 22871)
+-- TOC entry 3449 (class 2606 OID 22871)
 -- Name: orders orders_branch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1422,7 +1448,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- TOC entry 3446 (class 2606 OID 24195)
+-- TOC entry 3450 (class 2606 OID 24195)
 -- Name: orders orders_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1431,7 +1457,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- TOC entry 3457 (class 2606 OID 22963)
+-- TOC entry 3461 (class 2606 OID 22963)
 -- Name: upgrade_categories upgrade_categories_upgrade_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1440,7 +1466,7 @@ ALTER TABLE ONLY public.upgrade_categories
 
 
 --
--- TOC entry 3458 (class 2606 OID 22980)
+-- TOC entry 3462 (class 2606 OID 22980)
 -- Name: upgrade_items upgrade_items_upgrade_category_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
@@ -1464,7 +1490,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENC
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,UPDATE ON TABLES TO nook_prod_user;
 
 
--- Completed on 2026-03-02 11:14:10
+-- Completed on 2026-05-07 12:50:13
 
 --
 -- PostgreSQL database dump complete

@@ -173,6 +173,11 @@ const runCustomReport = async (req, res) => {
   try {
     const { prompt } = req.body;
 
+    console.log('\n========================================');
+    console.log('  AI CUSTOM REPORT - REQUEST RECEIVED');
+    console.log('========================================');
+    console.log(`[1/6] Manager question: "${prompt}"`);
+
     // Validate prompt exists
     if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
       return res.json({
@@ -209,7 +214,13 @@ Question: ${prompt.trim()}
 
 SQL:`;
 
+    console.log('\n[2/6] Building prompt for Ollama...');
+    console.log(`      Schema context: ${DATABASE_SCHEMA.length} chars`);
+    console.log(`      Example queries included: yes`);
+    console.log(`      Full prompt length: ${ollamaPrompt.length} chars`);
+
     // Call Ollama API - using mistral (fast) or sqlcoder (accurate but slower)
+    console.log('\n[3/6] Sending prompt to Ollama (model: mistral)...');
     const ollamaResponse = await axios.post('http://localhost:11434/api/generate', {
       model: 'mistral',
       prompt: ollamaPrompt,
@@ -221,6 +232,11 @@ SQL:`;
     });
 
     let generatedSQL = ollamaResponse.data.response.trim();
+
+    console.log('\n[4/6] Raw response from Ollama:');
+    console.log('      ----------------------------------------');
+    console.log(`      ${generatedSQL}`);
+    console.log('      ----------------------------------------');
 
     // Remove markdown code blocks if present
     generatedSQL = generatedSQL.replace(/```sql\n?/gi, '').replace(/```\n?/g, '').trim();
@@ -239,6 +255,9 @@ SQL:`;
 
     generatedSQL = generatedSQL.trim();
 
+    console.log('\n[5/6] Cleaned SQL (after stripping markdown + trimming):');
+    console.log(`      ${generatedSQL}`);
+
     // Check if Ollama couldn't answer
     if (generatedSQL.includes('CANNOT_ANSWER')) {
       return res.json({
@@ -248,8 +267,11 @@ SQL:`;
     }
 
     // Security check: Only allow SELECT statements
+    console.log('\n[6/6] Running security checks...');
     const sqlUpper = generatedSQL.toUpperCase().trim();
+    console.log(`      CHECK 1 - Starts with SELECT: ${sqlUpper.startsWith('SELECT') ? 'PASS' : 'FAIL'}`);
     if (!sqlUpper.startsWith('SELECT')) {
+      console.log('      >> Query rejected: does not start with SELECT');
       return res.json({
         return_code: 'INVALID_SQL',
         message: 'Only SELECT queries are allowed for security reasons'
@@ -258,25 +280,30 @@ SQL:`;
 
     // Check for dangerous keywords
     const dangerousKeywords = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'TRUNCATE', 'ALTER', 'CREATE', 'GRANT', 'REVOKE'];
+    let blocked = null;
     for (const keyword of dangerousKeywords) {
-      // Check if keyword appears as a standalone word (not part of column name)
       const regex = new RegExp(`\\b${keyword}\\b`, 'i');
       if (regex.test(generatedSQL)) {
-        return res.json({
-          return_code: 'INVALID_SQL',
-          message: 'Only SELECT queries are allowed for security reasons'
-        });
+        blocked = keyword;
+        break;
       }
     }
+    console.log(`      CHECK 2 - No blocked keywords (${dangerousKeywords.join(', ')}): ${blocked ? `FAIL (found: ${blocked})` : 'PASS'}`);
+    if (blocked) {
+      console.log(`      >> Query rejected: contains blocked keyword "${blocked}"`);
+      return res.json({
+        return_code: 'INVALID_SQL',
+        message: 'Only SELECT queries are allowed for security reasons'
+      });
+    }
 
-    // Log the generated SQL for debugging
-    console.log('\n===== CUSTOM REPORT =====');
-    console.log('Prompt:', prompt);
-    console.log('Generated SQL:', generatedSQL);
-    console.log('=========================\n');
+    console.log('\n      All checks passed — executing query against database...');
 
     // Execute the query
     const result = await query(generatedSQL);
+
+    console.log(`\n      Query returned ${result.rowCount} row(s)`);
+    console.log('========================================\n');
 
     return res.json({
       return_code: 'SUCCESS',

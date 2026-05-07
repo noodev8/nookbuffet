@@ -12,21 +12,23 @@ IMPORTANT RELATIONSHIPS:
 - Each BUFFET has MENU ITEMS selected (order_items table)
 - Orders are assigned to a BRANCH location
 - order_items has order_id column for direct access to orders
+- Upgrades have their own categories (upgrade_categories) and items (upgrade_items)
+- buffet_upgrades is the junction table linking which upgrades are available for which buffet versions
 
 TABLE: orders - Customer orders
   - id (integer, primary key)
   - order_number (varchar, unique)
-  - customer_email (varchar) - **USE THIS FOR CUSTOMER QUERIES** (this is where customer info is stored)
+  - customer_email (varchar) - **USE THIS FOR GUEST ORDERS** (always populated)
   - customer_phone (varchar)
-  - customer_id (integer, FK to customers) - NOT USED, always NULL
+  - customer_id (integer, FK to customers, nullable) - set when the customer had an account at time of order
   - fulfillment_type (varchar) - 'delivery' or 'collection'
   - fulfillment_address (text)
   - total_price (numeric)
   - status (varchar) - 'pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'
   - payment_status (varchar) - 'pending', 'paid', 'refunded'
   - payment_method (varchar)
-  - stripe_payment_intent_id (varchar)
-  - notes (text)
+  - notes (text) - customer notes
+  - staff_notes (text) - internal notes added by staff
   - created_at (timestamp)
   - updated_at (timestamp)
   - completed_at (timestamp)
@@ -34,20 +36,29 @@ TABLE: orders - Customer orders
   - fulfillment_time (varchar)
   - branch_id (integer, FK to branches)
 
-TABLE: customers - **NOTE: THIS TABLE IS EMPTY - DO NOT USE IT**
-  Customer information is stored directly in orders.customer_email
-  For customer queries, use orders.customer_email NOT the customers table
+TABLE: customers - Registered customer accounts
+  - id (integer, primary key)
+  - email (varchar, unique)
+  - first_name (varchar)
+  - last_name (varchar)
+  - phone (varchar)
+  - default_address (text)
+  - is_active (boolean)
+  - is_verified (boolean)
+  - created_at (timestamp)
+  - updated_at (timestamp)
+  - last_login (timestamp)
+NOTE: Guest orders (no account) still appear in orders.customer_email. Use customer_email for all order queries.
+For registered-account queries, join orders.customer_id to customers.id.
 
 TABLE: branches - Restaurant locations (e.g., "Welshpool", "Shrewsbury")
   - id (integer, primary key)
   - name (varchar)
   - address (text)
-  - latitude (numeric)
-  - longitude (numeric)
-  - delivery_radius_miles (integer)
+  - delivery_radius_miles (numeric)
   - is_active (boolean)
-  - delivery_time_start (time) - branch-set delivery/collection start time (e.g., '09:00')
-  - delivery_time_end (time) - branch-set delivery/collection end time (e.g., '10:00')
+  - delivery_time_start (time)
+  - delivery_time_end (time)
 
 TABLE: buffet_versions - Types of buffets (e.g., "Standard Buffet", "Kids Buffet")
   - id (integer, primary key)
@@ -91,6 +102,7 @@ TABLE: categories - Menu categories (e.g., "Sandwiches", "Wraps", "Savoury", "Di
   - position (integer)
   - is_required (boolean)
   - is_active (boolean)
+  - image_url, image_url_2, image_url_3, image_url_4 (varchar) - display images for this category
 
 TABLE: menu_items - Individual food items
   - id (integer, primary key)
@@ -101,15 +113,39 @@ TABLE: menu_items - Individual food items
   - allergens (text)
   - is_included_in_base (boolean)
   - is_active (boolean)
+  - branch_id (integer, FK to branches, nullable) - if set, item is specific to that branch
 
-TABLE: upgrades - Add-on packages (e.g., "Continental")
+TABLE: upgrades - Add-on packages available to attach to buffets (e.g., "Continental")
   - id (integer, primary key)
   - name (varchar)
   - description (text)
   - price_per_person (numeric)
   - is_active (boolean)
 
-TABLE: order_buffet_upgrades - Upgrades added to order buffets
+TABLE: buffet_upgrades - Junction table: which upgrades are linked to which buffet versions
+  - id (integer, primary key)
+  - buffet_version_id (integer, FK to buffet_versions)
+  - upgrade_id (integer, FK to upgrades)
+  - is_active (boolean)
+
+TABLE: upgrade_categories - Categories within an upgrade (e.g., "Cold Meats", "Cheeses")
+  - id (integer, primary key)
+  - upgrade_id (integer, FK to upgrades)
+  - name (varchar)
+  - description (text)
+  - num_choices (integer) - how many items the customer can pick from this category
+  - is_required (boolean)
+  - position (integer)
+  - is_active (boolean)
+
+TABLE: upgrade_items - Individual items within an upgrade category
+  - id (integer, primary key)
+  - upgrade_category_id (integer, FK to upgrade_categories)
+  - name (varchar)
+  - description (text)
+  - is_active (boolean)
+
+TABLE: order_buffet_upgrades - Upgrades added to a specific buffet in an order
   - id (integer, primary key)
   - order_buffet_id (integer, FK to order_buffets)
   - order_id (integer, FK to orders)
@@ -119,6 +155,21 @@ TABLE: order_buffet_upgrades - Upgrades added to order buffets
   - num_people (integer)
   - subtotal (numeric)
 
+TABLE: order_buffet_upgrade_items - Specific upgrade items chosen by the customer
+  - id (integer, primary key)
+  - order_buffet_upgrade_id (integer, FK to order_buffet_upgrades)
+  - order_id (integer, FK to orders)
+  - upgrade_item_id (integer, FK to upgrade_items)
+  - item_name (varchar)
+  - category_name (varchar)
+
+TABLE: order_config - System configuration settings (e.g., order cutoff time)
+  - id (integer, primary key)
+  - config_key (varchar, unique)
+  - config_value (varchar)
+  - description (text)
+  - updated_at (timestamp)
+
 TABLE: admin_users - Staff accounts
   - id (integer, primary key)
   - username (varchar)
@@ -127,7 +178,11 @@ TABLE: admin_users - Staff accounts
   - role (varchar) - 'admin', 'manager', 'staff'
   - branch_id (integer, FK to branches)
   - is_active (boolean)
+  - created_at (timestamp)
+  - updated_at (timestamp)
   - last_login (timestamp)
+  - phone (varchar)
+  - default_address (text)
 `;
 
 const SQL_EXAMPLES = `
@@ -405,7 +460,16 @@ ORDER BY b.name, count DESC
 
 ===== UPGRADES =====
 
--- Most popular upgrades:
+NOTE: upgrade_name is stored directly on order_buffet_upgrades — do NOT join to upgrades table for order queries.
+
+-- Most ordered upgrade (use upgrade_name, not upgrade_id):
+SELECT upgrade_name, COUNT(*) as times_ordered
+FROM order_buffet_upgrades
+GROUP BY upgrade_name
+ORDER BY times_ordered DESC
+LIMIT 1
+
+-- All upgrades ranked by times ordered:
 SELECT upgrade_name, COUNT(*) as times_ordered, SUM(subtotal) as revenue
 FROM order_buffet_upgrades
 GROUP BY upgrade_name
@@ -413,6 +477,27 @@ ORDER BY times_ordered DESC
 
 -- Total upgrade revenue:
 SELECT SUM(subtotal) as upgrade_revenue FROM order_buffet_upgrades
+
+-- Upgrade revenue by upgrade type:
+SELECT upgrade_name, SUM(subtotal) as revenue
+FROM order_buffet_upgrades
+GROUP BY upgrade_name
+ORDER BY revenue DESC
+
+-- Most popular upgrade items chosen by customers:
+SELECT item_name, category_name, COUNT(*) as times_chosen
+FROM order_buffet_upgrade_items
+GROUP BY item_name, category_name
+ORDER BY times_chosen DESC
+LIMIT 10
+
+-- Upgrade items chosen for a specific upgrade (e.g., "Continental"):
+SELECT obui.item_name, obui.category_name, COUNT(*) as times_chosen
+FROM order_buffet_upgrade_items obui
+JOIN order_buffet_upgrades obu ON obui.order_buffet_upgrade_id = obu.id
+WHERE obu.upgrade_name ILIKE '%Continental%'
+GROUP BY obui.item_name, obui.category_name
+ORDER BY times_chosen DESC
 
 ===== DIETARY & ALLERGENS =====
 
