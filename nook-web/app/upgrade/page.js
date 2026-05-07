@@ -108,12 +108,12 @@ export default function UpgradePage() {
         allSelectedItems.push(...selectedItems[categoryId]);
       }
 
-      const upgradeSubtotal = parseFloat(upgrade.price_per_person) * order.numPeople;
+      const upgradeSubtotal = parseFloat(upgradeData.price_per_person) * order.numPeople;
 
       finalOrder.upgrades = [{
-        upgradeId: upgrade.id,
-        upgradeName: upgrade.name,
-        pricePerPerson: parseFloat(upgrade.price_per_person),
+        upgradeId: upgradeData.id,
+        upgradeName: upgradeData.name,
+        pricePerPerson: parseFloat(upgradeData.price_per_person),
         subtotal: upgradeSubtotal,
         selectedItems: allSelectedItems
       }];

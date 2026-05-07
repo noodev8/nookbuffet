@@ -114,7 +114,7 @@ function OrderPageContent() {
       return;
     }
 
-    // Check if  editing an existing order from the basket
+    // Check if editing an existing order from the basket
     const editingData = localStorage.getItem('editingOrder');
     let orderBeingEdited = null;
     if (editingData) {
@@ -189,10 +189,8 @@ function OrderPageContent() {
               if (section.items && section.items.length > 0) {
                 section.items.forEach(item => {
                   if (section.name === 'Bread') {
-                    // Default to "White and Brown Bread" option
                     initialSelected[item.id] = item.name.toLowerCase().includes('white and brown');
                   } else {
-                    // All other items start selected
                     initialSelected[item.id] = true;
                   }
                 });
@@ -201,7 +199,6 @@ function OrderPageContent() {
             setSelectedItems(initialSelected);
           }
         } else {
-          // Handle API-level errors without throwing - let caller decide what to do
           console.error('API returned error:', menuData);
           setError(menuData.message || 'Failed to load data');
         }
@@ -592,7 +589,7 @@ function OrderPageContent() {
 
                     // Create order object with all details
                     const selectedItemIds = Object.keys(selectedItems).filter(id => selectedItems[id]);
-                    const buffetVersionId = menuSections[0]?.buffet_version_id || '';
+                    const versionId = menuSections[0]?.buffet_version_id || '';
                     const buffetSubtotal = pricePerPerson * numPeople;
 
                     const newOrder = {
@@ -601,7 +598,7 @@ function OrderPageContent() {
                       notes,
                       dietaryInfo,
                       allergens,
-                      buffetVersionId,
+                      buffetVersionId: versionId,
                       buffetName: buffetTitle,
                       pricePerPerson,
                       totalPrice: buffetSubtotal,

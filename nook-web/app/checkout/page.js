@@ -1,7 +1,5 @@
-// This tells Next.js to run this page on the client side (in the browser) not the server
 'use client';
 
-// what i need from Next.js and React
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
@@ -11,8 +9,7 @@ import './checkout.css';
 // Load Stripe outside of component to avoid recreating on every render
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
-// The actual payment form component that uses Stripe hooks
-function PaymentForm({ orders, clientSecret, onSuccess, onError }) {
+function PaymentForm({ orders, onSuccess, onError }) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -25,7 +22,6 @@ function PaymentForm({ orders, clientSecret, onSuccess, onError }) {
     setLoading(true);
     setErrorMessage('');
 
-    // Confirm the payment with Stripe
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
@@ -39,7 +35,6 @@ function PaymentForm({ orders, clientSecret, onSuccess, onError }) {
       setLoading(false);
       onError(error.message);
     } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-      // Payment successful - now create the order
       onSuccess(paymentIntent.id);
     }
   };
@@ -69,21 +64,19 @@ function PaymentForm({ orders, clientSecret, onSuccess, onError }) {
 }
 
 function CheckoutContent() {
-  // router lets us navigate between pages, searchParams grabs stuff from the URL
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // These are state variables - the data this page keeps track of
-  const [orders, setOrders] = useState([]); // All the buffet orders from the basket
-  const [loading, setLoading] = useState(false); // Whether its currently processing
-  const [clientSecret, setClientSecret] = useState(''); // Stripe payment intent secret
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [clientSecret, setClientSecret] = useState('');
   const [paymentError, setPaymentError] = useState('');
-  const [isStaff, setIsStaff] = useState(false); // Whether the logged-in user is a staff member
-  const [showSkipInput, setShowSkipInput] = useState(false); // Show the skip reason field
-  const [skipReason, setSkipReason] = useState(''); // Why they're skipping payment
-  const [skipLoading, setSkipLoading] = useState(false); // Processing the skipped order
+  const [isStaff, setIsStaff] = useState(false);
+  const [showSkipInput, setShowSkipInput] = useState(false);
+  const [skipReason, setSkipReason] = useState('');
+  const [skipLoading, setSkipLoading] = useState(false);
 
-  // Check if the logged-in user is a staff member 
+  // Check if the logged-in user is staff
   useEffect(() => {
     const stored = localStorage.getItem('customer');
     if (stored) {
@@ -162,7 +155,6 @@ function CheckoutContent() {
     }
   };
 
-  // This runs when the page loads - grabs the order data from the URL
   useEffect(() => {
     const ordersParam = searchParams.get('orders');
 
@@ -214,13 +206,10 @@ function CheckoutContent() {
     createPaymentIntent();
   }, [orders]);
 
-  // Called when Stripe payment succeeds
   const handlePaymentSuccess = async (paymentIntentId) => {
     setLoading(true);
     try {
-      // Now create the order in the database with payment confirmed
-      // If a customer is logged in, link the order to their account
-      // Staff IDs live in admin_users, not customers 
+      // Staff IDs live in admin_users, not customers
       const storedCustomer = localStorage.getItem('customer');
       const parsedCustomer = storedCustomer ? JSON.parse(storedCustomer) : null;
       const customerId = parsedCustomer && parsedCustomer.accountType !== 'staff' ? parsedCustomer.id : null;
@@ -236,7 +225,7 @@ function CheckoutContent() {
         branchId: orders[0]?.branchId || null,
         totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
         customerId,
-        paymentIntentId: paymentIntentId, // Include Stripe payment ID
+        paymentIntentId: paymentIntentId,
         buffets: orders.map(order => ({
           buffetVersionId: order.buffetVersionId,
           numPeople: order.numPeople,
@@ -281,7 +270,6 @@ function CheckoutContent() {
     setPaymentError(message);
   };
 
-  // Here's what actually shows up on the page
   return (
     <div className="welcome-page-option3">
       <div className="checkout-page-container">
@@ -294,28 +282,20 @@ function CheckoutContent() {
             <p>This is a test version of a ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
           </div> */}
 
-          {/* Show all the buffets they're ordering */}
           <div className="checkout-section">
-            {/* The title shows how many buffets - adds an 's' if more than one */}
             <h2 className="checkout-section-title">Order Summary ({orders.length} buffet{orders.length !== 1 ? 's' : ''})</h2>
             <div className="checkout-orders-list">
-              {/* Loop through each order and display it */}
               {orders.map((order, index) => (
                 <div key={index} className="checkout-order-item">
                   <div className="checkout-order-header">
-                    {/* Show the buffet name (e.g., "Standard Buffet", "Kids Buffet") */}
                     <span className="checkout-order-number">{order.buffetName || `Buffet #${index + 1}`}</span>
-                    {/* Show how many people - adds an 's' if more than one person */}
                     <span className="checkout-order-people">{order.numPeople} person{order.numPeople !== 1 ? 's' : ''}</span>
                   </div>
                   <div className="checkout-order-details">
-                    {/* Only show notes if they actually wrote something */}
                     {order.notes && <span>Notes: {order.notes}</span>}
-                    {/* Show buffet base price */}
                     <span className="checkout-order-buffet-price">
                       Buffet: £{(order.pricePerPerson * order.numPeople).toFixed(2)}
                     </span>
-                    {/* Show upgrades if any */}
                     {order.upgrades && order.upgrades.length > 0 && (
                       <div className="checkout-order-upgrades">
                         {order.upgrades.map((upgrade, idx) => (
@@ -325,7 +305,6 @@ function CheckoutContent() {
                         ))}
                       </div>
                     )}
-                    {/* Show the total price with 2 decimal places (like £25.00) */}
                     {order.totalPrice !== undefined && (
                       <span className="checkout-order-price">Total: £{order.totalPrice.toFixed(2)}</span>
                     )}
@@ -333,24 +312,21 @@ function CheckoutContent() {
                 </div>
               ))}
             </div>
-            {/* Show the grand total if there are any orders */}
             {orders.length > 0 && (
               <div className="checkout-grand-total">
                 <span>Grand Total:</span>
                 <span className="checkout-grand-total-value">
-                  {/* Add up all the prices and format with 2 decimals */}
                   £{orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0).toFixed(2)}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Show the business details - only if rhey have orders and a business name */}
+          {/* Business details - only shown if they have orders and a business name */}
           {orders.length > 0 && orders[0].businessName && (
             <div className="checkout-section">
               <h2 className="checkout-section-title">Business Details</h2>
               <div className="checkout-details-display">
-                {/* Each detail-row shows a label and the actual value */}
                 <div className="detail-row">
                   <span className="detail-label">Business:</span>
                   <span className="detail-value">{orders[0].businessName}</span>
@@ -369,7 +345,6 @@ function CheckoutContent() {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Type:</span>
-                  {/* Show "Delivery" or "Collection" based on what they picked */}
                   <span className="detail-value">{orders[0].fulfillmentType === 'delivery' ? 'Delivery' : 'Collection'}</span>
                 </div>
                 <div className="detail-row">
@@ -476,7 +451,6 @@ function CheckoutContent() {
               >
                 <PaymentForm
                   orders={orders}
-                  clientSecret={clientSecret}
                   onSuccess={handlePaymentSuccess}
                   onError={handlePaymentError}
                 />
@@ -504,12 +478,9 @@ function CheckoutContent() {
   );
 }
 
-// main checkout page component - wraps everything in Suspense
-// show a loading screen while the page figures out what orders to display
 export default function CheckoutPage() {
   return (
     <Suspense fallback={
-      // fallback is what shows up while loading
       <div className="welcome-page-option3">
         <div className="checkout-page-container">
           <div className="checkout-content-wrapper">
@@ -520,7 +491,6 @@ export default function CheckoutPage() {
         </div>
       </div>
     }>
-      {/* once everything's loaded, show the actual checkout content */}
       <CheckoutContent />
     </Suspense>
   );
