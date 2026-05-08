@@ -220,6 +220,34 @@ const createBuffetVersion = async (req, res) => {
   }
 };
 
+// ===== DELETE BUFFET VERSION (SOFT DELETE) =====
+/**
+ * Soft-delete a buffet version (protected, manager/admin only)
+ * DELETE /api/buffet-versions/manage/:id
+ */
+const deleteBuffetVersion = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!id || isNaN(id)) {
+      return res.json({ return_code: 'INVALID_ID', message: 'Please provide a valid buffet version ID' });
+    }
+
+    const { version, categoriesDeactivated, itemsDeactivated } = await buffetVersionModel.deactivateBuffetVersion(id);
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Buffet version removed successfully',
+      data: version,
+      categoriesDeactivated,
+      itemsDeactivated
+    });
+  } catch (error) {
+    if (error.message === 'Buffet version not found') {
+      return res.json({ return_code: 'NOT_FOUND', message: 'Buffet version not found' });
+    }
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove buffet version' });
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the routes file
 module.exports = {
@@ -227,6 +255,7 @@ module.exports = {
   getAllBuffetVersions,
   getAllBuffetVersionsForManagement,
   updateBuffetVersion,
-  createBuffetVersion
+  createBuffetVersion,
+  deleteBuffetVersion
 };
 

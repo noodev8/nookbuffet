@@ -69,6 +69,10 @@
    ======================================== */
 .branches-page-header {
   margin-bottom: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 .branches-page-header h2 {
   font-family: 'Oswald', sans-serif;
@@ -123,7 +127,36 @@
 .timeslot-label { font-size: 0.8rem; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
 .timeslot-value { font-size: 1.05rem; font-weight: 600; color: #2e7d32; }
 
-.branch-actions { flex-shrink: 0; }
+.branch-actions { flex-shrink: 0; display: flex; gap: 0.5rem; }
+
+.add-branch-button {
+  background: #2e7d32;
+  color: white;
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+.add-branch-button:hover { background: #1b5e20; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(46,125,50,0.3); }
+
+.delete-branch-button {
+  background: transparent;
+  color: #e53935;
+  border: 1.5px solid #e53935;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+.delete-branch-button:hover { background: #e53935; color: white; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(229,57,53,0.3); }
 
 .edit-timeslot-button {
   background: #667eea;
@@ -223,5 +256,7 @@
   .branch-card { flex-direction: column; }
   .branch-actions { width: 100%; }
   .edit-timeslot-button { width: 100%; }
+  .delete-branch-button { width: 100%; }
+  .add-branch-button { width: 100%; }
   .form-row { flex-direction: column; }
 }

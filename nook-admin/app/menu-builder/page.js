@@ -137,7 +137,7 @@ function ImagePickerGrid({ label, value, onChange, webUrl, apiUrl, imageOptions,
 }
 
 // ===== SORTABLE CATEGORY ROW =====
-function SortableCategory({ c, editingCategory, isKids, webUrl, saveCategory, setEditingCategory, startEditCategory, saving, imgPickerConfig }) {
+function SortableCategory({ c, editingCategory, isKids, webUrl, saveCategory, setEditingCategory, startEditCategory, saving, imgPickerConfig, onDelete }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: c.id,
     disabled: editingCategory?.id === c.id,
@@ -203,6 +203,7 @@ function SortableCategory({ c, editingCategory, isKids, webUrl, saveCategory, se
             {c.is_required && <span className="mb-badge mb-badge-required">Required</span>}
           </div>
           <button className="mb-edit-btn" onClick={() => startEditCategory(c)}>Edit</button>
+          <button className="mb-delete-btn" onClick={() => onDelete(c)}>Delete</button>
         </div>
       )}
     </div>
@@ -767,6 +768,108 @@ export default function MenuBuilderPage() {
     } catch { alert('Failed to update item'); } finally { setSaving(false); }
   };
 
+  // ===== DELETE: BUFFET VERSION (SOFT DELETE — CASCADE) =====
+  const deleteBuffetVersion = async (v) => {
+    // Count categories and items under this version from local state so the warning is specific
+    const affectedCats = allCategories.filter(c => c.buffet_version_id === v.id);
+    const affectedCatIds = new Set(affectedCats.map(c => c.id));
+    const affectedItems = menuItems.filter(item => affectedCatIds.has(item.category_id));
+
+    const catLine = affectedCats.length > 0
+      ? `\n• ${affectedCats.length} category/categories will also be removed`
+      : '';
+    const itemLine = affectedItems.length > 0
+      ? `\n• ${affectedItems.length} menu item(s) inside those categories will also be removed`
+      : '';
+
+    const confirmed = window.confirm(
+      `Remove "${v.title}"?${catLine}${itemLine}\n\nExisting orders will not be affected.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${apiUrl}/api/buffet-versions/manage/${v.id}`, { method: 'DELETE', headers: authHeaders() });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setBuffetVersions(prev => prev.filter(x => x.id !== v.id));
+        setAllCategories(prev => prev.filter(c => c.buffet_version_id !== v.id));
+        setMenuItems(prev => prev.filter(item => !affectedCatIds.has(item.category_id)));
+        showSuccess(`"${v.title}" removed`);
+      } else { alert(d.message || 'Failed to remove'); }
+    } catch { alert('Failed to remove buffet version'); }
+  };
+
+  // ===== DELETE: CATEGORY (SOFT DELETE) =====
+  const deleteCategory = async (c) => {
+    if (!window.confirm(`Remove category "${c.name}"?\n\nAll items inside will also be hidden. Existing orders will not be affected.`)) return;
+    try {
+      const res = await fetch(`${apiUrl}/api/menu/manage/categories/${c.id}`, { method: 'DELETE', headers: authHeaders() });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setAllCategories(prev => prev.filter(x => x.id !== c.id));
+        showSuccess(`"${c.name}" removed`);
+      } else { alert(d.message || 'Failed to remove'); }
+    } catch { alert('Failed to remove category'); }
+  };
+
+  // ===== DELETE: MENU ITEM (SOFT DELETE) =====
+  const deleteMenuItem = async (item) => {
+    if (!window.confirm(`Remove "${item.name}"?\n\nExisting orders will not be affected.`)) return;
+    try {
+      const res = await fetch(`${apiUrl}/api/menu/manage/items/${item.id}`, { method: 'DELETE', headers: authHeaders() });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setMenuItems(prev => prev.filter(x => x.id !== item.id));
+        showSuccess(`"${item.name}" removed`);
+      } else { alert(d.message || 'Failed to remove'); }
+    } catch { alert('Failed to remove menu item'); }
+  };
+
+  // ===== DELETE: UPGRADE (SOFT DELETE) =====
+  const deleteUpgrade = async (upgrade) => {
+    if (!window.confirm(`Remove upgrade "${upgrade.name}"?\n\nExisting orders will not be affected.`)) return;
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage/${upgrade.id}`, { method: 'DELETE', headers: authHeaders() });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setAllUpgrades(prev => prev.filter(u => u.id !== upgrade.id));
+        showSuccess(`"${upgrade.name}" removed`);
+      } else { alert(d.message || 'Failed to remove'); }
+    } catch { alert('Failed to remove upgrade'); }
+  };
+
+  // ===== DELETE: UPGRADE CATEGORY (SOFT DELETE) =====
+  const deleteUpgradeCategory = async (upgradeId, cat) => {
+    if (!window.confirm(`Remove category "${cat.name}"?\n\nAll items inside will also be hidden.`)) return;
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage/categories/${cat.id}`, { method: 'DELETE', headers: authHeaders() });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setAllUpgrades(prev => prev.map(u => u.id === upgradeId
+          ? { ...u, categories: u.categories.filter(c => c.id !== cat.id) }
+          : u
+        ));
+        showSuccess(`"${cat.name}" removed`);
+      } else { alert(d.message || 'Failed to remove'); }
+    } catch { alert('Failed to remove upgrade category'); }
+  };
+
+  // ===== DELETE: UPGRADE ITEM (SOFT DELETE) =====
+  const deleteUpgradeItem = async (upgradeId, catId, item) => {
+    if (!window.confirm(`Remove "${item.name}"?`)) return;
+    try {
+      const res = await fetch(`${apiUrl}/api/upgrades/manage/items/${item.id}`, { method: 'DELETE', headers: authHeaders() });
+      const d = await res.json();
+      if (d.return_code === 'SUCCESS') {
+        setAllUpgrades(prev => prev.map(u => u.id === upgradeId
+          ? { ...u, categories: u.categories.map(c => c.id === catId ? { ...c, items: c.items.filter(i => i.id !== item.id) } : c) }
+          : u
+        ));
+        showSuccess(`"${item.name}" removed`);
+      } else { alert(d.message || 'Failed to remove'); }
+    } catch { alert('Failed to remove upgrade item'); }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
@@ -843,7 +946,7 @@ export default function MenuBuilderPage() {
           <button className="nav-item" onClick={() => router.push('/prices')}>Prices</button>
           <button className="nav-item active">Menu Builder</button>
           <button className="nav-item" onClick={() => router.push('/staff')}>Staff Management</button>
-          <button className="nav-item" onClick={() => router.push('/branches')}>Delivery Times</button>
+          <button className="nav-item" onClick={() => router.push('/branches')}>Branches</button>
           <button className="nav-item" onClick={() => router.push('/reports')}>Reports</button>
         </nav>
       </header>
@@ -949,6 +1052,7 @@ export default function MenuBuilderPage() {
                       <span className="mb-existing-detail">£{parseFloat(v.price_per_person).toFixed(2)} / person</span>
                       {v.branch_name && <span className="mb-badge">{v.branch_name}</span>}
                       <button className="mb-edit-btn" onClick={() => startEditVersion(v)}>Edit</button>
+                      <button className="mb-delete-btn" onClick={() => deleteBuffetVersion(v)}>Delete</button>
                     </div>
                   )}
                 </div>
@@ -1066,6 +1170,7 @@ export default function MenuBuilderPage() {
                                 startEditCategory={startEditCategory}
                                 saving={saving}
                                 imgPickerConfig={imgPickerConfig}
+                                onDelete={deleteCategory}
                               />
                             ))}
                           </SortableContext>
@@ -1203,6 +1308,7 @@ export default function MenuBuilderPage() {
                       {item.dietary_info && <span className="mb-badge mb-badge-dietary">{item.dietary_info}</span>}
                       {!item.is_active && <span className="mb-badge mb-badge-inactive">Out of stock</span>}
                       <button className="mb-edit-btn" onClick={() => startEditItem(item)}>Edit</button>
+                      <button className="mb-delete-btn" onClick={() => deleteMenuItem(item)}>Delete</button>
                     </div>
                   )}
                 </div>
@@ -1279,6 +1385,7 @@ export default function MenuBuilderPage() {
                       <button className="mb-edit-btn" onClick={() => toggleExpandUpgrade(upgrade.id)}>
                         {expandedUpgradeId === upgrade.id ? 'Collapse' : 'Manage'}
                       </button>
+                      <button className="mb-delete-btn" onClick={() => deleteUpgrade(upgrade)}>Delete</button>
                     </div>
                   )}
 
@@ -1353,6 +1460,7 @@ export default function MenuBuilderPage() {
                                 <button className="mb-edit-btn" onClick={() => { setExpandedCatId(expandedCatId === cat.id ? null : cat.id); setNewUItem(p => ({ ...p, catId: cat.id })); }}>
                                   {expandedCatId === cat.id ? 'Collapse' : 'Items'}
                                 </button>
+                                <button className="mb-delete-btn" onClick={() => deleteUpgradeCategory(upgrade.id, cat)}>Delete</button>
                               </div>
                             )}
 
@@ -1386,6 +1494,7 @@ export default function MenuBuilderPage() {
                                         <span className="mb-existing-name">{item.name}</span>
                                         {item.description && <span className="mb-existing-detail">{item.description}</span>}
                                         <button className="mb-edit-btn" onClick={() => setEditingUItem({ ...item })}>Edit</button>
+                                        <button className="mb-delete-btn" onClick={() => deleteUpgradeItem(upgrade.id, cat.id, item)}>Delete</button>
                                       </div>
                                     )}
                                   </div>

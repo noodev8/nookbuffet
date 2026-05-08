@@ -68,6 +68,11 @@ router.get('/manage/buffet/:buffetId', verifyToken, checkRole(mgmt), upgradeCont
 router.post('/manage/buffet/:buffetId/upgrade/:upgradeId', verifyToken, checkRole(mgmt), upgradeController.linkUpgradeToBuffet);
 router.delete('/manage/buffet/:buffetId/upgrade/:upgradeId', verifyToken, checkRole(mgmt), upgradeController.unlinkUpgradeFromBuffet);
 
+// DELETE (soft delete) an upgrade, upgrade category, or upgrade item
+router.delete('/manage/:id', verifyToken, checkRole(mgmt), upgradeController.deleteUpgrade);
+router.delete('/manage/categories/:catId', verifyToken, checkRole(mgmt), upgradeController.deleteUpgradeCategory);
+router.delete('/manage/items/:itemId', verifyToken, checkRole(mgmt), upgradeController.deleteUpgradeItem);
+
 // GET upgrade with all categories and items
 router.get('/:id/full', upgradeController.getUpgradeWithItems);
 

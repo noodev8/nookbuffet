@@ -10,7 +10,7 @@ Each version has a name, description, and price per person.
 =======================================================================================================================================
 */
 
-const { query } = require('../database');  // Import the database query function
+const { query, getClient } = require('../database');  // Import the database query function
 
 // ===== GET ONE SPECIFIC BUFFET VERSION =====
 /**
@@ -178,6 +178,74 @@ const createBuffetVersion = async (title, description, pricePerPerson, branchId)
   }
 };
 
+// ===== DEACTIVATE BUFFET VERSION (SOFT DELETE — CASCADE) =====
+/**
+ * Soft-delete a buffet version and cascade to its categories and menu items.
+ * All three updates run inside a single transaction so nothing is left half-deleted.
+ *
+ * @param {number} id - The buffet version ID
+ * @returns {Promise<object>} { version, categoriesDeactivated, itemsDeactivated }
+ */
+const deactivateBuffetVersion = async (id) => {
+  const client = await getClient();
+  try {
+    await client.query('BEGIN');
+
+    // 1. Confirm the version exists
+    const versionResult = await client.query(
+      `UPDATE buffet_versions SET is_active = false WHERE id = $1
+       RETURNING id, title, is_active`,
+      [id]
+    );
+    if (versionResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      throw new Error('Buffet version not found');
+    }
+
+    // 2. Collect all category IDs for this version
+    const catIds = await client.query(
+      `SELECT id FROM categories WHERE buffet_version_id = $1 AND is_active = true`,
+      [id]
+    );
+    const categoryCount = catIds.rows.length;
+
+    let itemCount = 0;
+    if (categoryCount > 0) {
+      const ids = catIds.rows.map(r => r.id);
+
+      // 3. Soft-delete all menu items in those categories
+      const itemResult = await client.query(
+        `UPDATE menu_items SET is_active = false
+         WHERE category_id = ANY($1::int[]) AND is_active = true
+         RETURNING id`,
+        [ids]
+      );
+      itemCount = itemResult.rows.length;
+
+      // 4. Soft-delete the categories themselves
+      await client.query(
+        `UPDATE categories SET is_active = false
+         WHERE id = ANY($1::int[])`,
+        [ids]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    return {
+      version: versionResult.rows[0],
+      categoriesDeactivated: categoryCount,
+      itemsDeactivated: itemCount
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Could not deactivate buffet version (cascade):', error);
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the controller
 module.exports = {
@@ -185,6 +253,7 @@ module.exports = {
   getAllBuffetVersions,
   getAllBuffetVersionsForManagement,
   updateBuffetVersion,
-  createBuffetVersion
+  createBuffetVersion,
+  deactivateBuffetVersion
 };
 

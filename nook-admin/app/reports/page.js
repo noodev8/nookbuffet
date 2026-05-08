@@ -428,7 +428,7 @@ export default function ReportsPage() {
           <button className="nav-item" onClick={() => router.push('/prices')}>Prices</button>
           <button className="nav-item" onClick={() => router.push('/menu-builder')}>Menu Builder</button>
           <button className="nav-item" onClick={goToStaffManagement}>Staff Management</button>
-          <button className="nav-item" onClick={() => router.push('/branches')}>Delivery Times</button>
+          <button className="nav-item" onClick={() => router.push('/branches')}>Branches</button>
           <button className="nav-item active">Reports</button>
         </nav>
       </header>

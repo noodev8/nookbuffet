@@ -74,7 +74,10 @@ router.post('/manage', verifyToken, checkRole(['admin', 'manager']), buffetVersi
 // ===== ROUTE 4: UPDATE A BUFFET VERSION PRICE (PROTECTED) =====
 router.patch('/manage/:id', verifyToken, checkRole(['admin', 'manager']), buffetVersionController.updateBuffetVersion);
 
-// ===== ROUTE 4: GET ONE SPECIFIC BUFFET VERSION =====
+// ===== ROUTE 5: DELETE (SOFT DELETE) A BUFFET VERSION (PROTECTED) =====
+router.delete('/manage/:id', verifyToken, checkRole(['admin', 'manager']), buffetVersionController.deleteBuffetVersion);
+
+// ===== ROUTE 6: GET ONE SPECIFIC BUFFET VERSION =====
 // NOTE: This must come AFTER any other specific routes
 router.get('/:id', buffetVersionController.getBuffetVersionById);
 

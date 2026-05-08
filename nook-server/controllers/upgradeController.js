@@ -256,6 +256,45 @@ const unlinkUpgradeFromBuffet = async (req, res) => {
   }
 };
 
+// ===== DELETE UPGRADE (SOFT DELETE) =====
+const deleteUpgrade = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!id || isNaN(id)) return res.json({ return_code: 'INVALID_ID', message: 'Invalid upgrade ID' });
+    const deactivated = await upgradeModel.deactivateUpgrade(id);
+    res.json({ return_code: 'SUCCESS', message: 'Upgrade removed successfully', data: deactivated });
+  } catch (error) {
+    if (error.message === 'Upgrade not found') return res.json({ return_code: 'NOT_FOUND', message: 'Upgrade not found' });
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove upgrade' });
+  }
+};
+
+// ===== DELETE UPGRADE CATEGORY (SOFT DELETE) =====
+const deleteUpgradeCategory = async (req, res) => {
+  try {
+    const id = parseInt(req.params.catId);
+    if (!id || isNaN(id)) return res.json({ return_code: 'INVALID_ID', message: 'Invalid category ID' });
+    const deactivated = await upgradeModel.deactivateUpgradeCategory(id);
+    res.json({ return_code: 'SUCCESS', message: 'Upgrade category removed successfully', data: deactivated });
+  } catch (error) {
+    if (error.message === 'Upgrade category not found') return res.json({ return_code: 'NOT_FOUND', message: 'Upgrade category not found' });
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove upgrade category' });
+  }
+};
+
+// ===== DELETE UPGRADE ITEM (SOFT DELETE) =====
+const deleteUpgradeItem = async (req, res) => {
+  try {
+    const id = parseInt(req.params.itemId);
+    if (!id || isNaN(id)) return res.json({ return_code: 'INVALID_ID', message: 'Invalid item ID' });
+    const deactivated = await upgradeModel.deactivateUpgradeItem(id);
+    res.json({ return_code: 'SUCCESS', message: 'Upgrade item removed successfully', data: deactivated });
+  } catch (error) {
+    if (error.message === 'Upgrade item not found') return res.json({ return_code: 'NOT_FOUND', message: 'Upgrade item not found' });
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove upgrade item' });
+  }
+};
+
 module.exports = {
   getAllUpgrades,
   getUpgradesForBuffet,
@@ -270,6 +309,9 @@ module.exports = {
   updateUpgradeItem,
   getBuffetUpgradeLinks,
   linkUpgradeToBuffet,
-  unlinkUpgradeFromBuffet
+  unlinkUpgradeFromBuffet,
+  deleteUpgrade,
+  deleteUpgradeCategory,
+  deleteUpgradeItem
 };
 

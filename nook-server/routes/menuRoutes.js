@@ -88,6 +88,12 @@ router.patch('/manage/items/:id', verifyToken, checkRole(['admin', 'manager']), 
 // ===== ROUTE 9: UPDATE MENU ITEM STOCK STATUS (PROTECTED) =====
 router.patch('/manage/:id', verifyToken, checkRole(['admin', 'manager']), menuController.updateMenuItemStockStatus);
 
+// ===== ROUTE 10: DELETE (SOFT DELETE) A CATEGORY (PROTECTED) =====
+router.delete('/manage/categories/:id', verifyToken, checkRole(['admin', 'manager']), menuController.deleteCategory);
+
+// ===== ROUTE 11: DELETE (SOFT DELETE) A MENU ITEM (PROTECTED) =====
+router.delete('/manage/items/:id', verifyToken, checkRole(['admin', 'manager']), menuController.deleteMenuItem);
+
 // ===== EXPORTS =====
 // Make this router available to server.js
 module.exports = router;

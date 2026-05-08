@@ -63,12 +63,21 @@ router.get('/', branchController.getAllBranches);
 // When someone POSTs to /api/branches/nearest with an address, find the nearest branch
 router.post('/nearest', branchController.findNearestBranch);
 
+// ===== ROUTE: CREATE BRANCH (manager only) =====
+// POST /api/branches  { name, address, deliveryRadiusMiles, deliveryTimeStart, deliveryTimeEnd }
+router.post('/', verifyToken, checkRole(['manager']), branchController.createBranch);
+
 // ===== ROUTE: UPDATE BRANCH TIMESLOT (manager only) =====
 // PUT /api/branches/:id/timeslot  { deliveryTimeStart, deliveryTimeEnd }
 router.put('/:id/timeslot', verifyToken, checkRole(['manager']), branchController.updateBranchTimeslot);
 
+// ===== ROUTE: UPDATE DELIVERY RADIUS (manager only) =====
 // PATCH /api/branches/:id/delivery-radius  { deliveryRadius }
 router.patch('/:id/delivery-radius', verifyToken, checkRole(['manager']), branchController.updateDeliveryRadius);
+
+// ===== ROUTE: DELETE BRANCH (manager only) =====
+// DELETE /api/branches/:id
+router.delete('/:id', verifyToken, checkRole(['manager']), branchController.deleteBranch);
 
 module.exports = router;
 

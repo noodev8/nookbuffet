@@ -227,6 +227,20 @@
   flex-shrink: 0;
 }
 .mb-edit-btn:hover { background: #667eea; color: white; }
+
+.mb-delete-btn {
+  padding: 0.3rem 0.9rem;
+  border: 2px solid #e53935;
+  border-radius: 6px;
+  background: white;
+  color: #e53935;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.mb-delete-btn:hover { background: #e53935; color: white; }
 .mb-existing-name { font-weight: 600; color: #333; flex: 1; }
 .mb-existing-detail { color: #667eea; font-weight: 600; font-size: 0.95rem; }
 .mb-badge {

@@ -414,6 +414,50 @@ const updateCategoryPositions = async (updates) => {
   }
 };
 
+// ===== DEACTIVATE CATEGORY (SOFT DELETE) =====
+/**
+ * Soft-delete a category by setting is_active = false
+ *
+ * @param {number} id - Category ID
+ * @returns {Promise<object>} The deactivated row
+ */
+const deactivateCategory = async (id) => {
+  try {
+    const result = await query(
+      `UPDATE categories SET is_active = false WHERE id = $1
+       RETURNING id, name, is_active`,
+      [id]
+    );
+    if (result.rows.length === 0) throw new Error('Category not found');
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not deactivate category:', error);
+    throw error;
+  }
+};
+
+// ===== DEACTIVATE MENU ITEM (SOFT DELETE) =====
+/**
+ * Soft-delete a menu item by setting is_active = false
+ *
+ * @param {number} id - Menu item ID
+ * @returns {Promise<object>} The deactivated row
+ */
+const deactivateMenuItem = async (id) => {
+  try {
+    const result = await query(
+      `UPDATE menu_items SET is_active = false WHERE id = $1
+       RETURNING id, name, is_active`,
+      [id]
+    );
+    if (result.rows.length === 0) throw new Error('Menu item not found');
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not deactivate menu item:', error);
+    throw error;
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the controller
 module.exports = {
@@ -427,5 +471,7 @@ module.exports = {
   createMenuItem,
   updateCategory,
   updateMenuItem,
-  updateCategoryPositions
+  updateCategoryPositions,
+  deactivateCategory,
+  deactivateMenuItem
 };

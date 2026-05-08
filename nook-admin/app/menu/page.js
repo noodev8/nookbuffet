@@ -234,7 +234,7 @@ export default function MenuManagementPage() {
             <button className="nav-item" onClick={goToStaffManagement}>Staff Management</button>
           )}
           {user && user.role === 'manager' && (
-            <button className="nav-item" onClick={() => router.push('/branches')}>Delivery Times</button>
+            <button className="nav-item" onClick={() => router.push('/branches')}>Branches</button>
           )}
           {user && user.role === 'manager' && (
             <button className="nav-item" onClick={goToReports}>Reports</button>

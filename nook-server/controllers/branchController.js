@@ -194,11 +194,97 @@ const updateDeliveryRadius = async (req, res) => {
   }
 };
 
+// ===== CREATE BRANCH =====
+/**
+ * Creates a new branch. Geocodes the provided address to get coordinates.
+ *
+ * @param {object} req - name, address, deliveryRadiusMiles, deliveryTimeStart, deliveryTimeEnd
+ * @param {object} res
+ */
+const createBranch = async (req, res) => {
+  try {
+    const {
+      name,
+      address,
+      deliveryRadiusMiles = 7,
+      deliveryTimeStart = '09:00',
+      deliveryTimeEnd = '17:00'
+    } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.json({ return_code: 'MISSING_FIELDS', message: 'Branch name is required' });
+    }
+    if (!address || !address.trim()) {
+      return res.json({ return_code: 'MISSING_FIELDS', message: 'Branch address is required' });
+    }
+
+    const radius = parseFloat(deliveryRadiusMiles);
+    if (isNaN(radius) || radius <= 0) {
+      return res.json({ return_code: 'VALIDATION_ERROR', message: 'Delivery radius must be a positive number' });
+    }
+
+    const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (!timeRegex.test(deliveryTimeStart) || !timeRegex.test(deliveryTimeEnd)) {
+      return res.json({ return_code: 'INVALID_FORMAT', message: 'Times must be in HH:MM format (e.g. 09:00)' });
+    }
+    if (deliveryTimeStart >= deliveryTimeEnd) {
+      return res.json({ return_code: 'INVALID_RANGE', message: 'Start time must be before end time' });
+    }
+
+    const coords = await geocodeAddress(address.trim());
+    if (!coords) {
+      return res.json({ return_code: 'INVALID_ADDRESS', message: 'Could not find that address. Please check it and try again.' });
+    }
+
+    const branch = await branchModel.createBranch(
+      name.trim(), address.trim(), coords.lat, coords.lng,
+      radius, deliveryTimeStart, deliveryTimeEnd
+    );
+
+    res.json({ return_code: 'SUCCESS', message: 'Branch created successfully', data: branch });
+
+  } catch (error) {
+    console.error('Error creating branch:', error);
+    res.json({ return_code: 'SERVER_ERROR', message: 'Failed to create branch' });
+  }
+};
+
+// ===== DELETE BRANCH =====
+/**
+ * Deactivates a branch (soft delete). The branch record is kept so historical
+ * orders that reference it remain intact.
+ *
+ * @param {object} req - id in params
+ * @param {object} res
+ */
+const deleteBranch = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+      return res.json({ return_code: 'INVALID_ID', message: 'Invalid branch ID' });
+    }
+
+    const deactivated = await branchModel.deactivateBranch(id);
+    if (!deactivated) {
+      return res.json({ return_code: 'NOT_FOUND', message: 'Branch not found or already inactive' });
+    }
+
+    res.json({ return_code: 'SUCCESS', message: `Branch "${deactivated.name}" removed`, data: deactivated });
+
+  } catch (error) {
+    console.error('Error deleting branch:', error);
+    res.json({ return_code: 'SERVER_ERROR', message: 'Failed to delete branch' });
+  }
+};
+
 // Export the functions so routes can use them
 module.exports = {
   getAllBranches,
   findNearestBranch,
   updateBranchTimeslot,
-  updateDeliveryRadius
+  updateDeliveryRadius,
+  createBranch,
+  deleteBranch
 };
 

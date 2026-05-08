@@ -110,10 +110,51 @@ const updateDeliveryRadius = async (branchId, radiusMiles) => {
   return result.rows[0] || null;
 };
 
+/**
+ * Create a new branch
+ * @param {string} name
+ * @param {string} address
+ * @param {number} lat
+ * @param {number} lng
+ * @param {number} deliveryRadiusMiles
+ * @param {string} deliveryTimeStart - HH:MM
+ * @param {string} deliveryTimeEnd - HH:MM
+ * @returns {object} - Newly created branch
+ */
+const createBranch = async (name, address, lat, lng, deliveryRadiusMiles, deliveryTimeStart, deliveryTimeEnd) => {
+  const sql = `
+    INSERT INTO branches (name, address, latitude, longitude, delivery_radius_miles, delivery_time_start, delivery_time_end)
+    VALUES ($1, $2, $3, $4, $5, $6::TIME, $7::TIME)
+    RETURNING id, name, address, latitude, longitude, delivery_radius_miles, is_active,
+              TO_CHAR(delivery_time_start, 'HH24:MI') AS delivery_time_start,
+              TO_CHAR(delivery_time_end, 'HH24:MI') AS delivery_time_end
+  `;
+  const result = await query(sql, [name, address, lat, lng, deliveryRadiusMiles, deliveryTimeStart, deliveryTimeEnd]);
+  return result.rows[0];
+};
+
+/**
+ * Deactivate a branch (soft delete)
+ * @param {number} branchId
+ * @returns {object} - The deactivated branch, or null if not found
+ */
+const deactivateBranch = async (branchId) => {
+  const sql = `
+    UPDATE branches
+    SET is_active = false
+    WHERE id = $1 AND is_active = true
+    RETURNING id, name
+  `;
+  const result = await query(sql, [branchId]);
+  return result.rows[0] || null;
+};
+
 module.exports = {
   getAllActiveBranches,
   getBranchById,
   findNearestBranch,
   updateBranchTimeslot,
-  updateDeliveryRadius
+  updateDeliveryRadius,
+  createBranch,
+  deactivateBranch
 };

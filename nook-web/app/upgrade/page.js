@@ -280,7 +280,7 @@ export default function UpgradePage() {
                                 onClick={() => needsSelection && toggleItem(category.id, item.id, category.num_choices)}
                               >
                                 {needsSelection && (
-                                  <span className="item-checkbox">{isSelected ? '✓' : ''}</span>
+                                  <span className="item-checkbox">{isSelected ? '' : ''}</span>
                                 )}
                                 {isAutoIncluded && <span className="item-check">✓</span>}
                                 <span className="item-name">{item.name}</span>

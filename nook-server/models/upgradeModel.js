@@ -324,6 +324,51 @@ const unlinkUpgradeFromBuffet = async (buffetVersionId, upgradeId) => {
   }
 };
 
+// ===== DEACTIVATE UPGRADE (SOFT DELETE) =====
+const deactivateUpgrade = async (id) => {
+  try {
+    const result = await query(
+      `UPDATE upgrades SET is_active = false WHERE id = $1 RETURNING id, name, is_active`,
+      [id]
+    );
+    if (result.rows.length === 0) throw new Error('Upgrade not found');
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not deactivate upgrade:', error);
+    throw error;
+  }
+};
+
+// ===== DEACTIVATE UPGRADE CATEGORY (SOFT DELETE) =====
+const deactivateUpgradeCategory = async (id) => {
+  try {
+    const result = await query(
+      `UPDATE upgrade_categories SET is_active = false WHERE id = $1 RETURNING id, name, is_active`,
+      [id]
+    );
+    if (result.rows.length === 0) throw new Error('Upgrade category not found');
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not deactivate upgrade category:', error);
+    throw error;
+  }
+};
+
+// ===== DEACTIVATE UPGRADE ITEM (SOFT DELETE) =====
+const deactivateUpgradeItem = async (id) => {
+  try {
+    const result = await query(
+      `UPDATE upgrade_items SET is_active = false WHERE id = $1 RETURNING id, name, is_active`,
+      [id]
+    );
+    if (result.rows.length === 0) throw new Error('Upgrade item not found');
+    return result.rows[0];
+  } catch (error) {
+    console.error('Could not deactivate upgrade item:', error);
+    throw error;
+  }
+};
+
 module.exports = {
   getAllUpgrades,
   getUpgradeById,
@@ -339,6 +384,9 @@ module.exports = {
   updateUpgradeItem,
   getBuffetUpgradeLinks,
   linkUpgradeToBuffet,
-  unlinkUpgradeFromBuffet
+  unlinkUpgradeFromBuffet,
+  deactivateUpgrade,
+  deactivateUpgradeCategory,
+  deactivateUpgradeItem
 };
 

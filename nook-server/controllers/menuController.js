@@ -355,6 +355,48 @@ const reorderCategories = async (req, res) => {
   }
 };
 
+// ===== DELETE CATEGORY (SOFT DELETE) =====
+/**
+ * Soft-delete a category (protected, manager/admin only)
+ * DELETE /api/menu/manage/categories/:id
+ */
+const deleteCategory = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!id || isNaN(id)) {
+      return res.json({ return_code: 'INVALID_ID', message: 'Please provide a valid category ID' });
+    }
+    const deactivated = await menuModel.deactivateCategory(id);
+    res.json({ return_code: 'SUCCESS', message: 'Category removed successfully', data: deactivated });
+  } catch (error) {
+    if (error.message === 'Category not found') {
+      return res.json({ return_code: 'NOT_FOUND', message: 'Category not found' });
+    }
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove category' });
+  }
+};
+
+// ===== DELETE MENU ITEM (SOFT DELETE) =====
+/**
+ * Soft-delete a menu item (protected, manager/admin only)
+ * DELETE /api/menu/manage/items/:id
+ */
+const deleteMenuItem = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!id || isNaN(id)) {
+      return res.json({ return_code: 'INVALID_ID', message: 'Please provide a valid menu item ID' });
+    }
+    const deactivated = await menuModel.deactivateMenuItem(id);
+    res.json({ return_code: 'SUCCESS', message: 'Menu item removed successfully', data: deactivated });
+  } catch (error) {
+    if (error.message === 'Menu item not found') {
+      return res.json({ return_code: 'NOT_FOUND', message: 'Menu item not found' });
+    }
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove menu item' });
+  }
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the routes file
 module.exports = {
@@ -367,5 +409,7 @@ module.exports = {
   createMenuItem,
   updateCategory,
   updateMenuItem,
-  reorderCategories
+  reorderCategories,
+  deleteCategory,
+  deleteMenuItem
 };

@@ -19,6 +19,12 @@ export default function BranchesPage() {
   const [formLoading, setFormLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Add branch modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addForm, setAddForm] = useState({ name: '', address: '', deliveryRadiusMiles: '7', deliveryTimeStart: '09:00', deliveryTimeEnd: '17:00' });
+  const [addFormError, setAddFormError] = useState('');
+  const [addFormLoading, setAddFormLoading] = useState(false);
+
   // Auth check
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -123,6 +129,73 @@ export default function BranchesPage() {
     }
   };
 
+  const handleAddFormChange = (e) => {
+    setAddForm({ ...addForm, [e.target.name]: e.target.value });
+    setAddFormError('');
+  };
+
+  const handleAddBranch = async (e) => {
+    e.preventDefault();
+    setAddFormLoading(true);
+    setAddFormError('');
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+
+      const response = await fetch(`${apiUrl}/api/branches`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(addForm)
+      });
+
+      const data = await response.json();
+
+      if (data.return_code === 'SUCCESS') {
+        setShowAddModal(false);
+        setAddForm({ name: '', address: '', deliveryRadiusMiles: '7', deliveryTimeStart: '09:00', deliveryTimeEnd: '17:00' });
+        setSuccessMessage(`Branch "${data.data.name}" added successfully`);
+        fetchBranches();
+        setTimeout(() => setSuccessMessage(''), 4000);
+      } else {
+        setAddFormError(data.message || 'Failed to add branch');
+      }
+    } catch (err) {
+      console.error('Error adding branch:', err);
+      setAddFormError('Failed to add branch. Please try again.');
+    } finally {
+      setAddFormLoading(false);
+    }
+  };
+
+  const handleDeleteBranch = async (branch) => {
+    if (!window.confirm(`Are you sure you want to remove "${branch.name}"?\n\nThis will hide the branch from customers. Existing orders will not be affected.`)) return;
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+
+      const response = await fetch(`${apiUrl}/api/branches/${branch.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      const data = await response.json();
+
+      if (data.return_code === 'SUCCESS') {
+        setSuccessMessage(`Branch "${branch.name}" removed`);
+        fetchBranches();
+        setTimeout(() => setSuccessMessage(''), 4000);
+      } else {
+        setSuccessMessage('');
+        setError(data.message || 'Failed to remove branch');
+      }
+    } catch (err) {
+      console.error('Error deleting branch:', err);
+      setError('Failed to remove branch. Please try again.');
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
@@ -163,14 +236,19 @@ export default function BranchesPage() {
           <button className="nav-item" onClick={() => router.push('/prices')}>Prices</button>
           <button className="nav-item" onClick={() => router.push('/menu-builder')}>Menu Builder</button>
           <button className="nav-item" onClick={() => router.push('/staff')}>Staff Management</button>
-          <button className="nav-item active">Delivery Times</button>
+          <button className="nav-item active">Branches</button>
           <button className="nav-item" onClick={() => router.push('/reports')}>Reports</button>
         </nav>
       </header>
 
       <div className="branches-page-header">
-        <h2>Delivery Times</h2>
-        <p className="page-subtitle">Set the delivery time window for each branch</p>
+        <div>
+          <h2>Branches</h2>
+          <p className="page-subtitle">Set the delivery time window for each branch</p>
+        </div>
+        <button className="add-branch-button" onClick={() => { setAddFormError(''); setShowAddModal(true); }}>
+          + Add Branch
+        </button>
       </div>
 
       {successMessage && (
@@ -200,6 +278,9 @@ export default function BranchesPage() {
               <div className="branch-actions">
                 <button className="edit-timeslot-button" onClick={() => handleEditClick(branch)}>
                   Edit
+                </button>
+                <button className="delete-branch-button" onClick={() => handleDeleteBranch(branch)}>
+                  Delete
                 </button>
               </div>
             </div>
@@ -243,6 +324,59 @@ export default function BranchesPage() {
                 </button>
                 <button type="submit" className="submit-button" disabled={formLoading}>
                   {formLoading ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showAddModal && (
+        <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Add New Branch</h2>
+              <button className="close-button" onClick={() => setShowAddModal(false)}>×</button>
+            </div>
+            <form onSubmit={handleAddBranch} className="timeslot-form">
+              {addFormError && <div className="form-error">{addFormError}</div>}
+              <div className="form-group">
+                <label htmlFor="add-name">Branch Name</label>
+                <input type="text" id="add-name" name="name"
+                  value={addForm.name} onChange={handleAddFormChange}
+                  placeholder="e.g. Shrewsbury" required />
+              </div>
+              <div className="form-group">
+                <label htmlFor="add-address">Address</label>
+                <input type="text" id="add-address" name="address"
+                  value={addForm.address} onChange={handleAddFormChange}
+                  placeholder="e.g. 12 High Street, Shrewsbury, SY1 1AA" required />
+                <p className="form-hint">The address is used to calculate delivery distances for customers.</p>
+              </div>
+              <div className="form-group">
+                <label htmlFor="add-radius">Delivery Radius (miles)</label>
+                <input type="number" id="add-radius" name="deliveryRadiusMiles"
+                  value={addForm.deliveryRadiusMiles} onChange={handleAddFormChange}
+                  min="0.1" step="0.1" required />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="add-start">Start Time</label>
+                  <input type="time" id="add-start" name="deliveryTimeStart"
+                    value={addForm.deliveryTimeStart} onChange={handleAddFormChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="add-end">End Time</label>
+                  <input type="time" id="add-end" name="deliveryTimeEnd"
+                    value={addForm.deliveryTimeEnd} onChange={handleAddFormChange} required />
+                </div>
+              </div>
+              <div className="form-actions">
+                <button type="button" className="cancel-button" onClick={() => setShowAddModal(false)} disabled={addFormLoading}>
+                  Cancel
+                </button>
+                <button type="submit" className="submit-button" disabled={addFormLoading}>
+                  {addFormLoading ? 'Adding...' : 'Add Branch'}
                 </button>
               </div>
             </form>
