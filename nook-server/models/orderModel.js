@@ -28,12 +28,15 @@ const createOrder = async (orderData) => {
     // Start a transaction - this means all queries must succeed or none will
     await client.query('BEGIN');
 
-    // Generate a simple sequential order number (format: ORD-001, ORD-002, etc.)
-    // Get the count of existing orders to determine the next number
-    const countQuery = 'SELECT COUNT(*) as count FROM orders';
-    const countResult = await client.query(countQuery);
-    const orderCount = parseInt(countResult.rows[0].count) + 1;
-    const orderNumber = `ORD-${orderCount.toString().padStart(3, '0')}`;
+    // Generate a sequential order number (format: ORD-001, ORD-002, etc.)
+    // Use MAX of the numeric part so gaps from deletions never cause collisions
+    const numQuery = `
+      SELECT COALESCE(MAX(CAST(SUBSTRING(order_number FROM 5) AS INTEGER)), 0) + 1 AS next_num
+      FROM orders
+    `;
+    const numResult = await client.query(numQuery);
+    const nextNum = parseInt(numResult.rows[0].next_num);
+    const orderNumber = `ORD-${nextNum.toString().padStart(3, '0')}`;
     
     // Insert the main order record
     // Staff skip takes priority - mark as waived. Otherwise check for Stripe payment.

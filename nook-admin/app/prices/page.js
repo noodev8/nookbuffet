@@ -98,10 +98,13 @@ export default function PricesManagementPage() {
       const token = localStorage.getItem('admin_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 
+      const version = versions.find(v => v.id === versionId);
       const res = await fetch(`${apiUrl}/api/buffet-versions/manage/${versionId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
+          title: version.title,
+          description: version.description || null,
           price_per_person: parseFloat(editPrice),
           branch_id: editBranchId ? parseInt(editBranchId) : null
         })

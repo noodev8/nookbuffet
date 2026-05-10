@@ -161,12 +161,12 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
 const getAllMenuItemsForManagement = async (branchId = null) => {
   try {
     const params = [];
-    let whereClause = '';
+    let whereClause = 'WHERE bv.is_active = true AND c.is_active = true';
 
     if (branchId) {
       params.push(branchId);
       // Filter by the buffet version's branch, not the item's branch_id
-      whereClause = `WHERE bv.branch_id = $1`;
+      whereClause += ` AND bv.branch_id = $1`;
     }
 
     const result = await query(`

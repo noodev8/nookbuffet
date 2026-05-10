@@ -17,7 +17,7 @@ const { query } = require('../database');
  * @param {string} endDate - Optional end date (YYYY-MM-DD)
  * @returns {Promise<array>} Array of items with order counts, sorted by times ordered
  */
-const getStockReport = async (startDate = null, endDate = null) => {
+const getStockReport = async (startDate = null, endDate = null, buffetVersionId = null) => {
   try {
     let queryText = `
       SELECT
@@ -28,10 +28,15 @@ const getStockReport = async (startDate = null, endDate = null) => {
       FROM order_items oi
       JOIN order_buffets ob ON oi.order_buffet_id = ob.id
       JOIN orders o ON ob.order_id = o.id
-      WHERE 1=1
+      WHERE o.status != 'cancelled'
     `;
 
     const params = [];
+
+    if (buffetVersionId) {
+      params.push(buffetVersionId);
+      queryText += ` AND ob.buffet_version_id = $${params.length}`;
+    }
 
     if (startDate) {
       params.push(startDate);
@@ -56,20 +61,57 @@ const getStockReport = async (startDate = null, endDate = null) => {
   }
 };
 
-// ===== GET CATEGORIES FOR FILTER =====
+// ===== GET BUFFET VERSIONS FOR REPORT FILTER =====
 /**
- * Get list of all categories that have been ordered
- * Used for the filter dropdown
+ * Get distinct buffet versions that appear in at least one non-cancelled order.
+ * Used to populate the buffet version filter dropdown on the stock report.
  *
- * @returns {Promise<array>} Array of category names
+ * @returns {Promise<array>} Array of { id, title } objects
  */
-const getOrderedCategories = async () => {
+const getOrderedBuffetVersions = async () => {
   try {
     const result = await query(`
+      SELECT DISTINCT bv.id, bv.title
+      FROM order_buffets ob
+      JOIN buffet_versions bv ON ob.buffet_version_id = bv.id
+      JOIN orders o ON ob.order_id = o.id
+      WHERE o.status != 'cancelled'
+      ORDER BY bv.title
+    `);
+    return result.rows;
+  } catch (error) {
+    console.error('Could not get buffet versions for report:', error);
+    throw new Error('Failed to get buffet versions for report');
+  }
+};
+
+// ===== GET CATEGORIES FOR FILTER =====
+/**
+ * Get list of categories that have been ordered, optionally scoped to a buffet version.
+ * Used for the category filter dropdown on the stock report.
+ *
+ * @param {number|null} buffetVersionId - Optional buffet version ID to scope results
+ * @returns {Promise<array>} Array of category names
+ */
+const getOrderedCategories = async (buffetVersionId = null) => {
+  try {
+    let queryText = `
       SELECT DISTINCT oi.category_name
       FROM order_items oi
-      ORDER BY oi.category_name
-    `);
+      JOIN order_buffets ob ON oi.order_buffet_id = ob.id
+      JOIN orders o ON ob.order_id = o.id
+      WHERE o.status != 'cancelled'
+    `;
+    const params = [];
+
+    if (buffetVersionId) {
+      params.push(buffetVersionId);
+      queryText += ` AND ob.buffet_version_id = $${params.length}`;
+    }
+
+    queryText += ` ORDER BY oi.category_name`;
+
+    const result = await query(queryText, params);
     return result.rows.map(row => row.category_name);
   } catch (error) {
     console.error('Could not get categories:', error);
@@ -183,6 +225,7 @@ const getAccountReport = async (startDate = null, endDate = null) => {
 // ===== EXPORTS =====
 module.exports = {
   getStockReport,
+  getOrderedBuffetVersions,
   getOrderedCategories,
   getBranchReport,
   getAccountReport

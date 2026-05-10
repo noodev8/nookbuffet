@@ -15,6 +15,7 @@ import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
+  arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
@@ -520,6 +521,7 @@ export default function MenuBuilderPage() {
     e.preventDefault();
     if (!vTitle.trim()) { alert('Name is required'); return; }
     if (!vPrice || isNaN(parseFloat(vPrice)) || parseFloat(vPrice) < 0) { alert('A valid price is required'); return; }
+    if (!vBranchId) { alert('Please select a branch'); return; }
     setSaving(true);
     try {
       const res = await fetch(`${apiUrl}/api/buffet-versions/manage`, {
@@ -883,25 +885,27 @@ export default function MenuBuilderPage() {
     if (!over || active.id === over.id) return;
 
     const fromCat = allCategories.find(c => c.id === active.id);
-    const toCat = allCategories.find(c => c.id === over.id);
+    const toCat   = allCategories.find(c => c.id === over.id);
     if (!fromCat || !toCat) return;
 
-    const fromPos = fromCat.position;
-    const toPos = toCat.position;
+    // Only allow reordering within the same buffet version
+    if (fromCat.buffet_version_id !== toCat.buffet_version_id) return;
 
-    setAllCategories(prev => sortCategories(prev.map(c => {
-      if (c.id === active.id) return { ...c, position: toPos };
-      if (c.id === over.id) return { ...c, position: fromPos };
-      return c;
-    })));
+    // Get the ordered group for this buffet version and move the dragged item
+    const group    = sortCategories(allCategories.filter(c => c.buffet_version_id === fromCat.buffet_version_id));
+    const oldIndex = group.findIndex(c => c.id === active.id);
+    const newIndex = group.findIndex(c => c.id === over.id);
+    const reordered = arrayMove(group, oldIndex, newIndex).map((c, i) => ({ ...c, position: i }));
+
+    // Update local state immediately so the UI feels instant
+    setAllCategories(prev => sortCategories(
+      prev.map(c => reordered.find(r => r.id === c.id) ?? c)
+    ));
 
     try {
       await fetch(`${apiUrl}/api/menu/manage/categories/reorder`, {
         method: 'PATCH', headers: authHeaders(),
-        body: JSON.stringify([
-          { id: active.id, position: toPos },
-          { id: over.id, position: fromPos },
-        ])
+        body: JSON.stringify(reordered.map(c => ({ id: c.id, position: c.position })))
       });
     } catch { /* silently fail — UI already updated */ }
   };
@@ -996,9 +1000,9 @@ export default function MenuBuilderPage() {
                   value={vDescription} onChange={e => setVDescription(e.target.value)} />
               </div>
               <div className="mb-field">
-                <label>Branch</label>
+                <label>Branch *</label>
                 <select className="mb-input" value={vBranchId} onChange={e => setVBranchId(e.target.value)}>
-                  <option value="">All Branches</option>
+                  <option value="">Select a branch...</option>
                   {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
               </div>

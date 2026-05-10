@@ -61,7 +61,18 @@ export default function BasketPage() {
         const customer = JSON.parse(customerData);
         if (customer.email) setEmail(customer.email);
         if (customer.phone) setPhone(customer.phone);
-        if (customer.default_address) setAddress(customer.default_address);
+        if (customer.default_address) {
+          // Try to split a UK postcode off the end of the saved address
+          const postcodeRegex = /([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})$/i;
+          const match = customer.default_address.match(postcodeRegex);
+          if (match) {
+            setPostcode(match[1].trim().toUpperCase());
+            setAddress(customer.default_address.replace(postcodeRegex, '').replace(/,?\s*$/, '').trim());
+          } else {
+            // No postcode found - put the whole thing in address
+            setAddress(customer.default_address);
+          }
+        }
       } catch (_) {}
     }
   }, []);

@@ -11,6 +11,8 @@ export default function ReportsPage() {
   const [stockData, setStockData] = useState([]);
   const [stockLoading, setStockLoading] = useState(false);
   const [stockError, setStockError] = useState(null);
+  const [buffetVersions, setBuffetVersions] = useState([]);
+  const [selectedBuffetVersion, setSelectedBuffetVersion] = useState('all');
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [dateRange, setDateRange] = useState('all');
@@ -65,7 +67,28 @@ export default function ReportsPage() {
     setUser(parsedUser);
   }, [router]);
 
-  // Fetch categories when user is authenticated
+  // Fetch buffet versions (once, when user authenticates)
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchBuffetVersions = async () => {
+      try {
+        const token = localStorage.getItem('admin_token');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+        const response = await fetch(`${apiUrl}/api/reports/buffet-versions`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        if (data.return_code === 'SUCCESS') setBuffetVersions(data.data || []);
+      } catch (err) {
+        console.error('Error fetching buffet versions:', err);
+      }
+    };
+
+    fetchBuffetVersions();
+  }, [user]);
+
+  // Fetch categories whenever the selected buffet version changes
   useEffect(() => {
     if (!user) return;
 
@@ -74,16 +97,16 @@ export default function ReportsPage() {
         const token = localStorage.getItem('admin_token');
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 
-        const response = await fetch(`${apiUrl}/api/reports/categories`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const params = new URLSearchParams();
+        if (selectedBuffetVersion !== 'all') params.append('buffet_version_id', selectedBuffetVersion);
+        const url = `${apiUrl}/api/reports/categories${params.toString() ? `?${params}` : ''}`;
 
+        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
         const data = await response.json();
 
         if (data.return_code === 'SUCCESS') {
           setCategories(data.data || []);
+          setSelectedCategory('all'); // reset category when version changes
         }
       } catch (err) {
         console.error('Error fetching categories:', err);
@@ -91,7 +114,7 @@ export default function ReportsPage() {
     };
 
     fetchCategories();
-  }, [user]);
+  }, [user, selectedBuffetVersion]);
 
   // Calculate date range for API
   const getDateParams = () => {
@@ -142,6 +165,7 @@ export default function ReportsPage() {
         const { startDate, endDate } = getDateParams();
         let url = `${apiUrl}/api/reports/stock`;
         const params = new URLSearchParams();
+        if (selectedBuffetVersion !== 'all') params.append('buffet_version_id', selectedBuffetVersion);
         if (startDate) params.append('startDate', startDate);
         if (endDate) params.append('endDate', endDate);
         if (params.toString()) url += `?${params.toString()}`;
@@ -168,7 +192,7 @@ export default function ReportsPage() {
     };
 
     fetchStockReport();
-  }, [user, activeTab, dateRange, customStartDate, customEndDate]);
+  }, [user, activeTab, selectedBuffetVersion, dateRange, customStartDate, customEndDate]);
 
   // Calculate date range for branch report API
   const getBranchDateParams = () => {
@@ -468,6 +492,18 @@ export default function ReportsPage() {
         {activeTab === 'stock' && (
           <div className="stock-report">
             <div className="report-filters">
+              <div className="filter-group">
+                <label>Buffet Version:</label>
+                <select
+                  value={selectedBuffetVersion}
+                  onChange={(e) => setSelectedBuffetVersion(e.target.value)}
+                >
+                  <option value="all">All Versions</option>
+                  {buffetVersions.map(v => (
+                    <option key={v.id} value={v.id}>{v.title}</option>
+                  ))}
+                </select>
+              </div>
               <div className="filter-group">
                 <label>Category:</label>
                 <select

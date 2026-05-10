@@ -25,9 +25,10 @@ const { DATABASE_SCHEMA, SQL_EXAMPLES } = require('../config/aiSchemaContext');
  */
 const getStockReport = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, buffet_version_id } = req.query;
+    const buffetVersionId = buffet_version_id && !isNaN(buffet_version_id) ? parseInt(buffet_version_id) : null;
 
-    const data = await reportModel.getStockReport(startDate, endDate);
+    const data = await reportModel.getStockReport(startDate, endDate, buffetVersionId);
 
     // Return flat list with parsed integers
     const items = data.map(item => ({
@@ -60,9 +61,28 @@ const getStockReport = async (req, res) => {
  * @param {object} req - Express request object
  * @param {object} res - Express response object
  */
+// ===== GET BUFFET VERSIONS FOR STOCK REPORT FILTER =====
+/**
+ * Get buffet versions that appear in at least one non-cancelled order
+ *
+ * GET /api/reports/buffet-versions
+ */
+const getBuffetVersionsForReport = async (req, res) => {
+  try {
+    const versions = await reportModel.getOrderedBuffetVersions();
+    return res.json({ return_code: 'SUCCESS', data: versions });
+  } catch (error) {
+    console.error('Error getting buffet versions for report:', error);
+    return res.json({ return_code: 'SERVER_ERROR', message: 'Failed to get buffet versions' });
+  }
+};
+
 const getCategories = async (req, res) => {
   try {
-    const categories = await reportModel.getOrderedCategories();
+    const { buffet_version_id } = req.query;
+    const buffetVersionId = buffet_version_id && !isNaN(buffet_version_id) ? parseInt(buffet_version_id) : null;
+
+    const categories = await reportModel.getOrderedCategories(buffetVersionId);
 
     return res.json({
       return_code: 'SUCCESS',
@@ -346,6 +366,7 @@ SQL:`;
 // ===== EXPORTS =====
 module.exports = {
   getStockReport,
+  getBuffetVersionsForReport,
   getCategories,
   getBranchReport,
   getAccountReport,

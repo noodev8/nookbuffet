@@ -21,9 +21,14 @@ const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 // Returns menu item sales data - manager only
 router.get('/stock', verifyToken, checkRole(['manager']), reportController.getStockReport);
 
+// ===== ROUTE: GET BUFFET VERSIONS FOR STOCK REPORT FILTER (PROTECTED) =====
+// GET /api/reports/buffet-versions
+// Returns buffet versions that appear in at least one non-cancelled order - manager only
+router.get('/buffet-versions', verifyToken, checkRole(['manager']), reportController.getBuffetVersionsForReport);
+
 // ===== ROUTE: GET CATEGORIES (PROTECTED) =====
-// GET /api/reports/categories
-// Returns list of categories for filter - manager only
+// GET /api/reports/categories?buffet_version_id=1
+// Returns list of categories for filter, optionally scoped to a buffet version - manager only
 router.get('/categories', verifyToken, checkRole(['manager']), reportController.getCategories);
 
 // ===== ROUTE: GET BRANCH REPORT (PROTECTED) =====

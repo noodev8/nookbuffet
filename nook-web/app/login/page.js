@@ -117,9 +117,7 @@ export default function LoginPage() {
                 onChange={handleChange}
                 required
               />
-              <div className="auth-forgot-link">
-                <a href="#">Forgot password?</a>
-              </div>
+
             </div>
 
             <button type="submit" className="auth-submit-button" disabled={loading}>

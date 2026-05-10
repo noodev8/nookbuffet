@@ -98,11 +98,11 @@ const getAllBuffetVersions = async (branchId = null) => {
 const getAllBuffetVersionsForManagement = async (branchId = null) => {
   try {
     const params = [];
-    let whereClause = '';
+    let whereClause = 'WHERE bv.is_active = true';
 
     if (branchId) {
       params.push(branchId);
-      whereClause = `WHERE bv.branch_id = $1`;
+      whereClause += ` AND bv.branch_id = $1`;
     }
 
     const result = await query(
