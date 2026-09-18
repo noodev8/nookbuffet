@@ -1,27 +1,8 @@
-'use client';
-
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect } from 'react';
 import './about.css';
 
 export default function AboutPage() {
-  useEffect(() => {
-    // Load Juicer script when component mounts
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = 'https://www.juicer.io/embed/_thenooksandwichbar-2ae03aed-f6c4-4629-b200-887df65f70bd/embed-code.js';
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
-
-    // Cleanup function
-    return () => {
-      const scripts = document.querySelectorAll('script[src*="juicer.io"]');
-      scripts.forEach(script => script.remove());
-    };
-  }, []);
-
   return (
     <div className="welcome-page-option3">
       <div className="about-page-container">
@@ -144,14 +125,6 @@ export default function AboutPage() {
                   </a>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="social-feed-section">
-            <h2>Follow Our Journey</h2>
-            <p>Stay up to date with our latest creations, behind-the-scenes moments, and customer favorites!</p>
-            <div className="juicer-feed-container">
-              <ul className="juicer-feed" data-feed-id="_thenooksandwichbar-2ae03aed-f6c4-4629-b200-887df65f70bd" data-per="3" data-gutter="20"></ul>
             </div>
           </div>
         </div>
