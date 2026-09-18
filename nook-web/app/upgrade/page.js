@@ -5,10 +5,52 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import './upgrade.css';
 
+// Move the pending order (plus its upgrade, if any) into the basket in localStorage.
+// Returns false if the pending order has already been moved, so it can't be added twice.
+const moveToBasket = (order, upgradeEntry) => {
+  if (!localStorage.getItem('pendingOrder')) {
+    console.log('pendingOrder already cleared - skipping duplicate add');
+    return false;
+  }
+
+  const finalOrder = { ...order };
+  delete finalOrder.editIndex; // Only needed to find the slot, don't store it
+
+  if (upgradeEntry) {
+    finalOrder.upgrades = [upgradeEntry];
+    finalOrder.totalPrice = order.totalPrice + upgradeEntry.subtotal;
+  }
+
+  // Clear pending order
+  localStorage.removeItem('pendingOrder');
+
+  // Get existing basket
+  const existingBasket = localStorage.getItem('basketData');
+  let basket = [];
+  if (existingBasket) {
+    try {
+      const parsed = JSON.parse(existingBasket);
+      basket = Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      basket = [];
+    }
+  }
+
+  if (order.editIndex !== undefined) {
+    // Editing an existing order - replace it at that index
+    basket[order.editIndex] = finalOrder;
+  } else {
+    // Add as new order
+    basket.push(finalOrder);
+  }
+
+  localStorage.setItem('basketData', JSON.stringify(basket));
+  return true;
+};
+
 export default function UpgradePage() {
   const router = useRouter();
   const hasFetched = useRef(false);
-  const hasAddedToBasket = useRef(false);
 
   const [pendingOrder, setPendingOrder] = useState(null);
   const [upgrade, setUpgrade] = useState(null);
@@ -48,9 +90,9 @@ export default function UpgradePage() {
     }
 
     const order = JSON.parse(pending);
-    setPendingOrder(order);
 
     const fetchUpgrade = async () => {
+      let upgradeDetails = null;
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 
@@ -67,39 +109,30 @@ export default function UpgradePage() {
           if (detailsResponse.ok) {
             const detailsData = await detailsResponse.json();
             if (detailsData.return_code === 'SUCCESS') {
-              setUpgrade(detailsData.data);
+              upgradeDetails = detailsData.data;
             }
           }
-        } else {
-          // No upgrades available, go straight to basket
-          addToBasketAndRedirect(order, null);
         }
       } catch (err) {
         console.error('Error fetching upgrade:', err);
-      } finally {
+      }
+
+      if (upgradeDetails) {
+        setPendingOrder(order);
+        setUpgrade(upgradeDetails);
         setLoading(false);
+      } else {
+        // No upgrade to offer (or it failed to load) - go straight to basket
+        if (moveToBasket(order, null)) router.push('/basket');
       }
     };
 
     fetchUpgrade();
-    
   }, [router]);
 
   // Add order to basket and go to basket page
-  const addToBasketAndRedirect = (order, upgradeData) => {
-  
-    if (hasAddedToBasket.current) return;
-
-    // Double-check pendingOrder still exists (hasn't been cleared already)
-    const pendingCheck = localStorage.getItem('pendingOrder');
-    if (!pendingCheck) {
-      console.log('pendingOrder already cleared - skipping duplicate add');
-      return;
-    }
-
-    hasAddedToBasket.current = true;
-
-    const finalOrder = { ...order };
+  const addToBasketAndRedirect = (upgradeData) => {
+    let upgradeEntry = null;
 
     if (upgradeData) {
       // Collect all selected item IDs
@@ -108,52 +141,22 @@ export default function UpgradePage() {
         allSelectedItems.push(...selectedItems[categoryId]);
       }
 
-      const upgradeSubtotal = parseFloat(upgradeData.price_per_person) * order.numPeople;
-
-      finalOrder.upgrades = [{
+      upgradeEntry = {
         upgradeId: upgradeData.id,
         upgradeName: upgradeData.name,
         pricePerPerson: parseFloat(upgradeData.price_per_person),
-        subtotal: upgradeSubtotal,
+        subtotal: parseFloat(upgradeData.price_per_person) * pendingOrder.numPeople,
         selectedItems: allSelectedItems
-      }];
-      finalOrder.totalPrice = order.totalPrice + upgradeSubtotal;
+      };
     }
 
-    // Clear pending order
-    localStorage.removeItem('pendingOrder');
-
-    // Get existing basket
-    const existingBasket = localStorage.getItem('basketData');
-    let basket = [];
-    if (existingBasket) {
-      try {
-        const parsed = JSON.parse(existingBasket);
-        basket = Array.isArray(parsed) ? parsed : [parsed];
-      } catch (e) {
-        basket = [];
-      }
-    }
-
-    // Check if editing an existing order (has editIndex)
-    if (order.editIndex !== undefined) {
-      // Replace the existing order at that index
-      basket[order.editIndex] = finalOrder;
-      // Remove editIndex from the final order (don't store it)
-      delete finalOrder.editIndex;
-    } else {
-      // Add as new order
-      basket.push(finalOrder);
-    }
-
-    localStorage.setItem('basketData', JSON.stringify(basket));
-    router.push('/basket');
+    if (moveToBasket(pendingOrder, upgradeEntry)) router.push('/basket');
   };
 
   // Skip upgrade - no thanks
   const handleNoThanks = () => {
     if (pendingOrder) {
-      addToBasketAndRedirect(pendingOrder, null);
+      addToBasketAndRedirect(null);
     }
   };
 
@@ -171,7 +174,7 @@ export default function UpgradePage() {
         }
       }
     }
-    addToBasketAndRedirect(pendingOrder, upgrade);
+    addToBasketAndRedirect(upgrade);
   };
 
   if (loading) {

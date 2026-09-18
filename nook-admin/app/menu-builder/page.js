@@ -336,6 +336,7 @@ export default function MenuBuilderPage() {
     if (!token || !userData) { router.push('/login'); return; }
     const parsedUser = JSON.parse(userData);
     if (parsedUser.role !== 'admin' && parsedUser.role !== 'manager') { router.push('/'); return; }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
     setUser(parsedUser);
 
     const headers = { 'Authorization': `Bearer ${token}` };

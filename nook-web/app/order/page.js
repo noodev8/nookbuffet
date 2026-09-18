@@ -118,6 +118,7 @@ function OrderPageContent() {
     let orderBeingEdited = null;
     if (editingData) {
       orderBeingEdited = JSON.parse(editingData);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
       setEditingOrder(orderBeingEdited);
       // Pre-fill the form with existing values
       setNumPeople(orderBeingEdited.numPeople || 5);

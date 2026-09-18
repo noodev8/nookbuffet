@@ -48,6 +48,7 @@ export default function AccountPage() {
         customer.last_name = parts.slice(1).join(' ') || '';
       }
       const safe = { ...EMPTY_CUSTOMER, ...customer, phone: customer.phone || '', default_address: customer.default_address || '' };
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
       setProfile(safe);
       setEditData(safe);
     } catch {
@@ -191,7 +192,7 @@ export default function AccountPage() {
               <div className="account-empty"><p>Loading your orders...</p></div>
             ) : orders.length === 0 ? (
               <div className="account-empty">
-                <p>You haven't placed any orders yet.</p>
+                <p>You haven&apos;t placed any orders yet.</p>
                 <Link href="/select-buffet" className="account-cta-button">Order a Buffet</Link>
               </div>
             ) : (

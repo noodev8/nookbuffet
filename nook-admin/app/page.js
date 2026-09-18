@@ -25,6 +25,7 @@ export default function AdminPage() {
 
     // Set user data
     const parsedUser = JSON.parse(userData);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
     setUser(parsedUser);
   }, [router]);
 
@@ -85,7 +86,7 @@ export default function AdminPage() {
   }, [user]);
 
   const goToOrderDetails = (orderId) => {
-    window.location.href = `/orders/${orderId}`;
+    router.push(`/orders/${orderId}`);
   };
 
   const formatDate = (dateString) => {

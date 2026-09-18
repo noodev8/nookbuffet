@@ -30,6 +30,7 @@ export default function BasketPage() {
       const parsed = JSON.parse(data);
       // Handle both array and single object formats
       const ordersList = Array.isArray(parsed) ? parsed : [parsed];
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
       setOrders(ordersList);
     }
 

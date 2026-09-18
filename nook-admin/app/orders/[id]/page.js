@@ -27,6 +27,7 @@ export default function OrderDetailsPage() {
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
     setUser(JSON.parse(userData));
   }, [router]);
 
@@ -181,7 +182,7 @@ export default function OrderDetailsPage() {
   };
 
   const goBack = () => {
-    window.location.href = '/';
+    router.push('/');
   };
 
   const saveStaffNotes = async () => {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, useSyncExternalStore, Suspense } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import './checkout.css';
@@ -67,25 +67,39 @@ function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [orders, setOrders] = useState([]);
+  // The basket passes the orders through the URL. searchParams.get() has already
+  // decoded it - decoding again throws on any '%' the customer typed (e.g. in notes)
+  const ordersParam = searchParams.get('orders');
+  const orders = useMemo(() => {
+    if (!ordersParam) return [];
+    try {
+      const parsedOrders = JSON.parse(ordersParam);
+      return Array.isArray(parsedOrders) ? parsedOrders : [parsedOrders];
+    } catch (e) {
+      console.error('Error parsing orders:', e);
+      return [];
+    }
+  }, [ordersParam]);
+
   const [loading, setLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState('');
   const [paymentError, setPaymentError] = useState('');
-  const [isStaff, setIsStaff] = useState(false);
   const [showSkipInput, setShowSkipInput] = useState(false);
   const [skipReason, setSkipReason] = useState('');
   const [skipLoading, setSkipLoading] = useState(false);
 
-  // Check if the logged-in user is staff
-  useEffect(() => {
-    const stored = localStorage.getItem('customer');
-    if (stored) {
+  // Check if the logged-in user is staff (never on the server, localStorage is browser only)
+  const isStaff = useSyncExternalStore(
+    () => () => {},
+    () => {
       try {
-        const customer = JSON.parse(stored);
-        if (customer.accountType === 'staff') setIsStaff(true);
-      } catch (_) {}
-    }
-  }, []);
+        return JSON.parse(localStorage.getItem('customer'))?.accountType === 'staff';
+      } catch {
+        return false;
+      }
+    },
+    () => false
+  );
 
   // ===== STAFF SKIP HANDLER =====
   // Bypasses Stripe entirely - creates the order with the skip reason as the payment method
@@ -152,20 +166,6 @@ function CheckoutContent() {
       setSkipLoading(false);
     }
   };
-
-  useEffect(() => {
-    const ordersParam = searchParams.get('orders');
-
-    if (ordersParam) {
-      try {
-        const decoded = decodeURIComponent(ordersParam);
-        const parsedOrders = JSON.parse(decoded);
-        setOrders(Array.isArray(parsedOrders) ? parsedOrders : [parsedOrders]);
-      } catch (e) {
-        console.error('Error parsing orders:', e);
-      }
-    }
-  }, [searchParams]);
 
   // Create payment intent when orders are loaded
   useEffect(() => {
@@ -364,7 +364,7 @@ function CheckoutContent() {
             {/* Staff-only skip payment block */}
             {isStaff && (
               <div className="staff-skip-section">
-                <p className="staff-skip-label">You're logged in as staff — you can skip payment if needed.</p>
+                <p className="staff-skip-label">You&apos;re logged in as staff — you can skip payment if needed.</p>
                 {!showSkipInput ? (
                   <button
                     className="staff-skip-toggle-button"

@@ -12,8 +12,6 @@ export default function SelectBuffetPage() {
 
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-    setLoading(true);
-    setError(null);
 
     fetch(`${apiUrl}/api/buffet-versions`)
       .then(res => res.json())

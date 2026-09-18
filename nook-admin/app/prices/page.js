@@ -28,6 +28,7 @@ export default function PricesManagementPage() {
       router.push('/'); return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
     setUser(parsedUser);
   }, [router]);
 

@@ -44,6 +44,15 @@ const createOrder = async (req, res) => {
       });
     }
 
+    // Without this an empty or garbled date slips past the cutoff check below
+    // (an Invalid Date is never "earlier" than anything) and the order is saved with no date
+    if (!orderData.fulfillmentDate || isNaN(new Date(orderData.fulfillmentDate).getTime())) {
+      return res.json({
+        return_code: 'VALIDATION_ERROR',
+        message: 'A valid collection date is required'
+      });
+    }
+
     if (!orderData.address || !orderData.address.trim()) {
       return res.json({
         return_code: 'VALIDATION_ERROR',

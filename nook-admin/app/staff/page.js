@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import './staff.css';
 
@@ -41,21 +41,13 @@ export default function StaffManagementPage() {
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
     setUser(parsedUser);
   }, [router]);
 
-  // Fetch users when user is authenticated
-  useEffect(() => {
-    if (!user) return;
-    fetchUsers();
-    
-  }, [user]);
-
-  const fetchUsers = async () => {
+  // Loading starts true for the first fetch; later refreshes keep showing the current list
+  const fetchUsers = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
-
       const token = localStorage.getItem('admin_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
       
@@ -82,6 +74,7 @@ export default function StaffManagementPage() {
 
       if (data.return_code === 'SUCCESS') {
         setUsers(data.data);
+        setError(null);
       } else {
         setError(data.message || 'Failed to load users');
       }
@@ -91,7 +84,15 @@ export default function StaffManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  // Fetch users when user is authenticated
+  useEffect(() => {
+    if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchUsers only sets state after its fetch resolves
+    fetchUsers();
+  }, [user, fetchUsers]);
+
 
   const handleFormChange = (e) => {
     setFormData({

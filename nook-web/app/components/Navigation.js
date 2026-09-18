@@ -1,21 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import './Navigation.css';
 
+// Other tabs logging in or out fire a storage event
+const subscribeToStorage = (callback) => {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+};
+
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [accountHref, setAccountHref] = useState('/login');
-  const pathname = usePathname();
-
-  // Re-check login state on every route change so the icon always points to the right place
-  useEffect(() => {
-    const customer = localStorage.getItem('customer');
-    setAccountHref(customer ? '/account' : '/login');
-  }, [pathname]);
+  // Subscribing to the pathname re-renders us on every route change, and each render
+  // re-reads localStorage, so the icon always points to the right place after login/logout
+  usePathname();
+  const isLoggedIn = useSyncExternalStore(
+    subscribeToStorage,
+    () => localStorage.getItem('customer') !== null,
+    () => false
+  );
+  const accountHref = isLoggedIn ? '/account' : '/login';
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);

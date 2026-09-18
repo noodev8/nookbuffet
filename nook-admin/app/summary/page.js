@@ -22,48 +22,50 @@ export default function SummaryPage() {
     }
 
     const parsedUser = JSON.parse(userData);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
     setUser(parsedUser);
   }, [router]);
 
   // Fetch orders once the user is ready
   useEffect(() => {
     if (!user) return;
+
+    const fetchOrders = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem('admin_token');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+        const response = await fetch(`${apiUrl}/api/orders`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+
+        if (data.return_code === 'UNAUTHORIZED' || data.return_code === 'FORBIDDEN') {
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+          router.push('/login');
+          return;
+        }
+        if (data.return_code === 'SUCCESS') {
+          const sorted = (data.data || []).sort((a, b) =>
+            new Date(a.fulfillment_date) - new Date(b.fulfillment_date)
+          );
+          setOrders(sorted);
+        } else {
+          setError(data.message || 'Failed to load orders.');
+        }
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError('Unable to connect to server.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchOrders();
-  }, [user]);
-
-  const fetchOrders = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem('admin_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const response = await fetch(`${apiUrl}/api/orders`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const data = await response.json();
-
-      if (data.return_code === 'UNAUTHORIZED' || data.return_code === 'FORBIDDEN') {
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_user');
-        router.push('/login');
-        return;
-      }
-      if (data.return_code === 'SUCCESS') {
-        const sorted = (data.data || []).sort((a, b) =>
-          new Date(a.fulfillment_date) - new Date(b.fulfillment_date)
-        );
-        setOrders(sorted);
-      } else {
-        setError(data.message || 'Failed to load orders.');
-      }
-    } catch (err) {
-      console.error('Error fetching orders:', err);
-      setError('Unable to connect to server.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, router]);
 
   // Group a set of orders by fulfillment date
   const groupByDate = (ordersToGroup) =>
