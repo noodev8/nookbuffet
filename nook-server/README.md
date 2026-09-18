@@ -17,9 +17,8 @@ TECH
   - Stripe for payments
   - Resend for emails
   - Mapbox API for delivery distance checks
-  - Axios for external API calls (Mapbox, Ollama)
+  - Axios for external API calls (Mapbox)
   - Multer for file uploads (menu images)
-  - Ollama (Mistral) for AI-powered custom reports — needs to be running separately on the server
 
 
 GETTING STARTED
@@ -53,7 +52,6 @@ API ROUTES
   /api/branches         - Branch locations, delivery radius, slot config
   /api/delivery         - Delivery distance check via Mapbox
   /api/payments         - Stripe payment intent creation
-  /api/reports          - Stock, branch, account, and AI custom reports
   /api/upload           - Image uploads for menu items and categories
   /api/contact          - Contact form submissions
 
@@ -62,7 +60,7 @@ AUTH
 
 Staff login is two steps. First call checks the password and sends a 6-digit code to the staff member's email. Second call verifies the code and returns a 24-hour session token. The code expires after 10 minutes and is cleared from the database once used.
 
-All protected routes use the verifyToken middleware. Role-restricted routes also use checkRole — for example, reports are manager-only and the AI custom report endpoint won't run for anyone below manager level.
+All protected routes use the verifyToken middleware. Role-restricted routes also use checkRole.
 
 
 STRUCTURE
@@ -73,7 +71,6 @@ STRUCTURE
   models/         - Database queries
   middleware/     - Auth and role checking
   utils/          - Email, Mapbox distance calc, order date logic
-  config/         - AI schema context for Ollama prompts
   tests/          - Jest unit tests
 
 

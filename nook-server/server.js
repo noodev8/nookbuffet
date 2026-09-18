@@ -22,7 +22,6 @@ const deliveryRoutes = require('./routes/deliveryRoutes');      // Routes for de
 const branchRoutes = require('./routes/branchRoutes');          // Routes for branch data
 const upgradeRoutes = require('./routes/upgradeRoutes');        // Routes for buffet upgrades
 const paymentRoutes = require('./routes/paymentRoutes');        // Routes for Stripe payments
-const reportRoutes = require('./routes/reportRoutes');          // Routes for reports
 const customerRoutes = require('./routes/customerRoutes');      // Routes for customer accounts
 const uploadRoutes = require('./routes/uploadRoutes');          // Routes for image uploads
 
@@ -66,7 +65,6 @@ app.use('/api/delivery', deliveryRoutes);            // Delivery endpoints
 app.use('/api/branches', branchRoutes);              // Branch endpoints
 app.use('/api/upgrades', upgradeRoutes);             // Upgrade endpoints
 app.use('/api/payments', paymentRoutes);             // Stripe payment endpoints
-app.use('/api/reports', reportRoutes);               // Report endpoints
 app.use('/api/customers', customerRoutes);          // Customer account endpoints
 app.use('/api/uploads', uploadRoutes);             // Image upload endpoints
 

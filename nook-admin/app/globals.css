@@ -115,8 +115,7 @@ img {
    ADMIN PAGE CONTAINERS & HEADER BACKGROUNDS
       ======================================== */
 
-.staff-management-container,
-.reports-container {
+.staff-management-container {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
@@ -126,14 +125,12 @@ img {
   color: white;
 }
 
-.staff-header,
-.reports-header {
+.staff-header {
   background: rgba(255, 255, 255, 0.1);
   color: white;
 }
 
-.staff-page-header h2,
-.reports-page-header h2 {
+.staff-page-header h2 {
   color: white;
 }
 

@@ -5,7 +5,7 @@ The internal portal for Nook Buffet staff. Not public facing — this is where t
 
 WHAT IT DOES
 
-Gives staff and managers a place to see incoming orders, update statuses, manage the menu, set prices, and pull reports. Different roles see different things depending on their access level.
+Gives staff and managers a place to see incoming orders, update statuses, manage the menu and set prices. Different roles see different things depending on their access level.
 
 Login uses 2-factor authentication — password first, then a 6-digit code sent to the staff member's email.
 
@@ -42,7 +42,6 @@ PAGES
   /menu           - Manage individual menu items and stock
   /menu-builder   - Build menus — categories, items, images, and display order
   /prices         - Manage buffet pricing per branch
-  /reports        - Stock, branch, account, and AI custom reports
   /staff          - Add, edit, and deactivate staff accounts
   /branches       - Branch locations, delivery radius, and slot config
   /summary        - Production summary — what needs to be made for upcoming orders
@@ -54,11 +53,10 @@ There are three roles. Permissions are enforced on the server — the frontend j
 
   staff    - View orders, update statuses, manage stock
   admin    - Everything staff can do, plus edit menus and prices
-  manager  - Everything admin can do, plus manage staff accounts and access reports
+  manager  - Everything admin can do, plus manage staff accounts
 
 
 NOTES
 
 The server (nook-server) needs to be running. Staff log in with their admin credentials, not a customer account.
 
-The custom AI reports tab on the reports page requires Ollama to be running on the server. The other report tabs work without it.

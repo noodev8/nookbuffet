@@ -168,9 +168,6 @@ export default function PricesManagementPage() {
           {user && user.role === 'manager' && (
             <button className="nav-item" onClick={() => router.push('/branches')}>Branches</button>
           )}
-          {user && user.role === 'manager' && (
-            <button className="nav-item" onClick={() => router.push('/reports')}>Reports</button>
-          )}
         </nav>
       </header>
 

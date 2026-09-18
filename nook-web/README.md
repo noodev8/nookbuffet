@@ -57,4 +57,3 @@ NOTES
 
 The server (nook-server) needs to be running for anything to work. Make sure NEXT_PUBLIC_API_URL points to it.
 
-Ollama is not required for this frontend — that's only used by the admin reports.

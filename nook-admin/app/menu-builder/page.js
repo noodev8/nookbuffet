@@ -951,7 +951,6 @@ export default function MenuBuilderPage() {
           <button className="nav-item active">Menu Builder</button>
           <button className="nav-item" onClick={() => router.push('/staff')}>Staff Management</button>
           <button className="nav-item" onClick={() => router.push('/branches')}>Branches</button>
-          <button className="nav-item" onClick={() => router.push('/reports')}>Reports</button>
         </nav>
       </header>
 

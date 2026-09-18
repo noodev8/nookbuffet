@@ -158,7 +158,6 @@ export default function SummaryPage() {
   const handleNavOrders = () => router.push('/');
   const handleNavMenu = () => router.push('/menu');
   const handleNavStaff = () => router.push('/staff');
-  const handleNavReports = () => router.push('/reports');
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
@@ -184,9 +183,6 @@ export default function SummaryPage() {
           )}
           {user.role === 'manager' && (
             <button className="nav-item" onClick={handleNavStaff}>Staff Management</button>
-          )}
-          {user.role === 'manager' && (
-            <button className="nav-item" onClick={handleNavReports}>Reports</button>
           )}
         </nav>
       </header>
