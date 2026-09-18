@@ -64,7 +64,7 @@ router.get('/', menuController.getAllMenuSections);
 router.get('/buffet-version/:id', menuController.getMenuSectionsByBuffetVersion);
 
 // ===== ROUTE 3: GET ALL MENU ITEMS FOR MANAGEMENT (PROTECTED) =====
-router.get('/manage', verifyToken, checkRole(['admin', 'manager']), menuController.getAllMenuItemsForManagement);
+router.get('/manage', verifyToken, checkRole(['staff', 'admin', 'manager']), menuController.getAllMenuItemsForManagement);
 
 // ===== ROUTE 4: GET CATEGORIES FOR MANAGEMENT (PROTECTED) =====
 // GET /api/menu/manage/categories?buffet_version_id=1
@@ -86,7 +86,7 @@ router.post('/manage/items', verifyToken, checkRole(['admin', 'manager']), menuC
 router.patch('/manage/items/:id', verifyToken, checkRole(['admin', 'manager']), menuController.updateMenuItem);
 
 // ===== ROUTE 9: UPDATE MENU ITEM STOCK STATUS (PROTECTED) =====
-router.patch('/manage/:id', verifyToken, checkRole(['admin', 'manager']), menuController.updateMenuItemStockStatus);
+router.patch('/manage/:id', verifyToken, checkRole(['staff', 'admin', 'manager']), menuController.updateMenuItemStockStatus);
 
 // ===== ROUTE 10: DELETE (SOFT DELETE) A CATEGORY (PROTECTED) =====
 router.delete('/manage/categories/:id', verifyToken, checkRole(['admin', 'manager']), menuController.deleteCategory);

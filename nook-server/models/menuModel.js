@@ -147,6 +147,22 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
   }
 };
 
+// ===== DELETED FLAG =====
+// menu_items.is_deleted is added by nook-docs/migrations/003. Until that has been run,
+// fall back to the old behaviour (a deleted item just shows as out of stock) instead of
+// failing. Checked once per server start, so restart the server after running it.
+let deletedFlagExists;
+const hasDeletedFlag = async () => {
+  if (deletedFlagExists === undefined) {
+    const result = await query(
+      `SELECT 1 FROM information_schema.columns WHERE table_name = 'menu_items' AND column_name = 'is_deleted'`
+    );
+    deletedFlagExists = result.rows.length > 0;
+    if (!deletedFlagExists) console.warn('menu_items.is_deleted missing - run nook-docs/migrations/003-menu-item-deleted-flag.sql');
+  }
+  return deletedFlagExists;
+};
+
 // ===== GET ALL MENU ITEMS FOR MANAGEMENT =====
 /**
  * Get ALL menu items across all categories for admin management.
@@ -155,6 +171,7 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
  */
 const getAllMenuItemsForManagement = async () => {
   try {
+    const notDeleted = (await hasDeletedFlag()) ? 'AND mi.is_deleted = false' : '';
     const result = await query(`
       SELECT
         mi.id,
@@ -171,7 +188,7 @@ const getAllMenuItemsForManagement = async () => {
       FROM menu_items mi
       JOIN categories c ON mi.category_id = c.id
       LEFT JOIN buffet_versions bv ON c.buffet_version_id = bv.id
-      WHERE bv.is_active = true AND c.is_active = true
+      WHERE bv.is_active = true AND c.is_active = true ${notDeleted}
       ORDER BY bv.id, c.position, c.name, mi.name
     `);
 
@@ -420,15 +437,18 @@ const deactivateCategory = async (id) => {
 
 // ===== DEACTIVATE MENU ITEM (SOFT DELETE) =====
 /**
- * Soft-delete a menu item by setting is_active = false
+ * Soft-delete a menu item. is_active on its own only means "in stock", so a deleted
+ * item also gets is_deleted = true to keep it off the admin menu for good.
+ * The row stays because past orders still point at it.
  *
  * @param {number} id - Menu item ID
  * @returns {Promise<object>} The deactivated row
  */
 const deactivateMenuItem = async (id) => {
   try {
+    const markDeleted = (await hasDeletedFlag()) ? ', is_deleted = true' : '';
     const result = await query(
-      `UPDATE menu_items SET is_active = false WHERE id = $1
+      `UPDATE menu_items SET is_active = false${markDeleted} WHERE id = $1
        RETURNING id, name, is_active`,
       [id]
     );

@@ -66,7 +66,7 @@ router.get('/', buffetVersionController.getAllBuffetVersions);
 
 // ===== ROUTE 2: GET ALL BUFFET VERSIONS FOR MANAGEMENT (PROTECTED) =====
 // NOTE: Must come BEFORE /:id so "manage" isn't treated as an ID
-router.get('/manage', verifyToken, checkRole(['admin', 'manager']), buffetVersionController.getAllBuffetVersionsForManagement);
+router.get('/manage', verifyToken, checkRole(['staff', 'admin', 'manager']), buffetVersionController.getAllBuffetVersionsForManagement);
 
 // ===== ROUTE 3: CREATE A NEW BUFFET VERSION (PROTECTED) =====
 router.post('/manage', verifyToken, checkRole(['admin', 'manager']), buffetVersionController.createBuffetVersion);

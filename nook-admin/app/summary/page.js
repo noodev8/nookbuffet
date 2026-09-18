@@ -1,252 +1,131 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import './summary.css';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import AdminShell, { useAdmin } from '../components/AdminShell';
+import { dayKey, dayLabel, isPast, peopleCount } from '../lib/format';
 
 export default function SummaryPage() {
-  const router = useRouter();
-  const [user, setUser] = useState(null);
+  return (
+    <AdminShell>
+      <PrepSummary />
+    </AdminShell>
+  );
+}
+
+// Totals up every item across a day's orders: { category: { item: { orders, people } } }
+const buildSummary = (dayOrders) => {
+  const summary = {};
+  const add = (cat, name, people) => {
+    summary[cat] = summary[cat] || {};
+    summary[cat][name] = summary[cat][name] || { orders: 0, people: 0 };
+    summary[cat][name].orders += 1;
+    summary[cat][name].people += people;
+  };
+
+  for (const order of dayOrders) {
+    for (const buffet of order.buffets || []) {
+      const people = buffet.num_people || 0;
+      for (const item of buffet.items || []) add(item.category_name || 'Other', item.item_name || 'Unknown item', people);
+      for (const upgrade of buffet.upgrades || []) {
+        for (const item of upgrade.selectedItems || []) add(item.category_name || 'Upgrades', item.item_name || 'Unknown item', people);
+      }
+    }
+  }
+  return summary;
+};
+
+function PrepSummary() {
+  const { api } = useAdmin();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Auth check - all roles allowed
   useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    const userData = localStorage.getItem('admin_user');
+    api('/api/orders')
+      .then(data => {
+        if (data.return_code === 'SUCCESS') setOrders(data.data || []);
+        else setError(data.message || 'Failed to load orders');
+      })
+      .catch(() => setError('Could not reach the server. Please try again.'))
+      .finally(() => setLoading(false));
+  }, [api]);
 
-    if (!token || !userData) {
-      router.push('/login');
-      return;
-    }
+  if (loading) return <div className="notice">Loading prep summary...</div>;
+  if (error) return <div className="notice notice-error">{error}</div>;
 
-    const parsedUser = JSON.parse(userData);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
-    setUser(parsedUser);
-  }, [router]);
-
-  // Fetch orders once the user is ready
-  useEffect(() => {
-    if (!user) return;
-
-    const fetchOrders = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = localStorage.getItem('admin_token');
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        const response = await fetch(`${apiUrl}/api/orders`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        const data = await response.json();
-
-        if (data.return_code === 'UNAUTHORIZED' || data.return_code === 'FORBIDDEN') {
-          localStorage.removeItem('admin_token');
-          localStorage.removeItem('admin_user');
-          router.push('/login');
-          return;
-        }
-        if (data.return_code === 'SUCCESS') {
-          const sorted = (data.data || []).sort((a, b) =>
-            new Date(a.fulfillment_date) - new Date(b.fulfillment_date)
-          );
-          setOrders(sorted);
-        } else {
-          setError(data.message || 'Failed to load orders.');
-        }
-      } catch (err) {
-        console.error('Error fetching orders:', err);
-        setError('Unable to connect to server.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrders();
-  }, [user, router]);
-
-  // Group a set of orders by fulfillment date
-  const groupByDate = (ordersToGroup) =>
-    ordersToGroup.reduce((acc, order) => {
-      const date = order.fulfillment_date
-        ? order.fulfillment_date.split('T')[0]
-        : 'No date set';
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(order);
-      return acc;
-    }, {});
-
-  // Aggregate items for a set of orders
-  const buildSummary = (dateOrders) => {
-    const summary = {};
-    dateOrders.forEach(order => {
-      (order.buffets || []).forEach(buffet => {
-        const people = buffet.num_people || 0;
-
-        (buffet.items || []).forEach(item => {
-          const cat = item.category_name || 'Other';
-          const name = item.item_name || 'Unknown item';
-          if (!summary[cat]) summary[cat] = {};
-          if (!summary[cat][name]) summary[cat][name] = { orders: 0, people: 0 };
-          summary[cat][name].orders += 1;
-          summary[cat][name].people += people;
-        });
-
-        (buffet.upgrades || []).forEach(upgrade => {
-          (upgrade.selectedItems || []).forEach(item => {
-            const cat = item.category_name || 'Upgrades';
-            const name = item.item_name || 'Unknown item';
-            if (!summary[cat]) summary[cat] = {};
-            if (!summary[cat][name]) summary[cat][name] = { orders: 0, people: 0 };
-            summary[cat][name].orders += 1;
-            summary[cat][name].people += people;
-          });
-        });
-      });
-    });
-    return summary;
-  };
-
-  const formatDate = (dateStr) => {
-    if (dateStr === 'No date set') return dateStr;
-    try {
-      return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-      });
-    } catch (_) { return dateStr; }
-  };
-
-  const totalPeople = (dateOrders) =>
-    dateOrders.reduce((sum, o) =>
-      sum + (o.buffets || []).reduce((s, b) => s + (b.num_people || 0), 0), 0);
-
-  const handleNavOrders = () => router.push('/');
-  const handleNavMenu = () => router.push('/menu');
-  const handleNavStaff = () => router.push('/staff');
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    router.push('/login');
-  };
-
-  if (!user) return null;
+  // Only today onwards - overdue orders are flagged on the Orders page instead
+  const days = {};
+  let overdue = 0;
+  for (const order of orders) {
+    const key = dayKey(order.fulfillment_date) || 'none';
+    if (isPast(key)) { overdue += 1; continue; }
+    (days[key] = days[key] || []).push(order);
+  }
+  const dayKeys = Object.keys(days).sort();
 
   return (
-    <div className="admin-container">
-      <header className="admin-header">
-        <div className="header-top">
-          <h1>the little nook buffet</h1>
-          <div className="user-info">
-            <span className="user-name">{user.full_name || user.username}</span>
-            <span className="user-role">({user.role})</span>
+    <>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Prep Summary</h1>
+          <p className="page-sub">Everything that needs making, added up per collection day.</p>
+        </div>
+        {dayKeys.length > 0 && (
+          <div className="page-actions no-print">
+            <button className="btn" onClick={() => window.print()}>Print</button>
           </div>
-        </div>
-        <nav className="main-nav">
-          <button className="nav-item" onClick={handleNavOrders}>Orders</button>
-          {(user.role === 'admin' || user.role === 'manager') && (
-            <button className="nav-item" onClick={handleNavMenu}>Menu Items</button>
-          )}
-          {user.role === 'manager' && (
-            <button className="nav-item" onClick={handleNavStaff}>Staff Management</button>
-          )}
-        </nav>
-      </header>
-
-      {loading && (
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Loading summary...</p>
-        </div>
-      )}
-
-      {!loading && error && (
-        <div className="error-state"><p>{error}</p></div>
-      )}
-
-      <div className="page-header">
-        <div className="page-stats">
-          <div className="stat-item">
-            <span className="stat-label">Open Orders</span>
-            <span className="stat-value">{orders.length}</span>
-          </div>
-        </div>
+        )}
       </div>
 
-      {!loading && !error && orders.length === 0 && (
-        <div className="empty-state"><p>No open orders — nothing to prepare!</p></div>
+      {overdue > 0 && (
+        <div className="note-box no-print">
+          {overdue} overdue order{overdue !== 1 ? 's are' : ' is'} not included here — see <Link href="/" style={{ textDecoration: 'underline' }}>Orders</Link>.
+        </div>
       )}
 
-      {!loading && !error && (() => {
-        const dateGrouped = groupByDate(orders);
-        const sortedDates = Object.keys(dateGrouped).sort();
+      {dayKeys.length === 0 && <div className="notice">Nothing to prepare — no upcoming orders.</div>}
+
+      {dayKeys.map(key => {
+        const dayOrders = days[key];
+        const summary = buildSummary(dayOrders);
+        const people = dayOrders.reduce((sum, o) => sum + peopleCount(o), 0);
 
         return (
-          <div className="summary-section">
+          <div key={key} className="card">
+            <div className="card-head">
+              <h2 className="card-title">{key === 'none' ? 'No date set' : dayLabel(key)}</h2>
+              <span className="card-sub">
+                {dayOrders.length} order{dayOrders.length !== 1 ? 's' : ''} · {people} people
+              </span>
+            </div>
 
-            {sortedDates.map(date => {
-              const dateOrders = dateGrouped[date];
-              const summary = buildSummary(dateOrders);
-              const people = totalPeople(dateOrders);
-
-              return (
-                <div key={date} className="summary-date-section">
-
-                  <div className="summary-date-header">
-                    <h3 className="summary-date-title">{formatDate(date)}</h3>
-                    <div className="summary-date-badges">
-                      <span className="summary-badge">{dateOrders.length} order{dateOrders.length !== 1 ? 's' : ''}</span>
-                      <span className="summary-badge summary-badge-people">{people} people total</span>
-                    </div>
-                  </div>
-
-                  <div className="summary-category-grid">
-                    {Object.keys(summary).sort().map(category => (
-                      <div key={category} className="summary-category-card">
-                        <h4 className="summary-category-title">
-                          <span className="category-dot"></span>
-                          {category}
-                        </h4>
-                        <ul className="summary-items-list">
-                          {Object.entries(summary[category])
-                            .sort((a, b) => a[0].localeCompare(b[0]))
-                            .map(([itemName, info]) => (
-                              <li key={itemName} className="summary-item-row">
-                                <span className="summary-item-name">{itemName}</span>
-                                <span className="summary-item-meta">
-                                  {info.orders} order{info.orders !== 1 ? 's' : ''} &middot; {info.people} people
-                                </span>
-                              </li>
-                            ))}
-                        </ul>
+            <div className="prep-grid">
+              {Object.keys(summary).sort().map(cat => (
+                <div key={cat} className="prep-cat">
+                  <h3>{cat}</h3>
+                  {Object.entries(summary[cat])
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .map(([name, info]) => (
+                      <div key={name} className="prep-row">
+                        <span>{name}</span>
+                        <span>{info.people} people · {info.orders} order{info.orders !== 1 ? 's' : ''}</span>
                       </div>
                     ))}
-                  </div>
-
-                  <div className="summary-order-refs">
-                    <p className="summary-order-refs-title">Orders included:</p>
-                    <div className="summary-order-ref-list">
-                      {dateOrders.map(order => (
-                        <a key={order.id} href={`/orders/${order.id}`} className="summary-order-ref-chip">
-                          {order.order_number}
-                          {order.fulfillment_time && <span className="summary-ref-time">{order.fulfillment_time}</span>}
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-
                 </div>
-              );
-            })}
+              ))}
+            </div>
 
+            <div className="chip-list no-print">
+              {dayOrders.map(order => (
+                <Link key={order.id} href={`/orders/${order.id}`} className="chip">
+                  {order.order_number}{order.fulfillment_time ? ` · ${order.fulfillment_time}` : ''}
+                </Link>
+              ))}
+            </div>
           </div>
         );
-      })()}
-
-      <button className="logout-button-bottom" onClick={handleLogout}>Logout</button>
-    </div>
+      })}
+    </>
   );
 }
-
-

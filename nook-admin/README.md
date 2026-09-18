@@ -36,23 +36,26 @@ Runs on port 3002 by default.
 
 PAGES
 
+Every page shares one header (app/components/AdminShell.js) with the navigation, the
+logged-in user and Log out. It also checks the login and provides an api() helper.
+
   /login          - Staff login (2FA)
-  /               - Dashboard / order overview
-  /orders/[id]    - Individual order detail, status updates, and staff notes
-  /menu           - Manage individual menu items and stock
-  /menu-builder   - Build menus — categories, items, images, and display order
-  /prices         - Manage buffet pricing
-  /staff          - Add, edit, and deactivate staff accounts
-  /summary        - Production summary — what needs to be made for upcoming orders
+  /               - Orders - open orders grouped by collection day, overdue first
+  /orders/[id]    - One order - mark paid, mark ready (emails the customer), print, cancel, note to customer
+  /summary        - Prep Summary - everything to make, added up per collection day
+  /menu           - Menu - pick a buffet to change its price, categories, items and stock; Upgrades tab
+  /staff          - Staff accounts (managers only)
+
+/prices and /menu-builder redirect to /menu.
 
 
 ROLES
 
-There are three roles. Permissions are enforced on the server — the frontend just hides things that aren't relevant.
+There are three roles. Permissions are enforced on the server - the frontend just hides things that aren't relevant.
 
-  staff    - View orders, update statuses, manage stock
-  admin    - Everything staff can do, plus edit menus and prices
-  manager  - Everything admin can do, plus manage staff accounts
+  staff    - Orders, prep summary, and marking menu items in or out of stock
+  admin    - Everything staff can do, plus editing the menu, prices and upgrades
+  manager  - Everything admin can do, plus managing staff accounts
 
 
 NOTES

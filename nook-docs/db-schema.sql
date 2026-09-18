@@ -285,6 +285,7 @@ CREATE TABLE public.menu_items (
     allergens text,
     dietary_info character varying(255),
     is_active boolean DEFAULT true,
+    is_deleted boolean DEFAULT false NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 

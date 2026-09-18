@@ -1,525 +1,215 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import './order-details.css';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import AdminShell, { useAdmin } from '../../components/AdminShell';
+import {
+  formatDate, formatDateTime, money, peopleCount, isPaid, paymentLabel, groupByCategory
+} from '../../lib/format';
 
-// No payment is taken online, so every order starts unpaid until staff mark it paid.
-// 'waived' only appears on older orders placed through the old staff skip-payment option.
-const paymentLabel = (paymentStatus) =>
-  paymentStatus === 'paid' ? 'Paid' : paymentStatus === 'waived' ? 'Waived' : 'Unpaid';
-const paymentBadgeClass = (paymentStatus) =>
-  paymentStatus === 'paid' || paymentStatus === 'waived' ? 'badge-paid' : 'badge-unpaid';
+export default function OrderPage() {
+  return (
+    <AdminShell>
+      <OrderDetails />
+    </AdminShell>
+  );
+}
 
-export default function OrderDetailsPage() {
+function OrderDetails() {
+  const { api } = useAdmin();
   const router = useRouter();
-  const params = useParams();
-  const orderId = params.id;
+  const { id: orderId } = useParams();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
+  const [busy, setBusy] = useState(false);
   const [staffNotes, setStaffNotes] = useState('');
-  const [staffNotesSaving, setStaffNotesSaving] = useState(false);
-  const [staffNotesSaved, setStaffNotesSaved] = useState(false);
-  const [paymentSaving, setPaymentSaving] = useState(false);
+  const [notesSaved, setNotesSaved] = useState(false);
 
-  // Check authentication on mount
   useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    const userData = localStorage.getItem('admin_user');
-
-    if (!token || !userData) {
-      router.push('/login');
-      return;
-    }
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
-    setUser(JSON.parse(userData));
-  }, [router]);
-
-  // Fetch order details
-  useEffect(() => {
-    if (!user || !orderId) return;
-
-    const fetchOrder = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const token = localStorage.getItem('admin_token');
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-
-        const response = await fetch(`${apiUrl}/api/orders/${orderId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.return_code === 'UNAUTHORIZED' || data.return_code === 'FORBIDDEN') {
-          localStorage.removeItem('admin_token');
-          localStorage.removeItem('admin_user');
-          router.push('/login');
-          return;
-        }
-
+    api(`/api/orders/${orderId}`)
+      .then(data => {
         if (data.return_code === 'SUCCESS') {
           setOrder(data.data);
           setStaffNotes(data.data.staff_notes || '');
-        } else if (data.return_code === 'NOT_FOUND') {
-          setError('Order not found');
         } else {
-          setError(data.message || 'Failed to load order');
+          setError(data.return_code === 'NOT_FOUND' ? 'Order not found' : data.message || 'Failed to load order');
         }
-      } catch (err) {
-        console.error('Error fetching order:', err);
-        setError('Failed to load order. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
+      })
+      .catch(() => setError('Could not reach the server. Please try again.'))
+      .finally(() => setLoading(false));
+  }, [api, orderId]);
 
-    fetchOrder();
-  }, [user, orderId, router]);
+  if (loading) return <div className="notice">Loading order...</div>;
+  if (error) return <div className="notice notice-error">{error}</div>;
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  };
+  const isOpen = order.status !== 'completed' && order.status !== 'cancelled';
 
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const formatTime = (timeString) => {
-    if (!timeString) return '';
-    return timeString;
-  };
-
-  const markOrderAsDone = async () => {
-    if (!confirm('Mark this order as completed?')) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('admin_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const response = await fetch(`${apiUrl}/api/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: 'completed' })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.return_code === 'SUCCESS') {
-        // Go back to orders list after marking as done
-        router.push('/');
-      } else {
-        alert('Failed to update order: ' + data.message);
-      }
-    } catch (error) {
-      console.error('Error updating order:', error);
-      alert('Failed to update order. Please try again.');
-    }
-  };
-
-  const cancelOrder = async () => {
-    if (!confirm('Are you sure you want to cancel this order?')) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('admin_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const response = await fetch(`${apiUrl}/api/orders/${orderId}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: 'cancelled' })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data.return_code === 'SUCCESS') {
-        router.push('/');
-      } else {
-        alert('Failed to cancel order: ' + data.message);
-      }
-    } catch (error) {
-      console.error('Error cancelling order:', error);
-      alert('Failed to cancel order. Please try again.');
-    }
-  };
-
-  // Toggle between paid and unpaid (a waived order can still be marked paid)
-  const togglePaymentStatus = async () => {
+  const togglePaid = async () => {
     const newStatus = order.payment_status === 'paid' ? 'unpaid' : 'paid';
-    if (newStatus === 'unpaid' && !confirm('Mark this order as unpaid?')) {
-      return;
-    }
-
-    setPaymentSaving(true);
+    if (newStatus === 'unpaid' && !confirm('Mark this order as unpaid?')) return;
+    setBusy(true);
     try {
-      const token = localStorage.getItem('admin_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const response = await fetch(`${apiUrl}/api/orders/${orderId}/payment-status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ payment_status: newStatus })
-      });
-
-      const data = await response.json();
-
-      if (data.return_code === 'SUCCESS') {
-        setOrder(prev => ({ ...prev, payment_status: data.data.payment_status }));
-      } else {
-        alert('Failed to update payment status: ' + data.message);
-      }
-    } catch (error) {
-      console.error('Error updating payment status:', error);
-      alert('Failed to update payment status. Please try again.');
+      const data = await api(`/api/orders/${orderId}/payment-status`, { method: 'PATCH', body: { payment_status: newStatus } });
+      if (data.return_code === 'SUCCESS') setOrder(prev => ({ ...prev, payment_status: data.data.payment_status }));
+      else alert(data.message || 'Could not update payment');
+    } catch {
+      alert('Could not reach the server. Please try again.');
     } finally {
-      setPaymentSaving(false);
+      setBusy(false);
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const goBack = () => {
-    router.push('/');
-  };
-
-  const saveStaffNotes = async () => {
-    setStaffNotesSaving(true);
-    setStaffNotesSaved(false);
+  // 'completed' emails the customer that their order is ready to collect
+  const setStatus = async (status, question) => {
+    if (!confirm(question)) return;
+    setBusy(true);
     try {
-      const token = localStorage.getItem('admin_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const response = await fetch(`${apiUrl}/api/orders/${orderId}/staff-notes`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ staff_notes: staffNotes })
-      });
-      const data = await response.json();
+      const data = await api(`/api/orders/${orderId}/status`, { method: 'PATCH', body: { status } });
+      if (data.return_code === 'SUCCESS') router.push('/');
+      else alert(data.message || 'Could not update the order');
+    } catch {
+      alert('Could not reach the server. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveNotes = async () => {
+    setBusy(true);
+    try {
+      const data = await api(`/api/orders/${orderId}/staff-notes`, { method: 'PATCH', body: { staff_notes: staffNotes } });
       if (data.return_code === 'SUCCESS') {
         setOrder(prev => ({ ...prev, staff_notes: staffNotes }));
-        setStaffNotesSaved(true);
-        setTimeout(() => setStaffNotesSaved(false), 3000);
+        setNotesSaved(true);
+        setTimeout(() => setNotesSaved(false), 3000);
       } else {
-        alert('Failed to save notes: ' + data.message);
+        alert(data.message || 'Could not save the note');
       }
-    } catch (err) {
-      alert('Failed to save notes. Please try again.');
+    } catch {
+      alert('Could not reach the server. Please try again.');
     } finally {
-      setStaffNotesSaving(false);
+      setBusy(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="order-details-container">
-        <div className="loading-state">
-          <div className="spinner"></div>
-          <p>Loading order...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="order-details-container">
-        <div className="error-state">
-          <p>{error}</p>
-          <button onClick={goBack} className="back-btn">Back to Orders</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!order) return null;
-
   return (
-    <div className="order-details-container">
-      <header className="order-details-header">
-        <button onClick={goBack} className="back-btn">← Back</button>
-        <div className="header-center">
-          <h1>{order.order_number}</h1>
-          <div className="order-meta">
-            <span className="order-date">Ordered: {formatDateTime(order.created_at)}</span>
-            <span className="order-date-separator">•</span>
-            <span className="order-date fulfillment">
-              Needed: {order.fulfillment_date ? new Date(order.fulfillment_date).toLocaleDateString('en-GB', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric'
-              }) : 'Not specified'} {order.fulfillment_time ? `at ${order.fulfillment_time}` : ''}
-            </span>
-          </div>
-        </div>
-        <div className="header-right">
-          <div className="order-badges">
-            <span className={`badge badge-${order.fulfillment_type}`}>{order.fulfillment_type}</span>
-            <span className="badge badge-people">
-              {order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people
-            </span>
-            <span className="badge badge-total">£{parseFloat(order.total_price).toFixed(2)}</span>
-            <span className={`badge ${paymentBadgeClass(order.payment_status)}`}>{paymentLabel(order.payment_status)}</span>
-          </div>
-        </div>
-      </header>
+    <>
+      <Link href="/" className="back-link no-print">← All orders</Link>
 
-      <div className="order-content">
-        {/* Print Header - only visible when printing */}
-        <div className="print-header">
-          <h1>{order.order_number}</h1>
-          <div className="print-meta">
-            <span>Ordered: {formatDateTime(order.created_at)}</span>
-            <span className="print-needed">Needed: {order.fulfillment_date ? new Date(order.fulfillment_date).toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric'
-            }) : 'Not specified'} {order.fulfillment_time ? `at ${order.fulfillment_time}` : ''}</span>
-          </div>
-          <div className="print-badges">
-            <span>{order.fulfillment_type}</span>
-            <span>{order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people</span>
-            <span>£{parseFloat(order.total_price).toFixed(2)}</span>
-            <span>{paymentLabel(order.payment_status)}</span>
-          </div>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">
+            {order.order_number}{' '}
+            <span className={`badge ${isPaid(order) ? 'badge-paid' : 'badge-unpaid'}`}>{paymentLabel(order)}</span>{' '}
+            {!isOpen && <span className="badge">{order.status === 'completed' ? 'Completed' : 'Cancelled'}</span>}
+          </h1>
+          <p className="page-sub">
+            Collect <strong>{formatDate(order.fulfillment_date)}{order.fulfillment_time ? ` at ${order.fulfillment_time}` : ''}</strong>
+            {' · '}{peopleCount(order)} people · {money(order.total_price)}
+          </p>
         </div>
+      </div>
 
-        {/* Action Buttons */}
-        <div className="action-buttons">
-          <button className="print-btn" onClick={handlePrint}>Print</button>
+      <div className="card action-bar no-print">
+        <button className={order.payment_status === 'paid' ? 'btn' : 'btn btn-success'} onClick={togglePaid} disabled={busy}>
+          {order.payment_status === 'paid' ? 'Mark as unpaid' : 'Mark as paid'}
+        </button>
+        {isOpen && (
           <button
-            className={order.payment_status === 'paid' ? 'unpaid-btn' : 'paid-btn'}
-            onClick={togglePaymentStatus}
-            disabled={paymentSaving}
+            className="btn btn-primary"
+            disabled={busy}
+            onClick={() => setStatus('completed', 'Mark this order as ready?\n\nThe customer will be emailed that it is ready to collect, and it will leave the orders list.')}
           >
-            {paymentSaving ? 'Saving...' : order.payment_status === 'paid' ? 'Mark as Unpaid' : 'Mark as Paid'}
+            Order ready — email customer
           </button>
-          <button className="done-btn" onClick={markOrderAsDone}>Mark as Done</button>
-          <button className="cancel-btn" onClick={cancelOrder}>Cancel Order</button>
-        </div>
+        )}
+        <button className="btn" onClick={() => window.print()}>Print</button>
+        <span className="spacer" />
+        {isOpen && (
+          <button
+            className="btn btn-danger"
+            disabled={busy}
+            onClick={() => setStatus('cancelled', 'Cancel this order? It will leave the orders list. The customer is not emailed.')}
+          >
+            Cancel order
+          </button>
+        )}
+      </div>
 
-        {/* Staff Notes */}
-        <div className="detail-section staff-notes-section">
-          <h3>Staff Notes</h3>
-          <p className="staff-notes-hint">These notes are visible to the customer in their order history.</p>
+      <div className="card">
+        <h2 className="card-title" style={{ marginBottom: '0.75rem' }}>Customer</h2>
+        <div className="detail-grid">
+          <Detail label="Business" value={order.notes || '—'} />
+          <Detail label="Email" value={<a href={`mailto:${order.customer_email}`}>{order.customer_email}</a>} />
+          <Detail label="Phone" value={order.customer_phone ? <a href={`tel:${order.customer_phone}`}>{order.customer_phone}</a> : '—'} />
+          <Detail label="Address" value={order.fulfillment_address || '—'} />
+          <Detail label="Ordered" value={formatDateTime(order.created_at)} />
+        </div>
+      </div>
+
+      <div className="card">
+        <h2 className="card-title">Note to customer</h2>
+        <p className="card-sub" style={{ marginBottom: '0.5rem' }}>The customer sees this in their order history.</p>
+        <div className="no-print">
           <textarea
-            className="staff-notes-textarea"
-            placeholder="Add a note for the customer, e.g. &quot;We have swapped your wraps for sandwiches today&quot;"
+            className="input"
+            rows={3}
+            placeholder="e.g. We have swapped your wraps for sandwiches today"
             value={staffNotes}
             onChange={e => setStaffNotes(e.target.value)}
-            rows={4}
           />
-          <div className="staff-notes-actions">
-            <button className="staff-notes-save-btn" onClick={saveStaffNotes} disabled={staffNotesSaving}>
-              {staffNotesSaving ? 'Saving...' : 'Save Note'}
-            </button>
-            {staffNotesSaved && <span className="staff-notes-saved">Saved</span>}
+          <div className="form-actions">
+            <button className="btn btn-sm" onClick={saveNotes} disabled={busy || staffNotes === (order.staff_notes || '')}>Save note</button>
+            {notesSaved && <span className="badge badge-paid" style={{ alignSelf: 'center' }}>Saved</span>}
           </div>
         </div>
-
-        {/* Customer Details */}
-        <div className="detail-section customer-section">
-          <h3>Customer Details</h3>
-          <div className="info-cards">
-            <div className="info-card">
-              <span className="info-label">Business</span>
-              <span className="info-value">{order.notes || 'N/A'}</span>
-            </div>
-            <div className="info-card">
-              <span className="info-label">Email</span>
-              <span className="info-value">{order.customer_email}</span>
-            </div>
-            <div className="info-card">
-              <span className="info-label">Phone</span>
-              <span className="info-value">{order.customer_phone}</span>
-            </div>
-            <div className="info-card full-width">
-              <span className="info-label">Address</span>
-              <span className="info-value">{order.fulfillment_address}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Fulfillment Details */}
-        <div className="detail-section fulfillment-section">
-          <h3>Fulfillment Details</h3>
-          <div className="info-cards">
-            <div className="info-card">
-              <span className="info-label">Type</span>
-              <span className="info-value fulfillment-type">{order.fulfillment_type}</span>
-            </div>
-            <div className="info-card">
-              <span className="info-label">Date</span>
-              <span className="info-value">{formatDate(order.fulfillment_date)}</span>
-            </div>
-            <div className="info-card">
-              <span className="info-label">Time</span>
-              <span className="info-value">{formatTime(order.fulfillment_time)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Buffets */}
-        {order.buffets && order.buffets.map((buffet, buffetIndex) => (
-          <div key={buffet.id} className="detail-section buffet-section">
-            <h3>{buffet.buffet_name || `Buffet #${buffetIndex + 1}`}</h3>
-
-            <div className="buffet-summary">
-              <div className="summary-item">
-                <span className="summary-label">People</span>
-                <span className="summary-value">{buffet.num_people}</span>
-              </div>
-              <div className="summary-item">
-                <span className="summary-label">Per Person</span>
-                <span className="summary-value">£{parseFloat(buffet.price_per_person).toFixed(2)}</span>
-              </div>
-              <div className="summary-item highlight">
-                <span className="summary-label">Subtotal</span>
-                <span className="summary-value">£{parseFloat(buffet.subtotal).toFixed(2)}</span>
-              </div>
-            </div>
-
-            {(buffet.dietary_info || buffet.allergens || buffet.notes) && (
-              <div className="buffet-notes">
-                {buffet.dietary_info && (
-                  <div className="note-item dietary-note">
-                    <span className="note-label">Dietary Info</span>
-                    <span className="note-value">{buffet.dietary_info}</span>
-                  </div>
-                )}
-                {buffet.allergens && (
-                  <div className="note-item allergen-note">
-                    <span className="note-label">Allergens</span>
-                    <span className="note-value">{buffet.allergens}</span>
-                  </div>
-                )}
-                {buffet.notes && (
-                  <div className="note-item general-note">
-                    <span className="note-label">Notes</span>
-                    <span className="note-value">{buffet.notes}</span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Menu Items */}
-            {buffet.items && buffet.items.length > 0 && (
-              <div className="menu-items">
-                <h4>Selected Menu Items</h4>
-                <div className="items-by-category">
-                  {(() => {
-                    const itemsByCategory = {};
-                    buffet.items.forEach(item => {
-                      if (!itemsByCategory[item.category_name]) {
-                        itemsByCategory[item.category_name] = [];
-                      }
-                      itemsByCategory[item.category_name].push(item);
-                    });
-
-                    return Object.entries(itemsByCategory).map(([category, items]) => (
-                      <div key={category} className="category-group">
-                        <h5 className="category-title">
-                          <span className="category-dot"></span>
-                          {category}
-                        </h5>
-                        <ul className="items-list">
-                          {items.map(item => (
-                            <li key={item.id}>{item.item_name}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ));
-                  })()}
-                </div>
-              </div>
-            )}
-
-            {/* Upgrades */}
-            {buffet.upgrades && buffet.upgrades.length > 0 && (
-              <div className="upgrades-section">
-                <h4>Upgrades</h4>
-                {buffet.upgrades.map((upgrade) => (
-                  <div key={upgrade.id} className="upgrade-card">
-                    <div className="upgrade-header">
-                      <span className="upgrade-name">{upgrade.upgrade_name}</span>
-                      <span className="upgrade-price">
-                        £{parseFloat(upgrade.price_per_person).toFixed(2)}/person × {upgrade.num_people} = £{parseFloat(upgrade.subtotal).toFixed(2)}
-                      </span>
-                    </div>
-                    {upgrade.selectedItems && upgrade.selectedItems.length > 0 && (
-                      <div className="upgrade-items">
-                        {(() => {
-                          const itemsByCategory = {};
-                          upgrade.selectedItems.forEach(item => {
-                            if (!itemsByCategory[item.category_name]) {
-                              itemsByCategory[item.category_name] = [];
-                            }
-                            itemsByCategory[item.category_name].push(item);
-                          });
-
-                          return Object.entries(itemsByCategory).map(([category, items]) => (
-                            <div key={category} className="upgrade-category-group">
-                              <span className="upgrade-category-name">{category}:</span>
-                              <span className="upgrade-category-items">
-                                {items.map(item => item.item_name).join(', ')}
-                              </span>
-                            </div>
-                          ));
-                        })()}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+        <p className="print-only">{order.staff_notes || '—'}</p>
       </div>
 
+      {(order.buffets || []).map((buffet, i) => (
+        <div key={buffet.id || i} className="card">
+          <h2 className="card-title">{buffet.buffet_name || `Buffet ${i + 1}`}</h2>
+          <p className="buffet-meta">
+            {buffet.num_people} people × {money(buffet.price_per_person)} = {money(buffet.subtotal)}
+          </p>
+
+          {buffet.dietary_info && <div className="note-box"><strong>Dietary:</strong> {buffet.dietary_info}</div>}
+          {buffet.allergens && <div className="note-box"><strong>Allergens:</strong> {buffet.allergens}</div>}
+          {buffet.notes && <div className="note-box"><strong>Notes:</strong> {buffet.notes}</div>}
+
+          <div className="item-columns">
+            {Object.entries(groupByCategory(buffet.items)).map(([cat, items]) => (
+              <div key={cat}>
+                <div className="item-cat">{cat}</div>
+                <ul className="item-list">
+                  {items.map(item => <li key={item.id}>{item.item_name}</li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          {(buffet.upgrades || []).filter(u => u.upgrade_name).map(upgrade => (
+            <div key={upgrade.id} className="upgrade-box">
+              <strong>+ {upgrade.upgrade_name}</strong> — {upgrade.num_people} × {money(upgrade.price_per_person)} = {money(upgrade.subtotal)}
+              {Object.entries(groupByCategory(upgrade.selectedItems)).map(([cat, items]) => (
+                <div key={cat}>{cat}: {items.map(item => item.item_name).join(', ')}</div>
+              ))}
+            </div>
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
+
+function Detail({ label, value }) {
+  return (
+    <div>
+      <div className="detail-label">{label}</div>
+      <div className="detail-value">{value}</div>
     </div>
   );
 }

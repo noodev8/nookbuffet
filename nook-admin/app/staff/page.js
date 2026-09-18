@@ -1,579 +1,192 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import './staff.css';
+import { useCallback, useEffect, useState } from 'react';
+import AdminShell, { useAdmin } from '../components/AdminShell';
+import { formatDateTime } from '../lib/format';
 
-export default function StaffManagementPage() {
-  const router = useRouter();
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [user, setUser] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    full_name: '',
-    role: 'staff'
-  });
-  const [formError, setFormError] = useState('');
-  const [formLoading, setFormLoading] = useState(false);
+const MANAGERS_ONLY = ['manager'];
 
-  // Check authentication on mount
-  useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    const userData = localStorage.getItem('admin_user');
+const ROLES = [
+  { value: 'staff', label: 'Staff', help: 'orders, prep summary and marking items in or out of stock' },
+  { value: 'admin', label: 'Admin', help: 'everything staff can do, plus editing the menu, prices and upgrades' },
+  { value: 'manager', label: 'Manager', help: 'everything, including adding and removing staff' },
+];
 
-    if (!token || !userData) {
-      router.push('/login');
-      return;
-    }
+const EMPTY_FORM = { full_name: '', username: '', email: '', password: '', role: 'staff' };
 
-    const parsedUser = JSON.parse(userData);
-
-    // Check if user has permission (manager only)
-    if (parsedUser.role !== 'manager') {
-      router.push('/');
-      return;
-    }
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
-    setUser(parsedUser);
-  }, [router]);
-
-  // Loading starts true for the first fetch; later refreshes keep showing the current list
-  const fetchUsers = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('admin_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      
-      const response = await fetch(`${apiUrl}/api/auth/users`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Check if token is invalid or expired
-      if (data.return_code === 'UNAUTHORIZED' || data.return_code === 'FORBIDDEN') {
-        // Clear invalid token and redirect to login
-        localStorage.removeItem('admin_token');
-        localStorage.removeItem('admin_user');
-        router.push('/login');
-        return;
-      }
-
-      if (data.return_code === 'SUCCESS') {
-        setUsers(data.data);
-        setError(null);
-      } else {
-        setError(data.message || 'Failed to load users');
-      }
-    } catch (err) {
-      console.error('Error fetching users:', err);
-      setError('Failed to load users. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
-  // Fetch users when user is authenticated
-  useEffect(() => {
-    if (!user) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetchUsers only sets state after its fetch resolves
-    fetchUsers();
-  }, [user, fetchUsers]);
-
-
-  const handleFormChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    setFormError('');
-  };
-
-  const handleAddUser = async (e) => {
-    e.preventDefault();
-    setFormLoading(true);
-    setFormError('');
-
-    try {
-      const token = localStorage.getItem('admin_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-
-      const response = await fetch(`${apiUrl}/api/auth/users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-
-      if (data.return_code === 'SUCCESS') {
-        // Reset form and close modal
-        setFormData({
-          username: '',
-          email: '',
-          password: '',
-          full_name: '',
-          role: 'staff'
-        });
-        setShowAddForm(false);
-
-        // Refresh the user list
-        fetchUsers();
-      } else {
-        setFormError(data.message || 'Failed to create user');
-      }
-    } catch (err) {
-      console.error('Error creating user:', err);
-      setFormError('Failed to create user. Please try again.');
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const goToOrders = () => {
-    router.push('/');
-  };
-
-  const goToMenuManagement = () => {
-    router.push('/menu');
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    router.push('/login');
-  };
-
-  const handleEditUser = (staffUser) => {
-    setEditingUser(staffUser);
-    setFormData({
-      username: staffUser.username,
-      email: staffUser.email,
-      password: '', // Leave password empty - only update if filled
-      full_name: staffUser.full_name,
-      role: staffUser.role
-    });
-    setFormError('');
-    setShowEditForm(true);
-  };
-
-  const handleUpdateUser = async (e) => {
-    e.preventDefault();
-    setFormLoading(true);
-    setFormError('');
-
-    try {
-      const token = localStorage.getItem('admin_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-
-      // Prepare update data - only include password if it's filled
-      const updateData = {
-        username: formData.username,
-        email: formData.email,
-        full_name: formData.full_name,
-        role: formData.role
-      };
-
-      if (formData.password) {
-        updateData.password = formData.password;
-      }
-
-      const response = await fetch(`${apiUrl}/api/auth/users/${editingUser.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(updateData)
-      });
-
-      const data = await response.json();
-
-      if (data.return_code === 'SUCCESS') {
-        // Refresh the user list
-        fetchUsers();
-        setShowEditForm(false);
-        setEditingUser(null);
-        setFormData({
-          username: '',
-          email: '',
-          password: '',
-          full_name: '',
-          role: 'staff'
-        });
-      } else {
-        setFormError(data.message || 'Failed to update user');
-      }
-    } catch (err) {
-      console.error('Error updating user:', err);
-      setFormError('Failed to update user. Please try again.');
-    } finally {
-      setFormLoading(false);
-    }
-  };
-
-  const handleDeleteUser = async (staffUser) => {
-    if (!confirm(`Are you sure you want to delete ${staffUser.full_name}? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('admin_token');
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-
-      const response = await fetch(`${apiUrl}/api/auth/users/${staffUser.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-
-      if (data.return_code === 'SUCCESS') {
-        // Remove the user from the list
-        setUsers(users.filter(u => u.id !== staffUser.id));
-      } else {
-        alert(data.message || 'Failed to delete user');
-      }
-    } catch (err) {
-      console.error('Error deleting user:', err);
-      alert('Failed to delete user. Please try again.');
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="staff-management-container">
-        <div className="loading">Loading staff...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="staff-management-container">
-        <div className="error">{error}</div>
-      </div>
-    );
-  }
-
+export default function StaffPage() {
   return (
-    <div className="staff-management-container">
-      <header className="staff-header">
-        <div className="header-top">
-          <h1>the little nook buffet</h1>
-          {user && (
-            <div className="user-info">
-              <span className="user-name">{user.full_name || user.username}</span>
-              <span className="user-role">({user.role})</span>
-            </div>
-          )}
-        </div>
-
-        <nav className="main-nav">
-          <button className="nav-item" onClick={goToOrders}>Orders</button>
-          <button className="nav-item" onClick={goToMenuManagement}>Menu Items</button>
-          <button className="nav-item" onClick={() => router.push('/prices')}>Prices</button>
-          <button className="nav-item" onClick={() => router.push('/menu-builder')}>Menu Builder</button>
-          <button className="nav-item active">Staff Management</button>
-        </nav>
-      </header>
-
-      <div className="staff-page-header">
-        <h2>Staff Members</h2>
-        <button className="add-staff-button" onClick={() => setShowAddForm(true)}>
-          + Add New Staff
-        </button>
-      </div>
-
-      <div className="users-list">
-        {users.length === 0 ? (
-          <div className="empty-state">
-            <p>No staff members found</p>
-          </div>
-        ) : (
-          users.map((staffUser) => (
-            <div key={staffUser.id} className="user-card">
-              <div className="user-header">
-                <div className="user-name-section">
-                  <h3>{staffUser.full_name}</h3>
-                  <span className={`role-badge role-${staffUser.role}`}>
-                    {staffUser.role}
-                  </span>
-                </div>
-                <div className={`status-badge ${staffUser.is_active ? 'active' : 'inactive'}`}>
-                  {staffUser.is_active ? 'Active' : 'Inactive'}
-                </div>
-              </div>
-              <div className="user-details">
-                <div className="detail-row">
-                  <span className="detail-label">Username:</span>
-                  <span className="detail-value">{staffUser.username}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Email:</span>
-                  <span className="detail-value">{staffUser.email}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Last Login:</span>
-                  <span className="detail-value">{formatDate(staffUser.last_login)}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Created:</span>
-                  <span className="detail-value">{formatDate(staffUser.created_at)}</span>
-                </div>
-              </div>
-              <div className="user-actions">
-                <button
-                  className="edit-button"
-                  onClick={() => handleEditUser(staffUser)}
-                >
-                  Edit
-                </button>
-                {staffUser.email !== user?.email && (
-                  <button
-                    className="delete-button"
-                    onClick={() => handleDeleteUser(staffUser)}
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-
-      {showAddForm && (
-        <div className="modal-overlay" onClick={() => setShowAddForm(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Add New Staff Member</h2>
-              <button className="close-button" onClick={() => setShowAddForm(false)}>×</button>
-            </div>
-
-            <form onSubmit={handleAddUser} className="add-user-form">
-              {formError && (
-                <div className="form-error">{formError}</div>
-              )}
-
-              <div className="form-group">
-                <label htmlFor="full_name">Full Name</label>
-                <input
-                  type="text"
-                  id="full_name"
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleFormChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="username">Username</label>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleFormChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleFormChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="password">Password</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleFormChange}
-                  required
-                  minLength="6"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="role">Role</label>
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleFormChange}
-                  required
-                >
-                  <option value="staff">Staff</option>
-                  <option value="admin">Admin</option>
-                  <option value="manager">Manager</option>
-                </select>
-              </div>
-
-              <div className="form-actions">
-                <button
-                  type="button"
-                  className="cancel-button"
-                  onClick={() => setShowAddForm(false)}
-                  disabled={formLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="submit-button"
-                  disabled={formLoading}
-                >
-                  {formLoading ? 'Creating...' : 'Create User'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {showEditForm && editingUser && (
-        <div className="modal-overlay" onClick={() => setShowEditForm(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Edit Staff Member</h2>
-              <button className="close-button" onClick={() => setShowEditForm(false)}>×</button>
-            </div>
-
-            <form onSubmit={handleUpdateUser} className="add-user-form">
-              {formError && (
-                <div className="form-error">{formError}</div>
-              )}
-
-              <div className="form-group">
-                <label htmlFor="edit_full_name">Full Name</label>
-                <input
-                  type="text"
-                  id="edit_full_name"
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleFormChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit_username">Username</label>
-                <input
-                  type="text"
-                  id="edit_username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleFormChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit_email">Email</label>
-                <input
-                  type="email"
-                  id="edit_email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleFormChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit_password">Password (leave blank to keep current)</label>
-                <input
-                  type="password"
-                  id="edit_password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleFormChange}
-                  minLength="6"
-                  placeholder="Leave blank to keep current password"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit_role">Role</label>
-                <select
-                  id="edit_role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleFormChange}
-                  required
-                >
-                  <option value="staff">Staff</option>
-                  <option value="admin">Admin</option>
-                  <option value="manager">Manager</option>
-                </select>
-              </div>
-
-              <div className="form-actions">
-                <button
-                  type="button"
-                  className="cancel-button"
-                  onClick={() => setShowEditForm(false)}
-                  disabled={formLoading}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="submit-button"
-                  disabled={formLoading}
-                >
-                  {formLoading ? 'Updating...' : 'Update User'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <button className="logout-button-bottom" onClick={handleLogout}>
-        Logout
-      </button>
-    </div>
+    <AdminShell roles={MANAGERS_ONLY}>
+      <StaffList />
+    </AdminShell>
   );
 }
 
+function StaffList() {
+  const { api, user } = useAdmin();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  // null = no form open, 'new' = adding, otherwise the staff member being edited
+  const [editing, setEditing] = useState(null);
+
+  const loadUsers = useCallback(async () => {
+    try {
+      const data = await api('/api/auth/users');
+      if (data.return_code === 'SUCCESS') {
+        setUsers(data.data || []);
+        setError(null);
+      } else {
+        setError(data.message || 'Failed to load staff');
+      }
+    } catch {
+      setError('Could not reach the server. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, [api]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loadUsers only sets state after its fetch resolves
+    loadUsers();
+  }, [loadUsers]);
+
+  const deleteUser = async (staffUser) => {
+    if (!confirm(`Delete ${staffUser.full_name}? They will no longer be able to log in. This cannot be undone.`)) return;
+    try {
+      const data = await api(`/api/auth/users/${staffUser.id}`, { method: 'DELETE' });
+      if (data.return_code === 'SUCCESS') setUsers(prev => prev.filter(u => u.id !== staffUser.id));
+      else alert(data.message || 'Could not delete this staff member');
+    } catch {
+      alert('Could not reach the server. Please try again.');
+    }
+  };
+
+  if (loading) return <div className="notice">Loading staff...</div>;
+  if (error) return <div className="notice notice-error">{error}</div>;
+
+  return (
+    <>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Staff</h1>
+          <p className="page-sub">Who can log in to this portal.</p>
+        </div>
+        {editing === null && (
+          <div className="page-actions">
+            <button className="btn btn-primary" onClick={() => setEditing('new')}>+ Add staff member</button>
+          </div>
+        )}
+      </div>
+
+      {editing === 'new' && (
+        <StaffForm onCancel={() => setEditing(null)} onSaved={() => { setEditing(null); loadUsers(); }} />
+      )}
+
+      <div className="card">
+        {users.length === 0 && <p className="card-sub">No staff yet.</p>}
+        {users.map(staffUser => (
+          editing?.id === staffUser.id ? (
+            <StaffForm
+              key={staffUser.id}
+              existing={staffUser}
+              onCancel={() => setEditing(null)}
+              onSaved={() => { setEditing(null); loadUsers(); }}
+            />
+          ) : (
+            <div key={staffUser.id} className="staff-row">
+              <div>
+                <div className="staff-name">
+                  {staffUser.full_name}{' '}
+                  <span className="badge">{ROLES.find(r => r.value === staffUser.role)?.label || staffUser.role}</span>{' '}
+                  {!staffUser.is_active && <span className="badge badge-unpaid">Inactive</span>}
+                </div>
+                <div className="staff-info">{staffUser.email} · username {staffUser.username}</div>
+              </div>
+              <div className="staff-info">Last login: {formatDateTime(staffUser.last_login)}</div>
+              <div>
+                <button className="btn-link" onClick={() => setEditing(staffUser)}>Edit</button>
+                {staffUser.email !== user.email && (
+                  <button className="btn-link danger" onClick={() => deleteUser(staffUser)}>Delete</button>
+                )}
+              </div>
+            </div>
+          )
+        ))}
+      </div>
+    </>
+  );
+}
+
+function StaffForm({ existing, onCancel, onSaved }) {
+  const { api } = useAdmin();
+  const [form, setForm] = useState(existing
+    ? { full_name: existing.full_name, username: existing.username, email: existing.email, password: '', role: existing.role }
+    : EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const set = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setFormError('');
+    try {
+      const body = { ...form };
+      if (existing && !body.password) delete body.password; // blank = keep current password
+      const data = existing
+        ? await api(`/api/auth/users/${existing.id}`, { method: 'PUT', body })
+        : await api('/api/auth/users', { method: 'POST', body });
+      if (data.return_code === 'SUCCESS') onSaved();
+      else setFormError(data.message || 'Could not save');
+    } catch {
+      setFormError('Could not reach the server. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form className="card" onSubmit={submit}>
+      <h2 className="card-title" style={{ marginBottom: '0.75rem' }}>{existing ? `Edit ${existing.full_name}` : 'Add staff member'}</h2>
+      {formError && <div className="form-error">{formError}</div>}
+      <div className="form-grid">
+        <div className="field">
+          <label htmlFor="full_name">Full name</label>
+          <input id="full_name" name="full_name" className="input" value={form.full_name} onChange={set} required />
+        </div>
+        <div className="field">
+          <label htmlFor="email">Email</label>
+          <input id="email" name="email" type="email" className="input" value={form.email} onChange={set} required />
+          <span className="field-hint">Their login code is sent here</span>
+        </div>
+        <div className="field">
+          <label htmlFor="username">Username</label>
+          <input id="username" name="username" className="input" value={form.username} onChange={set} required />
+        </div>
+        <div className="field">
+          <label htmlFor="password">{existing ? 'New password' : 'Password'}</label>
+          <input
+            id="password" name="password" type="password" className="input" minLength={6}
+            value={form.password} onChange={set} required={!existing}
+            placeholder={existing ? 'Leave blank to keep current' : 'At least 6 characters'}
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="role">Role</label>
+          <select id="role" name="role" className="input" value={form.role} onChange={set}>
+            {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </div>
+        <div className="field field-wide role-help">
+          {ROLES.map(r => <div key={r.value}><strong>{r.label}:</strong> {r.help}</div>)}
+        </div>
+      </div>
+      <div className="form-actions">
+        <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Saving...' : existing ? 'Save changes' : 'Add staff member'}</button>
+        <button className="btn" type="button" onClick={onCancel} disabled={saving}>Cancel</button>
+      </div>
+    </form>
+  );
+}
