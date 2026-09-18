@@ -1,31 +1,10 @@
 @import '../page.css';
 
 /* ========================================
-   BRANCH SECTION
+   SUMMARY SECTION
    ======================================== */
-.summary-branch-section {
+.summary-section {
   margin-bottom: 3rem;
-}
-
-.summary-branch-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  color: white;
-}
-
-.summary-branch-title {
-  font-family: 'Oswald', sans-serif;
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  flex: 1;
 }
 
 /* ========================================
@@ -74,12 +53,6 @@
 .summary-badge-people {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-color: transparent;
-  color: white;
-}
-
-.summary-branch-header .summary-badge-people {
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.5);
   color: white;
 }
 

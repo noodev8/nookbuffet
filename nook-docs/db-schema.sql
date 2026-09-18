@@ -49,7 +49,6 @@ CREATE TABLE public.admin_users (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     last_login timestamp without time zone,
-    branch_id integer,
     two_fa_code character varying(6),
     two_fa_expires_at timestamp without time zone,
     phone character varying(50),
@@ -91,52 +90,6 @@ ALTER SEQUENCE public.admin_users_id_seq OWNER TO nook_prod_user;
 --
 
 ALTER SEQUENCE public.admin_users_id_seq OWNED BY public.admin_users.id;
-
-
---
--- TOC entry 230 (class 1259 OID 22860)
--- Name: branches; Type: TABLE; Schema: public; Owner: nook_prod_user
---
-
-CREATE TABLE public.branches (
-    id integer NOT NULL,
-    name character varying(255) NOT NULL,
-    address text NOT NULL,
-    latitude numeric(10,8) NOT NULL,
-    longitude numeric(11,8) NOT NULL,
-    delivery_radius_miles numeric(5,1) DEFAULT 7,
-    is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    delivery_time_start time without time zone DEFAULT '09:00:00'::time without time zone,
-    delivery_time_end time without time zone DEFAULT '10:00:00'::time without time zone
-);
-
-
-ALTER TABLE public.branches OWNER TO nook_prod_user;
-
---
--- TOC entry 229 (class 1259 OID 22859)
--- Name: branches_id_seq; Type: SEQUENCE; Schema: public; Owner: nook_prod_user
---
-
-CREATE SEQUENCE public.branches_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.branches_id_seq OWNER TO nook_prod_user;
-
---
--- TOC entry 3615 (class 0 OID 0)
--- Dependencies: 229
--- Name: branches_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: nook_prod_user
---
-
-ALTER SEQUENCE public.branches_id_seq OWNED BY public.branches.id;
 
 
 --
@@ -191,8 +144,7 @@ CREATE TABLE public.buffet_versions (
     description text,
     price_per_person numeric(8,2),
     is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    branch_id integer
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -333,8 +285,7 @@ CREATE TABLE public.menu_items (
     allergens text,
     dietary_info character varying(255),
     is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    branch_id integer
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -607,7 +558,6 @@ CREATE TABLE public.orders (
     completed_at timestamp without time zone,
     fulfillment_date date,
     fulfillment_time character varying(20),
-    branch_id integer,
     stripe_payment_intent_id character varying(255),
     customer_id integer,
     staff_notes text
@@ -622,7 +572,7 @@ ALTER TABLE public.orders OWNER TO nook_prod_user;
 -- Name: COLUMN orders.fulfillment_date; Type: COMMENT; Schema: public; Owner: nook_prod_user
 --
 
-COMMENT ON COLUMN public.orders.fulfillment_date IS 'The date when the order should be delivered or collected';
+COMMENT ON COLUMN public.orders.fulfillment_date IS 'The date when the order should be collected';
 
 
 --
@@ -631,7 +581,7 @@ COMMENT ON COLUMN public.orders.fulfillment_date IS 'The date when the order sho
 -- Name: COLUMN orders.fulfillment_time; Type: COMMENT; Schema: public; Owner: nook_prod_user
 --
 
-COMMENT ON COLUMN public.orders.fulfillment_time IS 'The time when the order should be delivered or collected (format: HH:MM)';
+COMMENT ON COLUMN public.orders.fulfillment_time IS 'The time when the order should be collected (format: HH:MM)';
 
 
 --
@@ -833,14 +783,6 @@ ALTER TABLE ONLY public.admin_users ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
--- TOC entry 3352 (class 2604 OID 22863)
--- Name: branches id; Type: DEFAULT; Schema: public; Owner: nook_prod_user
---
-
-ALTER TABLE ONLY public.branches ALTER COLUMN id SET DEFAULT nextval('public.branches_id_seq'::regclass);
-
-
---
 -- TOC entry 3364 (class 2604 OID 22919)
 -- Name: buffet_upgrades id; Type: DEFAULT; Schema: public; Owner: nook_prod_user
 --
@@ -977,15 +919,6 @@ ALTER TABLE ONLY public.admin_users
 
 ALTER TABLE ONLY public.admin_users
     ADD CONSTRAINT admin_users_username_key UNIQUE (username);
-
-
---
--- TOC entry 3414 (class 2606 OID 22870)
--- Name: branches branches_pkey; Type: CONSTRAINT; Schema: public; Owner: nook_prod_user
---
-
-ALTER TABLE ONLY public.branches
-    ADD CONSTRAINT branches_pkey PRIMARY KEY (id);
 
 
 --
@@ -1151,14 +1084,6 @@ ALTER TABLE ONLY public.upgrades
 
 
 --
--- TOC entry 3410 (class 1259 OID 23011)
--- Name: idx_admin_users_branch_id; Type: INDEX; Schema: public; Owner: nook_prod_user
---
-
-CREATE INDEX idx_admin_users_branch_id ON public.admin_users USING btree (branch_id);
-
-
---
 -- TOC entry 3411 (class 1259 OID 22800)
 -- Name: idx_admin_users_email; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
@@ -1247,14 +1172,6 @@ CREATE INDEX idx_order_items_order_id ON public.order_items USING btree (order_i
 
 
 --
--- TOC entry 3389 (class 1259 OID 22876)
--- Name: idx_orders_branch_id; Type: INDEX; Schema: public; Owner: nook_prod_user
---
-
-CREATE INDEX idx_orders_branch_id ON public.orders USING btree (branch_id);
-
-
---
 -- TOC entry 3390 (class 1259 OID 22534)
 -- Name: idx_orders_customer_email; Type: INDEX; Schema: public; Owner: nook_prod_user
 --
@@ -1295,15 +1212,6 @@ CREATE INDEX idx_upgrade_items_category ON public.upgrade_items USING btree (upg
 
 
 --
--- TOC entry 3456 (class 2606 OID 23006)
--- Name: admin_users admin_users_branch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
---
-
-ALTER TABLE ONLY public.admin_users
-    ADD CONSTRAINT admin_users_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id);
-
-
---
 -- TOC entry 3457 (class 2606 OID 22926)
 -- Name: buffet_upgrades buffet_upgrades_buffet_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
@@ -1322,30 +1230,12 @@ ALTER TABLE ONLY public.buffet_upgrades
 
 
 --
--- TOC entry 3445 (class 2606 OID 24452)
--- Name: buffet_versions buffet_versions_branch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
---
-
-ALTER TABLE ONLY public.buffet_versions
-    ADD CONSTRAINT buffet_versions_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id);
-
-
---
 -- TOC entry 3446 (class 2606 OID 21946)
 -- Name: categories categories_buffet_version_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
 --
 
 ALTER TABLE ONLY public.categories
     ADD CONSTRAINT categories_buffet_version_id_fkey FOREIGN KEY (buffet_version_id) REFERENCES public.buffet_versions(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 3447 (class 2606 OID 24425)
--- Name: menu_items menu_items_branch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
---
-
-ALTER TABLE ONLY public.menu_items
-    ADD CONSTRAINT menu_items_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id);
 
 
 --
@@ -1436,15 +1326,6 @@ ALTER TABLE ONLY public.order_items
 
 ALTER TABLE ONLY public.order_items
     ADD CONSTRAINT order_items_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id) ON DELETE CASCADE;
-
-
---
--- TOC entry 3449 (class 2606 OID 22871)
--- Name: orders orders_branch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: nook_prod_user
---
-
-ALTER TABLE ONLY public.orders
-    ADD CONSTRAINT orders_branch_id_fkey FOREIGN KEY (branch_id) REFERENCES public.branches(id);
 
 
 --

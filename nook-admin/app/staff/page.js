@@ -10,7 +10,6 @@ export default function StaffManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
-  const [branches, setBranches] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -19,8 +18,7 @@ export default function StaffManagementPage() {
     email: '',
     password: '',
     full_name: '',
-    role: 'staff',
-    branch_id: ''
+    role: 'staff'
   });
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
@@ -45,25 +43,6 @@ export default function StaffManagementPage() {
 
     setUser(parsedUser);
   }, [router]);
-
-  // Fetch branches on mount
-  useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        const response = await fetch(`${apiUrl}/api/branches`);
-        const data = await response.json();
-
-        if (data.return_code === 'SUCCESS') {
-          setBranches(data.data || []);
-        }
-      } catch (err) {
-        console.error('Error fetching branches:', err);
-      }
-    };
-
-    fetchBranches();
-  }, []);
 
   // Fetch users when user is authenticated
   useEffect(() => {
@@ -131,19 +110,13 @@ export default function StaffManagementPage() {
       const token = localStorage.getItem('admin_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 
-      // Prepare data - convert empty branch_id to null
-      const submitData = {
-        ...formData,
-        branch_id: formData.branch_id ? parseInt(formData.branch_id) : null
-      };
-
       const response = await fetch(`${apiUrl}/api/auth/users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(submitData)
+        body: JSON.stringify(formData)
       });
 
       const data = await response.json();
@@ -155,8 +128,7 @@ export default function StaffManagementPage() {
           email: '',
           password: '',
           full_name: '',
-          role: 'staff',
-          branch_id: ''
+          role: 'staff'
         });
         setShowAddForm(false);
 
@@ -181,10 +153,6 @@ export default function StaffManagementPage() {
     router.push('/menu');
   };
 
-  const goToReports = () => {
-    router.push('/reports');
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
@@ -198,8 +166,7 @@ export default function StaffManagementPage() {
       email: staffUser.email,
       password: '', // Leave password empty - only update if filled
       full_name: staffUser.full_name,
-      role: staffUser.role,
-      branch_id: staffUser.branch_id ? String(staffUser.branch_id) : ''
+      role: staffUser.role
     });
     setFormError('');
     setShowEditForm(true);
@@ -219,8 +186,7 @@ export default function StaffManagementPage() {
         username: formData.username,
         email: formData.email,
         full_name: formData.full_name,
-        role: formData.role,
-        branch_id: formData.branch_id ? parseInt(formData.branch_id) : null
+        role: formData.role
       };
 
       if (formData.password) {
@@ -239,7 +205,7 @@ export default function StaffManagementPage() {
       const data = await response.json();
 
       if (data.return_code === 'SUCCESS') {
-        // Update the user in the list - need to refetch to get branch_name
+        // Refresh the user list
         fetchUsers();
         setShowEditForm(false);
         setEditingUser(null);
@@ -248,8 +214,7 @@ export default function StaffManagementPage() {
           email: '',
           password: '',
           full_name: '',
-          role: 'staff',
-          branch_id: ''
+          role: 'staff'
         });
       } else {
         setFormError(data.message || 'Failed to update user');
@@ -338,8 +303,6 @@ export default function StaffManagementPage() {
           <button className="nav-item" onClick={() => router.push('/prices')}>Prices</button>
           <button className="nav-item" onClick={() => router.push('/menu-builder')}>Menu Builder</button>
           <button className="nav-item active">Staff Management</button>
-          <button className="nav-item" onClick={() => router.push('/branches')}>Branches</button>
-          <button className="nav-item" onClick={goToReports}>Reports</button>
         </nav>
       </header>
 
@@ -379,10 +342,6 @@ export default function StaffManagementPage() {
                   <span className="detail-value">{staffUser.email}</span>
                 </div>
                 <div className="detail-row">
-                  <span className="detail-label">Branch:</span>
-                  <span className="detail-value">{staffUser.branch_name || 'Not Assigned'}</span>
-                </div>
-                <div className="detail-row">
                   <span className="detail-label">Last Login:</span>
                   <span className="detail-value">{formatDate(staffUser.last_login)}</span>
                 </div>
@@ -398,12 +357,14 @@ export default function StaffManagementPage() {
                 >
                   Edit
                 </button>
-                <button
-                  className="delete-button"
-                  onClick={() => handleDeleteUser(staffUser)}
-                >
-                  Delete
-                </button>
+                {staffUser.email !== user?.email && (
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDeleteUser(staffUser)}
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           ))
@@ -484,23 +445,6 @@ export default function StaffManagementPage() {
                   <option value="staff">Staff</option>
                   <option value="admin">Admin</option>
                   <option value="manager">Manager</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="branch_id">Branch</label>
-                <select
-                  id="branch_id"
-                  name="branch_id"
-                  value={formData.branch_id}
-                  onChange={handleFormChange}
-                >
-                  <option value="">No Branch Assigned</option>
-                  {branches.map((branch) => (
-                    <option key={branch.id} value={branch.id}>
-                      {branch.name}
-                    </option>
-                  ))}
                 </select>
               </div>
 
@@ -600,23 +544,6 @@ export default function StaffManagementPage() {
                   <option value="staff">Staff</option>
                   <option value="admin">Admin</option>
                   <option value="manager">Manager</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="edit_branch_id">Branch</label>
-                <select
-                  id="edit_branch_id"
-                  name="branch_id"
-                  value={formData.branch_id}
-                  onChange={handleFormChange}
-                >
-                  <option value="">No Branch Assigned</option>
-                  {branches.map((branch) => (
-                    <option key={branch.id} value={branch.id}>
-                      {branch.name}
-                    </option>
-                  ))}
                 </select>
               </div>
 

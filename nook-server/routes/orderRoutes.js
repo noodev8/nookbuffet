@@ -17,7 +17,7 @@ ENDPOINTS:
          "order_number": "ORD-20240115-12345",
          "customer_email": "customer@example.com",
          "customer_phone": "+44 1234 567890",
-         "fulfillment_type": "delivery",
+         "fulfillment_type": "collection",
          "fulfillment_address": "123 Main St, City",
          "fulfillment_date": "2024-01-15",
          "fulfillment_time": "12:00",
@@ -42,9 +42,9 @@ ENDPOINTS:
      "phone": "+44 1234 567890",
      "businessName": "Acme Corp",
      "address": "123 Main St, City",
-     "fulfillmentType": "delivery",
-     "deliveryDate": "2024-01-15",
-     "deliveryTime": "12:00",
+     "fulfillmentType": "collection",
+     "fulfillmentDate": "2024-01-15",
+     "fulfillmentTime": "12:00",
      "totalPrice": 109.00,
      "buffets": [
        {

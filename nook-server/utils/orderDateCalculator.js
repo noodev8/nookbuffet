@@ -1,6 +1,6 @@
 /*
 =======================================================================================================================================
-ORDER DATE CALCULATOR - Works out when the earliest delivery/collection can be
+ORDER DATE CALCULATOR - Works out when the earliest collection can be
 =======================================================================================================================================
  need at least 1 day notice for orders, but there's a daily cutoff time.
 If you order after the cutoff (default 4pm), you need to wait an extra day.
@@ -14,7 +14,7 @@ The cutoff time is stored in the database
 const { query } = require('../database');
 
 // ===== CALCULATE EARLIEST ORDER DATE =====
-// Figures out the soonest date a customer can have their order delivered/collected
+// Figures out the soonest date a customer can collect their order
 // Takes into account the daily cutoff time from the database
 const calculateEarliestOrderDate = async () => {
   try {

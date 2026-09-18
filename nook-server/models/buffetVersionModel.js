@@ -31,7 +31,7 @@ const getBuffetVersionById = async (versionId) => {
     // Query the database for this specific buffet version
     // $1 is a placeholder for the versionId (prevents SQL injection)
     const result = await query(
-      `SELECT id, title, description, price_per_person, is_active, created_at, branch_id
+      `SELECT id, title, description, price_per_person, is_active, created_at
        FROM buffet_versions
        WHERE id = $1 AND is_active = true`,
       [versionId]
@@ -59,23 +59,14 @@ const getBuffetVersionById = async (versionId) => {
  *
  * @returns {Promise<array>} Array of all active buffet versions
  */
-const getAllBuffetVersions = async (branchId = null) => {
+const getAllBuffetVersions = async () => {
   try {
-    const params = [];
-    let whereClause = 'WHERE is_active = true';
-
-    if (branchId) {
-      params.push(branchId);
-      whereClause += ` AND branch_id = $${params.length}`;
-    }
-
     // Query the database for all active buffet versions
     const result = await query(
-      `SELECT id, title, description, price_per_person, is_active, created_at, branch_id
+      `SELECT id, title, description, price_per_person, is_active, created_at
        FROM buffet_versions
-       ${whereClause}
-       ORDER BY id`,
-      params
+       WHERE is_active = true
+       ORDER BY id`
     );
 
     // Return all rows (each row is one buffet version)
@@ -89,30 +80,17 @@ const getAllBuffetVersions = async (branchId = null) => {
 // ===== GET ALL BUFFET VERSIONS FOR MANAGEMENT =====
 /**
  * Get all buffet versions (including inactive) for admin management.
- * Optionally filter by branch_id.
- * Joins branches table to include the branch name.
  *
- * @param {number|null} branchId - Optional branch ID to filter by
- * @returns {Promise<array>} Array of buffet versions with branch info
+ * @returns {Promise<array>} Array of buffet versions
  */
-const getAllBuffetVersionsForManagement = async (branchId = null) => {
+const getAllBuffetVersionsForManagement = async () => {
   try {
-    const params = [];
-    let whereClause = 'WHERE bv.is_active = true';
-
-    if (branchId) {
-      params.push(branchId);
-      whereClause += ` AND bv.branch_id = $1`;
-    }
-
     const result = await query(
       `SELECT bv.id, bv.title, bv.description, bv.price_per_person,
-              bv.is_active, bv.created_at, bv.branch_id, b.name as branch_name
+              bv.is_active, bv.created_at
        FROM buffet_versions bv
-       LEFT JOIN branches b ON bv.branch_id = b.id
-       ${whereClause}
-       ORDER BY b.name NULLS LAST, bv.id`,
-      params
+       WHERE bv.is_active = true
+       ORDER BY bv.id`
     );
 
     return result.rows;
@@ -124,21 +102,20 @@ const getAllBuffetVersionsForManagement = async (branchId = null) => {
 
 // ===== UPDATE BUFFET VERSION =====
 /**
- * Update the price_per_person and/or branch_id of a buffet version
+ * Update the title, description and price_per_person of a buffet version
  *
  * @param {number} id - The buffet version ID
  * @param {number} pricePerPerson - The new price per person
- * @param {number|null} branchId - The branch ID (or null for no branch)
  * @returns {Promise<object>} The updated buffet version
  */
-const updateBuffetVersion = async (id, title, description, pricePerPerson, branchId) => {
+const updateBuffetVersion = async (id, title, description, pricePerPerson) => {
   try {
     const result = await query(
       `UPDATE buffet_versions
-       SET title = $1, description = $2, price_per_person = $3, branch_id = $4
-       WHERE id = $5
-       RETURNING id, title, description, price_per_person, is_active, branch_id`,
-      [title, description ?? null, pricePerPerson, branchId ?? null, id]
+       SET title = $1, description = $2, price_per_person = $3
+       WHERE id = $4
+       RETURNING id, title, description, price_per_person, is_active`,
+      [title, description ?? null, pricePerPerson, id]
     );
 
     if (result.rows.length === 0) {
@@ -159,16 +136,15 @@ const updateBuffetVersion = async (id, title, description, pricePerPerson, branc
  * @param {string} title - The buffet version name
  * @param {string} description - Description of the buffet
  * @param {number} pricePerPerson - Price per person in GBP
- * @param {number|null} branchId - Optional branch ID (null = all branches)
  * @returns {Promise<object>} The newly created buffet version
  */
-const createBuffetVersion = async (title, description, pricePerPerson, branchId) => {
+const createBuffetVersion = async (title, description, pricePerPerson) => {
   try {
     const result = await query(
-      `INSERT INTO buffet_versions (title, description, price_per_person, branch_id, is_active)
-       VALUES ($1, $2, $3, $4, true)
-       RETURNING id, title, description, price_per_person, is_active, created_at, branch_id`,
-      [title, description || null, pricePerPerson, branchId ?? null]
+      `INSERT INTO buffet_versions (title, description, price_per_person, is_active)
+       VALUES ($1, $2, $3, true)
+       RETURNING id, title, description, price_per_person, is_active, created_at`,
+      [title, description || null, pricePerPerson]
     );
 
     return result.rows[0];

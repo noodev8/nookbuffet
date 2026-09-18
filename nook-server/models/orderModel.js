@@ -51,8 +51,8 @@ const createOrder = async (orderData) => {
       INSERT INTO orders (
         order_number, customer_email, customer_phone,
         fulfillment_type, fulfillment_address, fulfillment_date, fulfillment_time,
-        total_price, status, payment_status, payment_method, notes, branch_id, customer_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        total_price, status, payment_status, payment_method, notes, customer_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING id, order_number, created_at
     `;
 
@@ -62,14 +62,13 @@ const createOrder = async (orderData) => {
       orderData.phone,
       orderData.fulfillmentType,
       orderData.address,
-      orderData.deliveryDate || null,
-      orderData.deliveryTime || null,
+      orderData.fulfillmentDate || null,
+      orderData.fulfillmentTime || null,
       orderData.totalPrice,
       'pending',
       paymentStatus,
       orderData.staffSkipReason ? `Staff skip: ${orderData.staffSkipReason}` : (orderData.paymentIntentId ? 'stripe' : 'card'),
       orderData.businessName || null,
-      orderData.branchId || null,
       orderData.customerId || null
     ];
     
@@ -223,32 +222,21 @@ const createOrder = async (orderData) => {
 /**
  * Gets all orders with all their buffets and items
  * This is for the admin portal to see all orders
- * Can filter by branch_id if provided
  *
  * Uses a single query with JSON_AGG to avoid N+1 query problems.
  * The nested structure (orders → buffets → items/upgrades → upgrade_items)
  * is built using correlated subqueries with JSON aggregation.
  *
- * @param {number|null} branchId - Optional branch ID to filter by (null = all branches)
  * @returns {array} All orders with complete details
  */
-const getAllOrders = async (branchId = null) => {
-  const params = [];
-  let branchFilter = '';
-
-  // If branchId is provided, add filter
-  if (branchId !== null) {
-    branchFilter = 'AND o.branch_id = $1';
-    params.push(branchId);
-  }
-
+const getAllOrders = async () => {
   // Single query that builds the entire nested structure using JSON_AGG
   const ordersSQL = `
     SELECT
       o.id, o.order_number, o.customer_email, o.customer_phone,
       o.fulfillment_type, o.fulfillment_address, o.fulfillment_date, o.fulfillment_time,
       o.total_price, o.status, o.payment_status, o.payment_method, o.notes, o.staff_notes,
-      o.created_at, o.updated_at, o.branch_id, b.name as branch_name,
+      o.created_at, o.updated_at,
 
       -- Aggregate all buffets for this order into a JSON array
       COALESCE(
@@ -327,12 +315,11 @@ const getAllOrders = async (branchId = null) => {
       ) as buffets
 
     FROM orders o
-    LEFT JOIN branches b ON o.branch_id = b.id
-    WHERE o.status NOT IN ('completed', 'cancelled') ${branchFilter}
+    WHERE o.status NOT IN ('completed', 'cancelled')
     ORDER BY o.fulfillment_date ASC, o.created_at DESC
   `;
 
-  const ordersResult = await query(ordersSQL, params);
+  const ordersResult = await query(ordersSQL);
   return ordersResult.rows;
 };
 
@@ -378,7 +365,7 @@ const getOrderById = async (orderId) => {
       o.id, o.order_number, o.customer_email, o.customer_phone,
       o.fulfillment_type, o.fulfillment_address, o.fulfillment_date, o.fulfillment_time,
       o.total_price, o.status, o.payment_status, o.payment_method, o.notes, o.staff_notes,
-      o.created_at, o.updated_at, o.branch_id, b.name as branch_name,
+      o.created_at, o.updated_at,
 
       -- Aggregate all buffets for this order into a JSON array
       COALESCE(
@@ -457,7 +444,6 @@ const getOrderById = async (orderId) => {
       ) as buffets
 
     FROM orders o
-    LEFT JOIN branches b ON o.branch_id = b.id
     WHERE o.id = $1
   `;
 
@@ -479,7 +465,7 @@ const getOrdersByCustomerId = async (customerId, customerEmail) => {
       o.id, o.order_number, o.customer_email, o.customer_phone,
       o.fulfillment_type, o.fulfillment_address, o.fulfillment_date, o.fulfillment_time,
       o.total_price, o.status, o.payment_status, o.payment_method, o.notes, o.staff_notes,
-      o.created_at, o.updated_at, o.branch_id, b.name as branch_name,
+      o.created_at, o.updated_at,
 
       COALESCE(
         (
@@ -554,7 +540,6 @@ const getOrdersByCustomerId = async (customerId, customerEmail) => {
       ) as buffets
 
     FROM orders o
-    LEFT JOIN branches b ON o.branch_id = b.id
     WHERE o.customer_id = $1
        OR o.customer_email = $2
     ORDER BY o.created_at DESC

@@ -63,7 +63,7 @@ describe('createUser', () => {
     authModel.usernameExists.mockResolvedValue(false);
     authModel.createUser.mockResolvedValue({
       id: 1, username: 'bob', email: 'bob@test.com',
-      full_name: 'Bob Smith', role: 'staff', branch_id: null, is_active: true, created_at: new Date()
+      full_name: 'Bob Smith', role: 'staff', is_active: true, created_at: new Date()
     });
     const { req, res, getResult } = setup({
       username: 'bob', email: 'bob@test.com', password: 'pass123',
@@ -96,7 +96,7 @@ describe('updateUser', () => {
     authModel.getUserById.mockResolvedValue({ id: 5, email: 'old@test.com', username: 'oldname' });
     authModel.updateUser.mockResolvedValue({
       id: 5, username: 'newname', email: 'old@test.com',
-      full_name: 'Updated', role: 'staff', branch_id: null, is_active: true,
+      full_name: 'Updated', role: 'staff', is_active: true,
       last_login: null, created_at: new Date()
     });
     const { req, res, getResult } = setup({ full_name: 'Updated', role: 'staff' }, { id: '5' });

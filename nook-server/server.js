@@ -18,8 +18,6 @@ const contactRoutes = require('./routes/contactRoutes');        // Routes for co
 const buffetVersionRoutes = require('./routes/buffetVersionRoutes'); // Routes for buffet pricing/versions
 const orderRoutes = require('./routes/orderRoutes');            // Routes for order creation
 const authRoutes = require('./routes/authRoutes');              // Routes for admin authentication
-const deliveryRoutes = require('./routes/deliveryRoutes');      // Routes for delivery services
-const branchRoutes = require('./routes/branchRoutes');          // Routes for branch data
 const upgradeRoutes = require('./routes/upgradeRoutes');        // Routes for buffet upgrades
 const paymentRoutes = require('./routes/paymentRoutes');        // Routes for Stripe payments
 const customerRoutes = require('./routes/customerRoutes');      // Routes for customer accounts
@@ -61,8 +59,6 @@ app.use('/api/contact', contactRoutes);              // Contact form endpoints
 app.use('/api/buffet-versions', buffetVersionRoutes); // Buffet version endpoints
 app.use('/api/orders', orderRoutes);                 // Order endpoints
 app.use('/api/auth', authRoutes);                    // Admin authentication endpoints
-app.use('/api/delivery', deliveryRoutes);            // Delivery endpoints
-app.use('/api/branches', branchRoutes);              // Branch endpoints
 app.use('/api/upgrades', upgradeRoutes);             // Upgrade endpoints
 app.use('/api/payments', paymentRoutes);             // Stripe payment endpoints
 app.use('/api/customers', customerRoutes);          // Customer account endpoints

@@ -36,11 +36,11 @@ export default function AboutPage() {
             <div className="ordering-info">
               <h3>How We Work</h3>
               <p>
-                <strong>Easy Ordering:</strong> Place your orders before 4pm for next-day delivery or pickup. We believe in giving you the freshest experience possible, which is why we prepare everything the morning of your order.
+                <strong>Easy Ordering:</strong> Place your orders before 4pm for next-day collection. We believe in giving you the freshest experience possible, which is why we prepare everything the morning of your order.
               </p>
 
               <p>
-                <strong>Flexible Options:</strong> Choose between convenient pickup from our Welshpool location or delivery straight to your workplace. For deliveries, select your preferred time slot between 9am and 7pm - we&apos;ll work around your schedule.
+                <strong>Collection:</strong> Pick your order up from our Welshpool location on the day you&apos;ve chosen, freshly prepared and ready to go.
               </p>
 
               <p>

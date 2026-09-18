@@ -41,7 +41,7 @@ describe('createMenuItem', () => {
     menuModel.createMenuItem.mockResolvedValue({
       id: 10, name: 'Egg Mayo', description: null, category_id: 2,
       dietary_info: null, allergens: null, is_included_in_base: true,
-      branch_id: null, is_active: true
+      is_active: true
     });
     const { req, res, getResult } = setup({ name: 'Egg Mayo', category_id: 2 });
     await menuController.createMenuItem(req, res);
@@ -53,7 +53,7 @@ describe('createMenuItem', () => {
     menuModel.createMenuItem.mockResolvedValue({
       id: 11, name: 'Tuna Mayo', description: 'Classic tuna', category_id: 2,
       dietary_info: null, allergens: 'Fish', is_included_in_base: true,
-      branch_id: null, is_active: true
+      is_active: true
     });
     const { req, res, getResult } = setup({
       name: 'Tuna Mayo', category_id: 2,
@@ -98,7 +98,7 @@ describe('updateMenuItem', () => {
   test('returns SUCCESS when update is valid', async () => {
     menuModel.updateMenuItem.mockResolvedValue({
       id: 5, name: 'Updated Item', description: null, category_id: 1,
-      dietary_info: null, allergens: null, is_included_in_base: true, is_active: true, branch_id: null
+      dietary_info: null, allergens: null, is_included_in_base: true, is_active: true
     });
     const { req, res, getResult } = setup({ name: 'Updated Item', category_id: 1 }, { id: '5' });
     await menuController.updateMenuItem(req, res);

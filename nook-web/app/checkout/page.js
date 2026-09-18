@@ -109,10 +109,8 @@ function CheckoutContent() {
         phone: orders[0]?.phone || '',
         businessName: orders[0]?.businessName || '',
         address: orders[0]?.address || '',
-        fulfillmentType: orders[0]?.fulfillmentType || 'delivery',
-        deliveryDate: orders[0]?.deliveryDate || '',
-        deliveryTime: orders[0]?.deliveryTime || '',
-        branchId: orders[0]?.branchId || null,
+        fulfillmentType: 'collection',
+        fulfillmentDate: orders[0]?.fulfillmentDate || '',
         totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
         customerId,
         staffSkipReason: skipReason.trim(),
@@ -219,10 +217,8 @@ function CheckoutContent() {
         phone: orders[0]?.phone || '',
         businessName: orders[0]?.businessName || '',
         address: orders[0]?.address || '',
-        fulfillmentType: orders[0]?.fulfillmentType || 'delivery',
-        deliveryDate: orders[0]?.deliveryDate || '',
-        deliveryTime: orders[0]?.deliveryTime || '',
-        branchId: orders[0]?.branchId || null,
+        fulfillmentType: 'collection',
+        fulfillmentDate: orders[0]?.fulfillmentDate || '',
         totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
         customerId,
         paymentIntentId: paymentIntentId,
@@ -345,15 +341,11 @@ function CheckoutContent() {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Type:</span>
-                  <span className="detail-value">{orders[0].fulfillmentType === 'delivery' ? 'Delivery' : 'Collection'}</span>
+                  <span className="detail-value">Collection</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Date:</span>
-                  <span className="detail-value">{orders[0].deliveryDate}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Time:</span>
-                  <span className="detail-value">{orders[0].deliveryTime}</span>
+                  <span className="detail-value">{orders[0].fulfillmentDate}</span>
                 </div>
               </div>
             </div>

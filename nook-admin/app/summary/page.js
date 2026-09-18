@@ -10,8 +10,6 @@ export default function SummaryPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState(null);
 
   // Auth check - all roles allowed
   useEffect(() => {
@@ -25,30 +23,13 @@ export default function SummaryPage() {
 
     const parsedUser = JSON.parse(userData);
     setUser(parsedUser);
-    // Default to user's own branch; fall back to 'all'
-    setSelectedBranch(parsedUser.branch_id ? String(parsedUser.branch_id) : 'all');
   }, [router]);
 
-  // Fetch branch list
+  // Fetch orders once the user is ready
   useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        const res = await fetch(`${apiUrl}/api/branches`);
-        const data = await res.json();
-        if (data.return_code === 'SUCCESS') setBranches(data.data || []);
-      } catch (err) {
-        console.error('Error fetching branches:', err);
-      }
-    };
-    fetchBranches();
-  }, []);
-
-  // Fetch orders whenever user + branch are both ready
-  useEffect(() => {
-    if (!user || selectedBranch === null) return;
+    if (!user) return;
     fetchOrders();
-  }, [user, selectedBranch]);
+  }, [user]);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -56,11 +37,7 @@ export default function SummaryPage() {
     try {
       const token = localStorage.getItem('admin_token');
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const url = selectedBranch === 'all'
-        ? `${apiUrl}/api/orders`
-        : `${apiUrl}/api/orders?branch_id=${selectedBranch}`;
-
-      const response = await fetch(url, {
+      const response = await fetch(`${apiUrl}/api/orders`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -88,21 +65,9 @@ export default function SummaryPage() {
     }
   };
 
-  // When showing all branches, group by branch first otherwise just use a single group
-  const branchGroups = selectedBranch === 'all'
-    ? orders.reduce((acc, order) => {
-        const key = order.branch_name || 'Unknown Branch';
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(order);
-        return acc;
-      }, {})
-    : { [branches.find(b => String(b.id) === selectedBranch)?.name || 'Branch']: orders };
-
-  const sortedBranchNames = Object.keys(branchGroups).sort();
-
   // Group a set of orders by fulfillment date
-  const groupByDate = (branchOrders) =>
-    branchOrders.reduce((acc, order) => {
+  const groupByDate = (ordersToGroup) =>
+    ordersToGroup.reduce((acc, order) => {
       const date = order.fulfillment_date
         ? order.fulfillment_date.split('T')[0]
         : 'No date set';
@@ -198,28 +163,11 @@ export default function SummaryPage() {
         <div className="error-state"><p>{error}</p></div>
       )}
 
-      {/* Branch filter bar */}
       <div className="page-header">
         <div className="page-stats">
           <div className="stat-item">
             <span className="stat-label">Open Orders</span>
             <span className="stat-value">{orders.length}</span>
-          </div>
-        </div>
-        <div className="page-actions">
-          <div className="branch-filter">
-            <label htmlFor="summary-branch-select">Branch:</label>
-            <select
-              id="summary-branch-select"
-              value={selectedBranch || ''}
-              onChange={(e) => setSelectedBranch(e.target.value)}
-              className="branch-select"
-            >
-              <option value="all">All Branches</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>{branch.name}</option>
-              ))}
-            </select>
           </div>
         </div>
       </div>
@@ -228,24 +176,12 @@ export default function SummaryPage() {
         <div className="empty-state"><p>No open orders — nothing to prepare!</p></div>
       )}
 
-      {!loading && !error && sortedBranchNames.map(branchName => {
-        const branchOrders = branchGroups[branchName];
-        const dateGrouped = groupByDate(branchOrders);
+      {!loading && !error && (() => {
+        const dateGrouped = groupByDate(orders);
         const sortedDates = Object.keys(dateGrouped).sort();
 
         return (
-          <div key={branchName} className="summary-branch-section">
-
-            {selectedBranch === 'all' && (
-              <div className="summary-branch-header">
-                <h2 className="summary-branch-title">{branchName}</h2>
-                <span className="summary-badge summary-badge-people">
-                  {branchOrders.reduce((s, o) =>
-                    s + (o.buffets || []).reduce((ss, b) => ss + (b.num_people || 0), 0), 0)
-                  } people
-                </span>
-              </div>
-            )}
+          <div className="summary-section">
 
             {sortedDates.map(date => {
               const dateOrders = dateGrouped[date];
@@ -304,7 +240,7 @@ export default function SummaryPage() {
 
           </div>
         );
-      })}
+      })()}
 
       <button className="logout-button-bottom" onClick={handleLogout}>Logout</button>
     </div>

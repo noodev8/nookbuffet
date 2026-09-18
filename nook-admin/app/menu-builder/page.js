@@ -214,7 +214,6 @@ function SortableCategory({ c, editingCategory, isKids, webUrl, saveCategory, se
 export default function MenuBuilderPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
-  const [branches, setBranches] = useState([]);
   const [buffetVersions, setBuffetVersions] = useState([]);
   const [allCategories, setAllCategories] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -232,7 +231,6 @@ export default function MenuBuilderPage() {
   // Category filters
   const [catSearch, setCatSearch] = useState('');
   const [catFilterVersion, setCatFilterVersion] = useState('');
-  const [catFilterBranch, setCatFilterBranch] = useState('');
 
   // Drag-to-reorder sensors
   const sensors = useSensors(
@@ -263,7 +261,6 @@ export default function MenuBuilderPage() {
   const [vTitle, setVTitle] = useState('');
   const [vDescription, setVDescription] = useState('');
   const [vPrice, setVPrice] = useState('');
-  const [vBranchId, setVBranchId] = useState('');
 
   // Category form
   const [cName, setCName] = useState('');
@@ -332,7 +329,7 @@ export default function MenuBuilderPage() {
   const [iAllergens, setIAllergens] = useState('');
   const [categoriesForItem, setCategoriesForItem] = useState([]);
 
-  // Auth check + fetch branches + fetch buffet versions
+  // Auth check + fetch buffet versions
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     const userData = localStorage.getItem('admin_user');
@@ -342,11 +339,6 @@ export default function MenuBuilderPage() {
     setUser(parsedUser);
 
     const headers = { 'Authorization': `Bearer ${token}` };
-
-    fetch(`${apiUrl}/api/branches`, { headers })
-      .then(r => r.json())
-      .then(d => { if (d.return_code === 'SUCCESS') setBranches(d.data || []); })
-      .catch(() => {});
 
     fetch(`${apiUrl}/api/buffet-versions/manage`, { headers })
       .then(r => r.json())
@@ -444,14 +436,12 @@ export default function MenuBuilderPage() {
         body: JSON.stringify({
           title: editingVersion.title.trim(),
           description: editingVersion.description?.trim() || null,
-          price_per_person: parseFloat(editingVersion.price_per_person),
-          branch_id: editingVersion.branch_id || null
+          price_per_person: parseFloat(editingVersion.price_per_person)
         })
       });
       const d = await res.json();
       if (d.return_code === 'SUCCESS') {
-        const branchName = branches.find(b => b.id === d.data.branch_id)?.name || null;
-        setBuffetVersions(prev => prev.map(v => v.id === d.data.id ? { ...d.data, branch_name: branchName } : v));
+        setBuffetVersions(prev => prev.map(v => v.id === d.data.id ? d.data : v));
         setEditingVersion(null);
         showSuccess(`"${d.data.title}" updated!`);
       } else { alert(d.message || 'Failed to update'); }
@@ -521,20 +511,19 @@ export default function MenuBuilderPage() {
     e.preventDefault();
     if (!vTitle.trim()) { alert('Name is required'); return; }
     if (!vPrice || isNaN(parseFloat(vPrice)) || parseFloat(vPrice) < 0) { alert('A valid price is required'); return; }
-    if (!vBranchId) { alert('Please select a branch'); return; }
     setSaving(true);
     try {
       const res = await fetch(`${apiUrl}/api/buffet-versions/manage`, {
         method: 'POST', headers: authHeaders(),
         body: JSON.stringify({
           title: vTitle.trim(), description: vDescription.trim() || null,
-          price_per_person: parseFloat(vPrice), branch_id: vBranchId ? parseInt(vBranchId) : null
+          price_per_person: parseFloat(vPrice)
         })
       });
       const d = await res.json();
       if (d.return_code === 'SUCCESS') {
         setBuffetVersions(prev => [...prev, d.data]);
-        setVTitle(''); setVDescription(''); setVPrice(''); setVBranchId('');
+        setVTitle(''); setVDescription(''); setVPrice('');
         showSuccess(`Buffet version "${d.data.title}" created!`);
       } else { alert(d.message || 'Failed to create buffet version'); }
     } catch { alert('Failed to create buffet version'); } finally { setSaving(false); }
@@ -914,11 +903,9 @@ export default function MenuBuilderPage() {
 
   // Filtered categories
   const filteredCategories = allCategories.filter(c => {
-    const bv = buffetVersions.find(v => v.id === c.buffet_version_id);
     const matchesSearch = !catSearch || c.name.toLowerCase().includes(catSearch.toLowerCase());
     const matchesVersion = !catFilterVersion || String(c.buffet_version_id) === catFilterVersion;
-    const matchesBranch = !catFilterBranch || String(bv?.branch_id) === catFilterBranch;
-    return matchesSearch && matchesVersion && matchesBranch;
+    return matchesSearch && matchesVersion;
   });
 
   // Filtered menu items
@@ -950,7 +937,6 @@ export default function MenuBuilderPage() {
           <button className="nav-item" onClick={() => router.push('/prices')}>Prices</button>
           <button className="nav-item active">Menu Builder</button>
           <button className="nav-item" onClick={() => router.push('/staff')}>Staff Management</button>
-          <button className="nav-item" onClick={() => router.push('/branches')}>Branches</button>
         </nav>
       </header>
 
@@ -998,13 +984,6 @@ export default function MenuBuilderPage() {
                 <input className="mb-input" type="text" placeholder="Optional"
                   value={vDescription} onChange={e => setVDescription(e.target.value)} />
               </div>
-              <div className="mb-field">
-                <label>Branch *</label>
-                <select className="mb-input" value={vBranchId} onChange={e => setVBranchId(e.target.value)}>
-                  <option value="">Select a branch...</option>
-                  {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
-              </div>
             </div>
             <button className="mb-submit" type="submit" disabled={saving}>
               {saving ? 'Creating...' : 'Create Buffet Version'}
@@ -1035,14 +1014,6 @@ export default function MenuBuilderPage() {
                           <input className="mb-input" type="text" value={editingVersion.description || ''}
                             onChange={e => setEditingVersion(p => ({ ...p, description: e.target.value }))} />
                         </div>
-                        <div className="mb-field">
-                          <label>Branch</label>
-                          <select className="mb-input" value={editingVersion.branch_id || ''}
-                            onChange={e => setEditingVersion(p => ({ ...p, branch_id: e.target.value || null }))}>
-                            <option value="">All Branches</option>
-                            {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                          </select>
-                        </div>
                       </div>
                       <div className="mb-edit-actions">
                         <button className="mb-submit mb-submit-sm" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
@@ -1053,7 +1024,6 @@ export default function MenuBuilderPage() {
                     <div className="mb-existing-item">
                       <span className="mb-existing-name">{v.title}</span>
                       <span className="mb-existing-detail">£{parseFloat(v.price_per_person).toFixed(2)} / person</span>
-                      {v.branch_name && <span className="mb-badge">{v.branch_name}</span>}
                       <button className="mb-edit-btn" onClick={() => startEditVersion(v)}>Edit</button>
                       <button className="mb-delete-btn" onClick={() => deleteBuffetVersion(v)}>Delete</button>
                     </div>
@@ -1123,18 +1093,12 @@ export default function MenuBuilderPage() {
             <div className="mb-filters">
               <input className="mb-filter-search" type="text" placeholder="Search categories..."
                 value={catSearch} onChange={e => setCatSearch(e.target.value)} />
-              <select className="mb-filter-select" value={catFilterBranch} onChange={e => { setCatFilterBranch(e.target.value); setCatFilterVersion(''); }}>
-                <option value="">All locations</option>
-                {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
               <select className="mb-filter-select" value={catFilterVersion} onChange={e => setCatFilterVersion(e.target.value)}>
                 <option value="">All buffet versions</option>
-                {buffetVersions
-                  .filter(v => !catFilterBranch || String(v.branch_id ?? 'null') === catFilterBranch)
-                  .map(v => <option key={v.id} value={v.id}>{v.title}</option>)}
+                {buffetVersions.map(v => <option key={v.id} value={v.id}>{v.title}</option>)}
               </select>
-              {(catSearch || catFilterVersion || catFilterBranch) &&
-                <button className="mb-filter-clear" onClick={() => { setCatSearch(''); setCatFilterVersion(''); setCatFilterBranch(''); }}>Clear</button>
+              {(catSearch || catFilterVersion) &&
+                <button className="mb-filter-clear" onClick={() => { setCatSearch(''); setCatFilterVersion(''); }}>Clear</button>
               }
               <span className="mb-filter-count">{filteredCategories.length} of {allCategories.length}</span>
             </div>
@@ -1147,16 +1111,12 @@ export default function MenuBuilderPage() {
                   return versionIds.map(vId => {
                     const bv = buffetVersions.find(v => v.id === vId);
                     const bvName = bv?.title || `Version ${vId}`;
-                    const branchName = bv?.branch_name || null;
                     const isKids = bv?.title?.toLowerCase().includes('kids');
                     const groupCats = filteredCategories.filter(c => c.buffet_version_id === vId);
                     return (
                       <div key={vId} className="mb-version-group">
                         <div className="mb-version-group-header">
                           <span className="mb-version-group-title">{bvName}</span>
-                          {branchName
-                            ? <span className="mb-badge mb-badge-branch">{branchName}</span>
-                            : <span className="mb-badge mb-badge-all">All branches</span>}
                           <span className="mb-drag-hint">Drag to reorder</span>
                         </div>
                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

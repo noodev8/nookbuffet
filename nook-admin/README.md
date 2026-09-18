@@ -41,9 +41,8 @@ PAGES
   /orders/[id]    - Individual order detail, status updates, and staff notes
   /menu           - Manage individual menu items and stock
   /menu-builder   - Build menus — categories, items, images, and display order
-  /prices         - Manage buffet pricing per branch
+  /prices         - Manage buffet pricing
   /staff          - Add, edit, and deactivate staff accounts
-  /branches       - Branch locations, delivery radius, and slot config
   /summary        - Production summary — what needs to be made for upcoming orders
 
 

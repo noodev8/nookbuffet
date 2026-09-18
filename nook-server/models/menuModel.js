@@ -100,15 +100,12 @@ const getAllMenuSections = async () => {
 // ===== GET MENU SECTIONS BY BUFFET VERSION =====
 /**
  * Get menu sections filtered by buffet version ID.
- * Optionally filter items by branch_id so only that branch's active items are shown.
  *
  * @param {number} buffetVersionId - The ID of the buffet version you want
- * @param {number|null} branchId - Optional branch ID to filter menu items by
  * @returns {Promise<array>} Array of menu sections for that buffet version
  */
 const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
   try {
-    // The buffet version already determines the branch, so no item-level branch filter needed
     const result = await query(`
       SELECT
         c.id,
@@ -153,22 +150,11 @@ const getMenuSectionsByBuffetVersion = async (buffetVersionId) => {
 // ===== GET ALL MENU ITEMS FOR MANAGEMENT =====
 /**
  * Get ALL menu items across all categories for admin management.
- * Optionally filter by branch_id to show only items for a specific branch.
  *
- * @param {number|null} branchId - Optional branch ID to filter by
- * @returns {Promise<array>} Array of menu items with category, buffet version and branch info
+ * @returns {Promise<array>} Array of menu items with category and buffet version info
  */
-const getAllMenuItemsForManagement = async (branchId = null) => {
+const getAllMenuItemsForManagement = async () => {
   try {
-    const params = [];
-    let whereClause = 'WHERE bv.is_active = true AND c.is_active = true';
-
-    if (branchId) {
-      params.push(branchId);
-      // Filter by the buffet version's branch, not the item's branch_id
-      whereClause += ` AND bv.branch_id = $1`;
-    }
-
     const result = await query(`
       SELECT
         mi.id,
@@ -177,8 +163,6 @@ const getAllMenuItemsForManagement = async (branchId = null) => {
         mi.is_active,
         mi.allergens,
         mi.dietary_info,
-        bv.branch_id,
-        b.name as branch_name,
         c.id as category_id,
         c.name as category_name,
         c.position as category_position,
@@ -187,10 +171,9 @@ const getAllMenuItemsForManagement = async (branchId = null) => {
       FROM menu_items mi
       JOIN categories c ON mi.category_id = c.id
       LEFT JOIN buffet_versions bv ON c.buffet_version_id = bv.id
-      LEFT JOIN branches b ON bv.branch_id = b.id
-      ${whereClause}
-      ORDER BY b.name, bv.id, c.position, c.name, mi.name
-    `, params);
+      WHERE bv.is_active = true AND c.is_active = true
+      ORDER BY bv.id, c.position, c.name, mi.name
+    `);
 
     return result.rows;
   } catch (error) {
@@ -333,7 +316,7 @@ const updateMenuItem = async (id, name, description, categoryId, dietaryInfo, al
       `UPDATE menu_items
        SET name = $1, description = $2, category_id = $3, dietary_info = $4, allergens = $5, is_included_in_base = $6
        WHERE id = $7
-       RETURNING id, name, description, category_id, dietary_info, allergens, is_included_in_base, is_active, branch_id`,
+       RETURNING id, name, description, category_id, dietary_info, allergens, is_included_in_base, is_active`,
       [name, description ?? null, categoryId, dietaryInfo ?? null, allergens ?? null, isIncludedInBase ?? true, id]
     );
     if (result.rows.length === 0) throw new Error('Menu item not found');
@@ -380,16 +363,15 @@ const createCategory = async (name, description, buffetVersionId, position, isRe
  * @param {string|null} dietaryInfo - Dietary info (e.g., "Vegetarian")
  * @param {string|null} allergens - Allergen info
  * @param {boolean} isIncludedInBase - Whether included in base price
- * @param {number|null} branchId - Optional branch restriction
  * @returns {Promise<object>} The newly created menu item
  */
-const createMenuItem = async (name, description, categoryId, dietaryInfo, allergens, isIncludedInBase, branchId) => {
+const createMenuItem = async (name, description, categoryId, dietaryInfo, allergens, isIncludedInBase) => {
   try {
     const result = await query(
-      `INSERT INTO menu_items (name, description, category_id, dietary_info, allergens, is_included_in_base, branch_id, is_active)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, true)
-       RETURNING id, name, description, category_id, dietary_info, allergens, is_included_in_base, branch_id, is_active`,
-      [name, description ?? null, categoryId, dietaryInfo ?? null, allergens ?? null, isIncludedInBase ?? true, branchId ?? null]
+      `INSERT INTO menu_items (name, description, category_id, dietary_info, allergens, is_included_in_base, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, true)
+       RETURNING id, name, description, category_id, dietary_info, allergens, is_included_in_base, is_active`,
+      [name, description ?? null, categoryId, dietaryInfo ?? null, allergens ?? null, isIncludedInBase ?? true]
     );
     return result.rows[0];
   } catch (error) {

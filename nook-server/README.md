@@ -16,8 +16,6 @@ TECH
   - bcrypt for password hashing
   - Stripe for payments
   - Resend for emails
-  - Mapbox API for delivery distance checks
-  - Axios for external API calls (Mapbox)
   - Multer for file uploads (menu images)
 
 
@@ -32,7 +30,6 @@ Create a .env file:
   JWT_SECRET=...
   STRIPE_SECRET_KEY=sk_...
   RESEND_API_KEY=re_...
-  MAPBOX_API_KEY=pk_...
 
   npm run dev     - dev (auto-restarts on changes)
   npm start       - production
@@ -47,10 +44,8 @@ API ROUTES
   /api/customers        - Customer register, login, profile update, order history
   /api/orders           - Create orders, get orders, update status, staff notes
   /api/menu             - Menu categories and items
-  /api/buffet-versions  - Buffet types and pricing (Standard, Kids, etc.) — supports per-branch versions
+  /api/buffet-versions  - Buffet types and pricing (Standard, Kids, etc.)
   /api/upgrades         - Buffet upgrade options
-  /api/branches         - Branch locations, delivery radius, slot config
-  /api/delivery         - Delivery distance check via Mapbox
   /api/payments         - Stripe payment intent creation
   /api/upload           - Image uploads for menu items and categories
   /api/contact          - Contact form submissions
@@ -70,7 +65,7 @@ STRUCTURE
   controllers/    - Request handling logic
   models/         - Database queries
   middleware/     - Auth and role checking
-  utils/          - Email, Mapbox distance calc, order date logic
+  utils/          - Email and order date logic
   tests/          - Jest unit tests
 
 

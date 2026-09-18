@@ -68,7 +68,6 @@ const getMenuSectionsByBuffetVersion = async (req, res) => {
     }
 
     // Ask the model to get menu sections for this buffet version from the database
-    // Branch is determined by the buffet version itself, so no branch filter needed here
     const sections = await menuModel.getMenuSectionsByBuffetVersion(buffetVersionId);
 
     // Send the menu data back to the website
@@ -102,9 +101,7 @@ const getMenuSectionsByBuffetVersion = async (req, res) => {
  */
 const getAllMenuItemsForManagement = async (req, res) => {
   try {
-    // Optional branch filter via query param e.g. /api/menu/manage?branch_id=2
-    const branchId = req.query.branch_id ? parseInt(req.query.branch_id) : null;
-    const items = await menuModel.getAllMenuItemsForManagement(branchId);
+    const items = await menuModel.getAllMenuItemsForManagement();
 
     // Send the data back
     res.json({
@@ -247,7 +244,7 @@ const createCategory = async (req, res) => {
  */
 const createMenuItem = async (req, res) => {
   try {
-    const { name, description, category_id, dietary_info, allergens, is_included_in_base, branch_id } = req.body;
+    const { name, description, category_id, dietary_info, allergens, is_included_in_base } = req.body;
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return res.json({ return_code: 'INVALID_DATA', message: 'name is required' });
@@ -262,8 +259,7 @@ const createMenuItem = async (req, res) => {
       parseInt(category_id),
       dietary_info ? dietary_info.trim() : null,
       allergens ? allergens.trim() : null,
-      is_included_in_base !== false && is_included_in_base !== 'false',
-      branch_id ? parseInt(branch_id) : null
+      is_included_in_base !== false && is_included_in_base !== 'false'
     );
 
     res.json({ return_code: 'SUCCESS', message: 'Menu item created successfully', data: created });

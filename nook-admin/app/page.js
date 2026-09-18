@@ -11,8 +11,6 @@ export default function AdminPage() {
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
   const [user, setUser] = useState(null);
-  const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState(null); // null means loading, 'all' means all branches
 
   // Check authentication on mount
   useEffect(() => {
@@ -25,36 +23,14 @@ export default function AdminPage() {
       return;
     }
 
-    // Set user data and default branch filter
+    // Set user data
     const parsedUser = JSON.parse(userData);
     setUser(parsedUser);
-
-    // Default to user's branch if they have one, otherwise 'all'
-    setSelectedBranch(parsedUser.branch_id ? String(parsedUser.branch_id) : 'all');
   }, [router]);
 
-  // Fetch branches on mount
   useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        const response = await fetch(`${apiUrl}/api/branches`);
-        const data = await response.json();
-
-        if (data.return_code === 'SUCCESS') {
-          setBranches(data.data || []);
-        }
-      } catch (err) {
-        console.error('Error fetching branches:', err);
-      }
-    };
-
-    fetchBranches();
-  }, []);
-
-  useEffect(() => {
-    // Don't fetch orders if not authenticated or branch not yet determined
-    if (!user || selectedBranch === null) return;
+    // Don't fetch orders if not authenticated
+    if (!user) return;
 
     const fetchOrders = async () => {
       try {
@@ -64,12 +40,7 @@ export default function AdminPage() {
         const token = localStorage.getItem('admin_token');
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 
-        // Add branch filter to the API call
-        const url = selectedBranch === 'all'
-          ? `${apiUrl}/api/orders`
-          : `${apiUrl}/api/orders?branch_id=${selectedBranch}`;
-
-        const response = await fetch(url, {
+        const response = await fetch(`${apiUrl}/api/orders`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -111,7 +82,7 @@ export default function AdminPage() {
 
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, selectedBranch]);
+  }, [user]);
 
   const goToOrderDetails = (orderId) => {
     window.location.href = `/orders/${orderId}`;
@@ -246,10 +217,6 @@ export default function AdminPage() {
     router.push('/staff');
   };
 
-  const goToReports = () => {
-    router.push('/reports');
-  };
-
   const goToSummary = () => {
     router.push('/summary');
   };
@@ -281,12 +248,6 @@ export default function AdminPage() {
           {user && user.role === 'manager' && (
             <button className="nav-item" onClick={goToStaffManagement}>Staff Management</button>
           )}
-          {user && user.role === 'manager' && (
-            <button className="nav-item" onClick={() => router.push('/branches')}>Branches</button>
-          )}
-          {user && user.role === 'manager' && (
-            <button className="nav-item" onClick={goToReports}>Reports</button>
-          )}
         </nav>
       </header>
 
@@ -304,22 +265,6 @@ export default function AdminPage() {
           )}
         </div>
         <div className="page-actions">
-          <div className="branch-filter">
-            <label htmlFor="branch-select">Branch:</label>
-            <select
-              id="branch-select"
-              value={selectedBranch || ''}
-              onChange={(e) => setSelectedBranch(e.target.value)}
-              className="branch-select"
-            >
-              <option value="all">All Branches</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
-            </select>
-          </div>
           <button className="action-button" onClick={goToSummary}>
             Summary
           </button>
@@ -337,6 +282,7 @@ export default function AdminPage() {
         ) : (
           orders.map((order) => (
             <div key={order.id} className="order-card" data-order-id={order.id} onClick={() => goToOrderDetails(order.id)}>
+              {/* On-screen summary */}
               <div className="order-card-content">
                 <div className="order-card-main">
                   <h2 className="order-number">{order.order_number}</h2>
@@ -351,14 +297,67 @@ export default function AdminPage() {
                     </span>
                   </div>
                   <div className="order-badges">
-                    <span className={`badge badge-${order.fulfillment_type}`}>
-                      {order.fulfillment_type}
-                    </span>
+                    <span className={`badge badge-${order.fulfillment_type}`}>{order.fulfillment_type}</span>
                     <span className="badge badge-people">
                       {order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people
                     </span>
                     <span className="badge badge-total">£{parseFloat(order.total_price).toFixed(2)}</span>
                   </div>
+                </div>
+              </div>
+
+              {/* Print-only full details — hidden on screen, shown when printing */}
+              <div className="order-print-details">
+                <h2 className="opd-order-number">{order.order_number}</h2>
+                <div className="opd-meta">
+                  <span className="opd-type">{order.fulfillment_type}</span>
+                  <span>
+                    Needed: {order.fulfillment_date ? new Date(order.fulfillment_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not specified'}
+                    {order.fulfillment_time ? ` at ${order.fulfillment_time}` : ''}
+                  </span>
+                  <span>{order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people</span>
+                  <span>£{parseFloat(order.total_price).toFixed(2)}</span>
+                </div>
+
+                <div className="opd-row"><span className="opd-label">Email:</span> {order.customer_email}</div>
+                {order.customer_phone && <div className="opd-row"><span className="opd-label">Phone:</span> {order.customer_phone}</div>}
+                {order.notes && <div className="opd-row"><span className="opd-label">Business:</span> {order.notes}</div>}
+                {order.fulfillment_address && (
+                  <div className="opd-row"><span className="opd-label">Address:</span> {order.fulfillment_address}</div>
+                )}
+                {order.staff_notes && (
+                  <div className="opd-row opd-staff"><span className="opd-label">Staff Notes:</span> {order.staff_notes}</div>
+                )}
+
+                <div className="opd-buffets">
+                  {order.buffets?.map((buffet, bi) => {
+                    const grouped = (buffet.items || []).reduce((acc, item) => {
+                      const cat = item.category_name || 'Items';
+                      (acc[cat] = acc[cat] || []).push(item.item_name);
+                      return acc;
+                    }, {});
+                    return (
+                      <div key={bi} className="opd-buffet">
+                        <div className="opd-buffet-header">
+                          <strong>{buffet.buffet_name}</strong>
+                          <span>{buffet.num_people} people @ £{parseFloat(buffet.price_per_person).toFixed(2)}/person — £{parseFloat(buffet.subtotal).toFixed(2)}</span>
+                        </div>
+                        {Object.entries(grouped).map(([cat, items]) => (
+                          <div key={cat} className="opd-cat-row">
+                            <span className="opd-cat-name">{cat}:</span> {items.join(', ')}
+                          </div>
+                        ))}
+                        {buffet.upgrades?.filter(u => u.upgrade_name).map((upg, ui) => (
+                          <div key={ui} className="opd-upgrade-row">
+                            + {upg.upgrade_name}{upg.items?.length > 0 ? `: ${upg.items.map(i => i.item_name).join(', ')}` : ''}
+                          </div>
+                        ))}
+                        {buffet.dietary_info && <div className="opd-note-row"><span className="opd-label">Dietary:</span> {buffet.dietary_info}</div>}
+                        {buffet.allergens && <div className="opd-note-row"><span className="opd-label">Allergens:</span> {buffet.allergens}</div>}
+                        {buffet.notes && <div className="opd-note-row"><span className="opd-label">Notes:</span> {buffet.notes}</div>}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

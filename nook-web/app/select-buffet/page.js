@@ -9,18 +9,13 @@ export default function SelectBuffetPage() {
   const [buffetVersions, setBuffetVersions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState('');
 
-  // Re-fetch buffet versions when branch changes
   useEffect(() => {
-    if (!selectedBranch) return;
-
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
     setLoading(true);
     setError(null);
 
-    fetch(`${apiUrl}/api/buffet-versions?branch_id=${selectedBranch}`)
+    fetch(`${apiUrl}/api/buffet-versions`)
       .then(res => res.json())
       .then(data => {
         if (data.return_code === 'SUCCESS') {
@@ -31,35 +26,11 @@ export default function SelectBuffetPage() {
       })
       .catch(() => setError('Failed to load buffet versions. Please try again.'))
       .finally(() => setLoading(false));
-  }, [selectedBranch]);
-
-  useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-
-    // Fetch branches — setting selectedBranch will trigger the buffet versions fetch above
-    const fetchBranches = async () => {
-      try {
-        const res = await fetch(`${apiUrl}/api/branches`);
-        const data = await res.json();
-        if (data.return_code === 'SUCCESS') {
-          setBranches(data.data || []);
-          // Default to the first branch
-          if (data.data && data.data.length > 0) {
-            setSelectedBranch(data.data[0].id.toString());
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching branches:', err);
-      }
-    };
-
-    fetchBranches();
   }, []);
 
   const handleSelectBuffet = (buffetVersionId) => {
-    // Navigate to order page with the selected buffet version ID and branch
-    const branchParam = selectedBranch ? `&branch_id=${selectedBranch}` : '';
-    router.push(`/order?buffetVersionId=${buffetVersionId}${branchParam}`);
+    // Navigate to order page with the selected buffet version ID
+    router.push(`/order?buffetVersionId=${buffetVersionId}`);
   };
 
   return (
@@ -68,23 +39,6 @@ export default function SelectBuffetPage() {
         <div className="select-buffet-content">
           <h1 className="select-buffet-title">Choose Your Buffet</h1>
           <p className="select-buffet-subtitle">Select the buffet package that&apos;s right for you</p>
-
-          {/* Branch Selector */}
-          {branches.length > 0 && (
-            <div className="branch-selector-wrapper">
-              <label htmlFor="branch-select" className="branch-selector-label">Where are you ordering from?</label>
-              <select
-                id="branch-select"
-                value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className="branch-selector-select"
-              >
-                {branches.map(branch => (
-                  <option key={branch.id} value={branch.id.toString()}>{branch.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {/* Beta Warning Banner */}
           {/* <div className="beta-warning-banner">

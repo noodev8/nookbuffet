@@ -37,10 +37,10 @@ const createOrder = async (req, res) => {
       });
     }
 
-    if (!orderData.fulfillmentType || !['delivery', 'collection'].includes(orderData.fulfillmentType)) {
+    if (orderData.fulfillmentType !== 'collection') {
       return res.json({
         return_code: 'VALIDATION_ERROR',
-        message: 'Valid fulfillment type is required (delivery or collection)'
+        message: 'Orders are collection only'
       });
     }
 
@@ -90,25 +90,7 @@ const createOrder = async (req, res) => {
       }
     }
 
-    // Validate branch ID for all orders (delivery and collection)
-    if (!orderData.branchId) {
-      return res.json({
-        return_code: 'MISSING_FIELDS',
-        message: 'Branch ID is required'
-      });
-    }
-
-    // Verify branch exists and is active
-    const branchModel = require('../models/branchModel');
-    const branch = await branchModel.getBranchById(orderData.branchId);
-    if (!branch) {
-      return res.json({
-        return_code: 'INVALID_BRANCH',
-        message: 'Selected branch is not available'
-      });
-    }
-
-    // Validate delivery/collection date against cutoff rules
+    // Validate the collection date against cutoff rules
     const dateValidation = await calculateEarliestOrderDate();
     if (!dateValidation.success) {
       return res.json({
@@ -117,7 +99,7 @@ const createOrder = async (req, res) => {
       });
     }
 
-    const requestedDate = new Date(orderData.deliveryDate);
+    const requestedDate = new Date(orderData.fulfillmentDate);
     const earliestDate = new Date(dateValidation.earliestDate);
 
     if (requestedDate < earliestDate) {
@@ -140,7 +122,7 @@ const createOrder = async (req, res) => {
       ...orderData,
       customerName: orderData.businessName || 'Customer',
       customerEmail: orderData.email,
-      deliveryAddress: orderData.address
+      fulfillmentAddress: orderData.address
     };
 
     // Send email in background - don't block the response
@@ -185,20 +167,14 @@ const createOrder = async (req, res) => {
 /**
  * Gets all orders with complete details
  * This is for the admin portal
- * Supports optional branch_id query param to filter by branch
  *
  * @param {object} req - The request object 
  * @param {object} res - The response object
  */
 const getAllOrders = async (req, res) => {
   try {
-    // Get branch_id from query params if provided
-    // If branch_id is 'all' or not provided, show all orders
-    const branchId = req.query.branch_id;
-    const filterBranchId = branchId && branchId !== 'all' ? parseInt(branchId) : null;
-
-    // Ask the model to get orders (optionally filtered by branch)
-    const orders = await orderModel.getAllOrders(filterBranchId);
+    // Ask the model to get all orders
+    const orders = await orderModel.getAllOrders();
 
     // Send all orders back
     res.json({

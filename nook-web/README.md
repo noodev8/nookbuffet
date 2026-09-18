@@ -39,7 +39,7 @@ PAGES
 
   /                 - Home page
   /menu             - Full menu display
-  /select-buffet    - Pick a buffet type and branch
+  /select-buffet    - Pick a buffet type
   /order            - Build your buffet — choose items per category
   /upgrade          - Add upgrade packages to your order
   /basket           - Review everything before paying

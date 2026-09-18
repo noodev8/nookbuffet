@@ -138,7 +138,7 @@ const getAllUsers = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     // Get the user data from the request
-    const { username, email, password, full_name, role, branch_id } = req.body;
+    const { username, email, password, full_name, role } = req.body;
 
     // ===== VALIDATION =====
     // Make sure all required fields are provided
@@ -186,8 +186,7 @@ const createUser = async (req, res) => {
       email,
       password_hash,
       full_name,
-      role,
-      branch_id: branch_id || null
+      role
     });
 
     // ===== SUCCESS RESPONSE =====
@@ -201,7 +200,6 @@ const createUser = async (req, res) => {
         email: newUser.email,
         full_name: newUser.full_name,
         role: newUser.role,
-        branch_id: newUser.branch_id,
         is_active: newUser.is_active,
         created_at: newUser.created_at
       }
@@ -221,7 +219,7 @@ const createUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
-    const { username, email, full_name, role, is_active, password, branch_id } = req.body;
+    const { username, email, full_name, role, is_active, password } = req.body;
 
     // ===== CHECK IF USER EXISTS =====
     const existingUser = await authModel.getUserById(userId);
@@ -269,8 +267,6 @@ const updateUser = async (req, res) => {
     if (full_name !== undefined) updateData.full_name = full_name;
     if (role !== undefined) updateData.role = role;
     if (is_active !== undefined) updateData.is_active = is_active;
-    // branch_id can be null (to unassign) or a number
-    if (branch_id !== undefined) updateData.branch_id = branch_id;
 
     // ===== HASH PASSWORD IF PROVIDED =====
     if (password) {
@@ -290,7 +286,6 @@ const updateUser = async (req, res) => {
         email: updatedUser.email,
         full_name: updatedUser.full_name,
         role: updatedUser.role,
-        branch_id: updatedUser.branch_id,
         is_active: updatedUser.is_active,
         last_login: updatedUser.last_login,
         created_at: updatedUser.created_at
@@ -414,8 +409,7 @@ const verifyTwoFa = async (req, res) => {
         id: user.id,
         email: user.email,
         full_name: user.full_name,
-        role: user.role,
-        branch_id: user.branch_id
+        role: user.role
       }
     });
 
@@ -491,8 +485,7 @@ const staffWebLogin = async (req, res) => {
         id:        user.id,
         email:     user.email,
         full_name: user.full_name,
-        role:      user.role,
-        branch_id: user.branch_id
+        role:      user.role
       }
     });
 

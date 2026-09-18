@@ -222,7 +222,7 @@ export default function AccountPage() {
                         </div>
                         <div className="order-detail-row">
                           <span className="order-detail-label">Type</span>
-                          <span>{order.fulfillment_type === 'delivery' ? 'Delivery' : 'Collection'}</span>
+                          <span>{order.fulfillment_type ? order.fulfillment_type.charAt(0).toUpperCase() + order.fulfillment_type.slice(1) : ''}</span>
                         </div>
                         <div className="order-detail-row">
                           <span className="order-detail-label">Ordered</span>
@@ -300,8 +300,8 @@ export default function AccountPage() {
                   <input className="auth-input" name="phone" value={editData.phone} onChange={handleEditChange} placeholder="07700 900000" />
                 </div>
                 <div className="auth-form-group">
-                  <label>Default Delivery Address</label>
-                  <input className="auth-input" name="default_address" value={editData.default_address} onChange={handleEditChange} placeholder="Your delivery address" />
+                  <label>Default Address</label>
+                  <input className="auth-input" name="default_address" value={editData.default_address} onChange={handleEditChange} placeholder="Your address" />
                 </div>
                 {saveError && <p className="auth-error">{saveError}</p>}
                 <div className="profile-edit-actions">

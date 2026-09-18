@@ -180,7 +180,7 @@ const updateUpgrade = async (id, name, description, pricePerPerson) => {
 const getBuffetVersionLinksForUpgrade = async (upgradeId) => {
   try {
     const result = await query(
-      `SELECT bv.id, bv.title, bv.branch_id,
+      `SELECT bv.id, bv.title,
               CASE WHEN bu.id IS NOT NULL THEN true ELSE false END AS is_linked
        FROM buffet_versions bv
        LEFT JOIN buffet_upgrades bu ON bu.buffet_version_id = bv.id

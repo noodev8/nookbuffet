@@ -85,11 +85,10 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
       buffetNumber++;
     }
 
-    // Format delivery/collection info
-    const isDelivery = orderData.fulfillmentType === 'delivery';
-    const fulfillmentText = isDelivery ? 'Delivery' : 'Collection';
-    const dateText = orderData.deliveryDate || 'TBC';
-    const timeText = orderData.deliveryTime || 'TBC';
+    // Format collection info
+    const fulfillmentText = 'Collection';
+    const dateText = orderData.fulfillmentDate || 'TBC';
+    const timeText = orderData.fulfillmentTime || 'TBC';
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -129,12 +128,6 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
                   <td style="padding: 8px 0; color: #666;">Time:</td>
                   <td style="padding: 8px 0; font-weight: bold;">${timeText}</td>
                 </tr>
-                ${isDelivery && orderData.deliveryAddress ? `
-                <tr>
-                  <td style="padding: 8px 0; color: #666; vertical-align: top;">Address:</td>
-                  <td style="padding: 8px 0; font-weight: bold;">${orderData.deliveryAddress}</td>
-                </tr>
-                ` : ''}
                 ${orderData.businessName ? `
                 <tr>
                   <td style="padding: 8px 0; color: #666;">Business:</td>
@@ -193,8 +186,7 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
  */
 const sendOrderReadyEmail = async (orderData) => {
   try {
-    const isDelivery = orderData.fulfillment_type === 'delivery';
-    const fulfillmentText = isDelivery ? 'delivery' : 'collection';
+    const fulfillmentText = 'collection';
 
     // Format the date 
     const dateText = orderData.fulfillment_date
@@ -231,22 +223,12 @@ const sendOrderReadyEmail = async (orderData) => {
                 <p style="margin: 0; color: #333;">Order <strong>${orderData.order_number}</strong> has been prepared and is ready for ${fulfillmentText}.</p>
               </div>
 
-              ${isDelivery ? `
-                <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                  <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px;">Delivery Details</h3>
-                  <p style="margin: 0 0 8px 0;"><strong>Date:</strong> ${dateText}</p>
-                  ${timeText ? `<p style="margin: 0 0 8px 0;"><strong>Time:</strong> ${timeText}</p>` : ''}
-                  <p style="margin: 0;"><strong>Address:</strong> ${orderData.fulfillment_address || 'As provided'}</p>
-                </div>
-                <p style="color: #666;">Your order is on its way! Please ensure someone is available to receive the delivery.</p>
-              ` : `
-                <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                  <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px;">Collection Details</h3>
-                  <p style="margin: 0 0 8px 0;"><strong>Date:</strong> ${dateText}</p>
-                  ${timeText ? `<p style="margin: 0 0 8px 0;"><strong>Time:</strong> ${timeText}</p>` : ''}
-                </div>
-                <p style="color: #666;">Your order is ready and waiting for you! Please collect at your scheduled time.</p>
-              `}
+              <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px;">Collection Details</h3>
+                <p style="margin: 0 0 8px 0;"><strong>Date:</strong> ${dateText}</p>
+                ${timeText ? `<p style="margin: 0 0 8px 0;"><strong>Time:</strong> ${timeText}</p>` : ''}
+              </div>
+              <p style="color: #666;">Your order is ready and waiting for you! Please collect at your scheduled time.</p>
 
               <!-- Total -->
               <div style="background: #1a1a1a; color: white; padding: 15px 20px; border-radius: 8px; text-align: right; margin-top: 20px;">

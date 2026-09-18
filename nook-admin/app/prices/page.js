@@ -10,16 +10,13 @@ export default function PricesManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
-  const [branches, setBranches] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [editPrice, setEditPrice] = useState('');
-  const [editBranchId, setEditBranchId] = useState('');
   const [saving, setSaving] = useState(false);
 
 
 
-  // Auth check + fetch branches on mount
+  // Auth check on mount
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     const userData = localStorage.getItem('admin_user');
@@ -32,20 +29,9 @@ export default function PricesManagementPage() {
     }
 
     setUser(parsedUser);
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-    fetch(`${apiUrl}/api/branches`, { headers: { 'Authorization': `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(data => {
-        if (data.return_code === 'SUCCESS') {
-          setBranches(data.data || []);
-          if (parsedUser.branch_id) setSelectedBranch(parsedUser.branch_id.toString());
-        }
-      })
-      .catch(err => console.error('Error fetching branches:', err));
   }, [router]);
 
-  // Fetch buffet versions when user or branch filter changes
+  // Fetch buffet versions once the user is ready
   useEffect(() => {
     if (!user) return;
 
@@ -55,9 +41,8 @@ export default function PricesManagementPage() {
         setError(null);
         const token = localStorage.getItem('admin_token');
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        const branchParam = selectedBranch !== 'all' ? `?branch_id=${selectedBranch}` : '';
 
-        const res = await fetch(`${apiUrl}/api/buffet-versions/manage${branchParam}`, {
+        const res = await fetch(`${apiUrl}/api/buffet-versions/manage`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -79,15 +64,14 @@ export default function PricesManagementPage() {
     };
 
     fetchVersions();
-  }, [user, selectedBranch, router]);
+  }, [user, router]);
 
   const startEdit = (version) => {
     setEditingId(version.id);
     setEditPrice(parseFloat(version.price_per_person).toFixed(2));
-    setEditBranchId(version.branch_id ? version.branch_id.toString() : '');
   };
 
-  const cancelEdit = () => { setEditingId(null); setEditPrice(''); setEditBranchId(''); };
+  const cancelEdit = () => { setEditingId(null); setEditPrice(''); };
 
   const savePrice = async (versionId) => {
     if (!editPrice || isNaN(parseFloat(editPrice)) || parseFloat(editPrice) < 0) {
@@ -105,8 +89,7 @@ export default function PricesManagementPage() {
         body: JSON.stringify({
           title: version.title,
           description: version.description || null,
-          price_per_person: parseFloat(editPrice),
-          branch_id: editBranchId ? parseInt(editBranchId) : null
+          price_per_person: parseFloat(editPrice)
         })
       });
       const data = await res.json();
@@ -114,8 +97,7 @@ export default function PricesManagementPage() {
       if (data.return_code === 'SUCCESS') {
         setVersions(prev => prev.map(v =>
           v.id === versionId
-            ? { ...v, price_per_person: data.data.price_per_person, branch_id: data.data.branch_id,
-                branch_name: branches.find(b => b.id === data.data.branch_id)?.name || null }
+            ? { ...v, price_per_person: data.data.price_per_person }
             : v
         ));
         cancelEdit();
@@ -165,40 +147,14 @@ export default function PricesManagementPage() {
           {user && user.role === 'manager' && (
             <button className="nav-item" onClick={() => router.push('/staff')}>Staff Management</button>
           )}
-          {user && user.role === 'manager' && (
-            <button className="nav-item" onClick={() => router.push('/branches')}>Branches</button>
-          )}
         </nav>
       </header>
-
-      <div className="page-header">
-        <div className="filter-section">
-          <div className="branch-filter-wrapper">
-            <label htmlFor="branch-filter">Branch:</label>
-            <select
-              id="branch-filter"
-              value={selectedBranch}
-              onChange={(e) => { setSelectedBranch(e.target.value); cancelEdit(); }}
-              className="branch-filter"
-            >
-              <option value="all">All Branches</option>
-              {branches.map(b => (
-                <option key={b.id} value={b.id.toString()}>{b.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
 
       <div className="prices-grid">
         {versions.map(version => (
           <div key={version.id} className="price-card">
             <div className="price-card-header">
               <h3>{version.title}</h3>
-              {version.branch_name
-                ? <span className="branch-badge">{version.branch_name}</span>
-                : <span className="no-branch-badge">All Branches</span>
-              }
             </div>
 
             {editingId === version.id ? (
@@ -214,19 +170,6 @@ export default function PricesManagementPage() {
                     min="0"
                     autoFocus
                   />
-                </div>
-                <div className="branch-select-row">
-                  <label>Branch</label>
-                  <select
-                    className="branch-select"
-                    value={editBranchId}
-                    onChange={(e) => setEditBranchId(e.target.value)}
-                  >
-                    <option value="">All Branches (no branch)</option>
-                    {branches.map(b => (
-                      <option key={b.id} value={b.id.toString()}>{b.name}</option>
-                    ))}
-                  </select>
                 </div>
                 <div className="edit-actions">
                   <button className="save-button" onClick={() => savePrice(version.id)} disabled={saving}>
@@ -252,7 +195,7 @@ export default function PricesManagementPage() {
       </div>
 
       {versions.length === 0 && (
-        <div className="empty-state"><p>No buffet versions found for this branch</p></div>
+        <div className="empty-state"><p>No buffet versions found</p></div>
       )}
 
       <button className="logout-button-bottom" onClick={handleLogout}>Logout</button>

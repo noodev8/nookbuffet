@@ -20,23 +20,8 @@ export default function BasketPage() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
 
-  // Fulfillment state
-  const [fulfillmentType, setFulfillmentType] = useState('collection');
-  const [deliveryDate, setDeliveryDate] = useState('');
-  const [deliveryTime, setDeliveryTime] = useState('');
-
-  // Branch timeslot state (set automatically from selected branch)
-  const [branchTimeslot, setBranchTimeslot] = useState(null); 
-
-  // Branch validation state (for delivery)
-  const [branchId, setBranchId] = useState(null);
-  const [validatingAddress, setValidatingAddress] = useState(false);
-  const [addressValidated, setAddressValidated] = useState(false);
-  const [addressValidationMessage, setAddressValidationMessage] = useState('');
-
-  // Branch selection state (for collection)
-  const [branches, setBranches] = useState([]);
-  const [collectionBranchId, setCollectionBranchId] = useState('');
+  // Collection date state
+  const [fulfillmentDate, setFulfillmentDate] = useState('');
 
   // Get basket data from localStorage
   useEffect(() => {
@@ -46,12 +31,6 @@ export default function BasketPage() {
       // Handle both array and single object formats
       const ordersList = Array.isArray(parsed) ? parsed : [parsed];
       setOrders(ordersList);
-
-      // Pre-fill collection branch if orders were placed with a branch already selected
-      const firstBranchId = ordersList.find(o => o.branchId)?.branchId;
-      if (firstBranchId) {
-        setCollectionBranchId(firstBranchId.toString());
-      }
     }
 
     // Pre-fill customer details if they're logged in
@@ -77,169 +56,6 @@ export default function BasketPage() {
     }
   }, []);
 
-  // Fetch branches for collection dropdown when page loads
-  useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-        const response = await fetch(`${apiUrl}/api/branches`);
-        if (!response.ok) {
-          console.error('Failed to fetch branches:', response.status);
-          return;
-        }
-        const data = await response.json();
-        if (data.return_code === 'SUCCESS') {
-          setBranches(data.data || []);
-        }
-      } catch (err) {
-        console.error('Error fetching branches:', err);
-      }
-    };
-    fetchBranches();
-  }, []);
-
-  // Handle timeslot when switching fulfillment type
-  useEffect(() => {
-    if (fulfillmentType === 'collection') {
-      // Collection has no fixed timeslot — clear it
-      setBranchTimeslot(null);
-      setDeliveryTime('');
-    } else if (fulfillmentType === 'delivery' && addressValidated && branchId) {
-      // Switching back to delivery with an already-validated address —
-      // restore the timeslot from the branches list immediately
-      const matchingBranch = branches.find(b => b.id === branchId);
-      if (matchingBranch?.delivery_time_start && matchingBranch?.delivery_time_end) {
-        setBranchTimeslot({ start: matchingBranch.delivery_time_start, end: matchingBranch.delivery_time_end });
-        setDeliveryTime(`${matchingBranch.delivery_time_start}-${matchingBranch.delivery_time_end}`);
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fulfillmentType]);
-
-  // Auto-validate address when delivery is selected and address + postcode are filled (debounced)
-  useEffect(() => {
-    if (fulfillmentType === 'delivery' && address.trim() && postcode.trim() && !addressValidated) {
-      const timeoutId = setTimeout(() => {
-        validateDeliveryArea();
-      }, 1000);
-      return () => clearTimeout(timeoutId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fulfillmentType, address, postcode]);
-
-  // Auto-select nearest branch when collection is selected and address is filled (debounced)
-  useEffect(() => {
-    if (fulfillmentType === 'collection' && address.trim() && postcode.trim()) {
-      const timeoutId = setTimeout(() => {
-        findNearestBranchForCollection();
-      }, 1000);
-      return () => clearTimeout(timeoutId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fulfillmentType, address, postcode]);
-
-  // Find nearest branch for collection orders
-  const findNearestBranchForCollection = async () => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const response = await fetch(`${apiUrl}/api/branches/nearest`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ address: `${address.trim()}, ${postcode.trim()}` })
-      });
-
-      if (!response.ok) {
-        console.error('Failed to find nearest branch:', response.status);
-        return;
-      }
-
-      const result = await response.json();
-
-      if (result.return_code === 'SUCCESS' && result.data) {
-        setCollectionBranchId(result.data.id.toString());
-        // Collection has no fixed timeslot — customer can collect anytime
-      }
-    } catch (error) {
-      console.error('Error finding nearest branch:', error);
-    }
-  };
-
-  // Validate delivery area and get branch ID
-  const validateDeliveryArea = async () => {
-    if (!address.trim() || !postcode.trim()) {
-      return;
-    }
-
-    const fullAddress = `${address.trim()}, ${postcode.trim()}`;
-
-    setValidatingAddress(true);
-    setAddressValidated(false);
-    setAddressValidationMessage('');
-    setBranchId(null);
-
-    // The branch is determined by the buffet version the customer chose
-    const requiredBranchId = orders.find(o => o.branchId)?.branchId;
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const response = await fetch(`${apiUrl}/api/delivery/validate-area`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ address: fullAddress })
-      });
-
-      if (!response.ok) {
-        console.error('Failed to validate address:', response.status);
-        setAddressValidationMessage('Failed to validate address. Please try again.');
-        return;
-      }
-
-      const result = await response.json();
-
-      if (result.return_code === 'SUCCESS') {
-        if (result.data.isWithinRange) {
-          const validatedBranchId = result.data.branch.id;
-
-          // Make sure the delivery branch matches the buffet's branch
-          if (requiredBranchId && validatedBranchId !== requiredBranchId) {
-            const requiredBranchName = branches.find(b => b.id === requiredBranchId)?.name || 'the selected';
-            setAddressValidationMessage(`Sorry, this address is not within the ${requiredBranchName} delivery area. Your selected buffet can only be delivered from ${requiredBranchName}.`);
-            setBranchTimeslot(null);
-            setDeliveryTime('');
-            return;
-          }
-
-          setBranchId(validatedBranchId);
-          setAddressValidated(true);
-          setAddressValidationMessage(`Within delivery range of ${result.data.branch.name} (${result.data.distanceMiles.toFixed(1)} miles away)`);
-          // Look up the timeslot from the already-loaded branches list
-          const matchingBranch = branches.find(b => b.id === validatedBranchId);
-          const timeStart = matchingBranch?.delivery_time_start || result.data.branch.deliveryTimeStart;
-          const timeEnd = matchingBranch?.delivery_time_end || result.data.branch.deliveryTimeEnd;
-          if (timeStart && timeEnd) {
-            setBranchTimeslot({ start: timeStart, end: timeEnd });
-            setDeliveryTime(`${timeStart}-${timeEnd}`);
-          }
-        } else {
-          setAddressValidationMessage(`Sorry, this address is outside our delivery area. The nearest branch is ${result.data.distanceMiles.toFixed(1)} miles away (maximum: ${result.data.deliveryRadius} miles).`);
-          setBranchTimeslot(null);
-          setDeliveryTime('');
-        }
-      } else {
-        setAddressValidationMessage(`Address validation failed: ${result.message}`);
-      }
-    } catch (error) {
-      console.error('Error validating address:', error);
-      setAddressValidationMessage('Failed to validate address. Please try again.');
-    } finally {
-      setValidatingAddress(false);
-    }
-  };
-
   // Calculate fallback minimum date (tomorrow) in case API fails
   const calculateFallbackMinDate = () => {
     const tomorrow = new Date();
@@ -257,8 +73,8 @@ export default function BasketPage() {
           console.error('Failed to fetch earliest date:', response.status);
           const fallback = calculateFallbackMinDate();
           setMinDate(fallback);
-          if (!deliveryDate) {
-            setDeliveryDate(fallback);
+          if (!fulfillmentDate) {
+            setFulfillmentDate(fallback);
           }
           return;
         }
@@ -269,16 +85,16 @@ export default function BasketPage() {
           setMinDate(result.data.earliestDate);
           setCutoffInfo(result.data);
 
-          // Auto-set delivery date to earliest available if not already set
-          if (!deliveryDate) {
-            setDeliveryDate(result.data.earliestDate);
+          // Auto-set collection date to earliest available if not already set
+          if (!fulfillmentDate) {
+            setFulfillmentDate(result.data.earliestDate);
           }
         } else {
           // API returned an error, use fallback
           const fallback = calculateFallbackMinDate();
           setMinDate(fallback);
-          if (!deliveryDate) {
-            setDeliveryDate(fallback);
+          if (!fulfillmentDate) {
+            setFulfillmentDate(fallback);
           }
         }
       } catch (error) {
@@ -286,8 +102,8 @@ export default function BasketPage() {
         // Use fallback minimum date if API fails
         const fallback = calculateFallbackMinDate();
         setMinDate(fallback);
-        if (!deliveryDate) {
-          setDeliveryDate(fallback);
+        if (!fulfillmentDate) {
+          setFulfillmentDate(fallback);
         }
       } finally {
         setLoadingDateInfo(false);
@@ -327,47 +143,26 @@ export default function BasketPage() {
       alert('Please enter a phone number');
       return;
     }
-    if (!deliveryDate) {
+    if (!fulfillmentDate) {
       alert('Please select a date');
       return;
     }
-    if (fulfillmentType === 'delivery' && !deliveryTime) {
-      alert('No delivery timeslot available. Please validate your delivery address.');
-      return;
-    }
-
     // Validate selected date is not before minimum date
-    if (minDate && deliveryDate < minDate) {
+    if (minDate && fulfillmentDate < minDate) {
       alert(`Please select a date from ${new Date(minDate).toLocaleDateString('en-GB')} onwards`);
       return;
     }
 
-    // Check if delivery area has been validated for delivery orders
-    if (fulfillmentType === 'delivery' && !addressValidated) {
-      alert('Please wait for address validation to complete, or check that your address is within our delivery area');
-      return;
-    }
-
-    // Check if collection branch has been selected for collection orders
-    if (fulfillmentType === 'collection' && !collectionBranchId) {
-      alert('Please select a collection branch');
-      return;
-    }
-
     setLoading(true);
-    // Add business details and fulfillment to all orders
-    // Use branchId from delivery validation or collectionBranchId from dropdown
-    const selectedBranchId = fulfillmentType === 'delivery' ? branchId : parseInt(collectionBranchId);
+    // Add business details and collection date to all orders
     const updatedOrders = orders.map(order => ({
       ...order,
       businessName,
       address: `${address.trim()}, ${postcode.trim()}`,
       email,
       phone,
-      fulfillmentType,
-      deliveryDate,
-      deliveryTime,
-      branchId: selectedBranchId
+      fulfillmentType: 'collection',
+      fulfillmentDate
     }));
 
     // Pass all orders to checkout page
@@ -399,9 +194,8 @@ export default function BasketPage() {
       ...orderToEdit,
       editIndex: index
     }));
-    // Navigate to the order page with the same buffet version and branch
-    const branchParam = orderToEdit.branchId ? `&branch_id=${orderToEdit.branchId}` : '';
-    router.push(`/order?buffetVersionId=${orderToEdit.buffetVersionId}${branchParam}`);
+    // Navigate to the order page with the same buffet version
+    router.push(`/order?buffetVersionId=${orderToEdit.buffetVersionId}`);
   };
 
   // handle date changes with validation
@@ -412,21 +206,11 @@ export default function BasketPage() {
     if (minDate && selectedDate < minDate) {
       alert(`Please select a date from ${new Date(minDate).toLocaleDateString('en-GB')} onwards. Selected date is too early.`);
       // Reset to minimum date or clear the field
-      setDeliveryDate(minDate);
+      setFulfillmentDate(minDate);
       return;
     }
     
-    setDeliveryDate(selectedDate);
-  };
-
-  // Format "HH:MM" to "H:MM AM/PM" for display
-  const formatTime = (time) => {
-    if (!time) return '';
-    const [hourStr, minute] = time.split(':');
-    const hour = parseInt(hourStr, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minute} ${ampm}`;
+    setFulfillmentDate(selectedDate);
   };
 
   return (
@@ -477,12 +261,6 @@ export default function BasketPage() {
                       <span className="detail-label">People:</span>
                       <span className="detail-value">{order.numPeople}</span>
                     </div>
-                    {order.fulfillmentType && (
-                      <div className="detail-item">
-                        <span className="detail-label">Type:</span>
-                        <span className="detail-value">{order.fulfillmentType === 'delivery' ? 'Delivery' : 'Collection'}</span>
-                      </div>
-                    )}
                     {/* Buffet subtotal */}
                     <div className="detail-item">
                       <span className="detail-label">Buffet:</span>
@@ -551,12 +329,7 @@ export default function BasketPage() {
                   id="address"
                   type="text"
                   value={address}
-                  onChange={(e) => {
-                    setAddress(e.target.value);
-                    setAddressValidated(false);
-                    setAddressValidationMessage('');
-                    setBranchId(null);
-                  }}
+                  onChange={(e) => setAddress(e.target.value)}
                   placeholder="Street address"
                   className="form-input"
                 />
@@ -567,31 +340,11 @@ export default function BasketPage() {
                   id="postcode"
                   type="text"
                   value={postcode}
-                  onChange={(e) => {
-                    setPostcode(e.target.value);
-                    setAddressValidated(false);
-                    setAddressValidationMessage('');
-                    setBranchId(null);
-                  }}
+                  onChange={(e) => setPostcode(e.target.value)}
                   placeholder="e.g. SY1 1AA"
                   className="form-input"
                   style={{ maxWidth: '160px' }}
                 />
-                {fulfillmentType === 'delivery' && validatingAddress && (
-                  <div style={{ marginTop: '5px', color: '#007bff', fontSize: '14px' }}>
-                    Validating delivery address...
-                  </div>
-                )}
-                {fulfillmentType === 'delivery' && !validatingAddress && addressValidated && (
-                  <div style={{ marginTop: '5px', color: '#28a745', fontSize: '14px' }}>
-                    ✓ {addressValidationMessage}
-                  </div>
-                )}
-                {fulfillmentType === 'delivery' && !validatingAddress && !addressValidated && addressValidationMessage && (
-                  <div style={{ marginTop: '5px', color: '#dc3545', fontSize: '14px' }}>
-                    ✗ {addressValidationMessage}
-                  </div>
-                )}
               </div>
               <div className="form-row">
                 <div className="form-group">
@@ -620,94 +373,21 @@ export default function BasketPage() {
             </div>
           )}
 
-          {/* Fulfillment Section */}
+          {/* Collection Section */}
           {orders.length > 0 && (
             <div className="form-section">
-              <h2 className="form-section-title">Delivery or Collection</h2>
-              <div className="fulfillment-options">
-                <label className="fulfillment-option">
-                  <input
-                    type="radio"
-                    name="fulfillment"
-                    value="collection"
-                    checked={fulfillmentType === 'collection'}
-                    onChange={(e) => setFulfillmentType(e.target.value)}
-                  />
-                  <span>Collection</span>
-                </label>
-                <label className="fulfillment-option">
-                  <input
-                    type="radio"
-                    name="fulfillment"
-                    value="delivery"
-                    checked={fulfillmentType === 'delivery'}
-                    onChange={(e) => setFulfillmentType(e.target.value)}
-                  />
-                  <span>Delivery</span>
-                </label>
-              </div>
-
-              {/* Branch selection for collection orders */}
-              {fulfillmentType === 'collection' && (() => {
-                const requiredBranchId = orders.find(o => o.branchId)?.branchId;
-                const requiredBranch = requiredBranchId
-                  ? branches.find(b => b.id === requiredBranchId)
-                  : null;
-
-                if (requiredBranch) {
-                  // Branch is locked to the buffet's branch — show it as read-only
-                  return (
-                    <div className="form-group">
-                      <label>Collection Branch</label>
-                      <div style={{
-                        padding: '10px 14px',
-                        background: '#f0f7f0',
-                        border: '1px solid #28a745',
-                        borderRadius: '6px',
-                        color: '#1a5c1a',
-                        fontSize: '15px',
-                        fontWeight: '500'
-                      }}>
-                        {requiredBranch.name}
-                        <div style={{ fontSize: '12px', color: '#555', fontWeight: 'normal', marginTop: '4px' }}>
-                          Collection location is set by your chosen buffet
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                // Fallback: no required branch, show the free dropdown
-                return (
-                  <div className="form-group">
-                    <label htmlFor="collection-branch">Collection Branch *</label>
-                    <select
-                      id="collection-branch"
-                      value={collectionBranchId}
-                      onChange={(e) => setCollectionBranchId(e.target.value)}
-                      className="form-input"
-                    >
-                      <option value="">Select a branch</option>
-                      {branches.map((branch) => (
-                        <option key={branch.id} value={branch.id}>
-                          {branch.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })()}
+              <h2 className="form-section-title">Collection</h2>
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="delivery-date">Date *</label>
+                  <label htmlFor="fulfillment-date">Date *</label>
                   {loadingDateInfo ? (
                     <div style={{ padding: '10px', color: '#666' }}>Loading available dates...</div>
                   ) : (
                     <>
                       <input
-                        id="delivery-date"
+                        id="fulfillment-date"
                         type="date"
-                        value={deliveryDate}
+                        value={fulfillmentDate}
                         min={minDate || undefined}
                         onChange={handleDateChange}
                         className="form-input"
@@ -721,11 +401,11 @@ export default function BasketPage() {
                         <div style={{ marginTop: '5px', fontSize: '14px', color: '#666' }}>
                           {cutoffInfo.isAfterCutoff ? (
                             <span style={{ color: '#ff6b35' }}>
-                              After {cutoffInfo.cutoffTime} cutoff - earliest delivery: {new Date(cutoffInfo.earliestDate + 'T00:00:00').toLocaleDateString('en-GB')}
+                              After {cutoffInfo.cutoffTime} cutoff - earliest collection: {new Date(cutoffInfo.earliestDate + 'T00:00:00').toLocaleDateString('en-GB')}
                             </span>
                           ) : (
                             <span style={{ color: '#28a745' }}>
-                              ✓ Order by {cutoffInfo.cutoffTime} for next-day delivery
+                              ✓ Order by {cutoffInfo.cutoffTime} for next-day collection
                             </span>
                           )}
                         </div>
@@ -733,38 +413,6 @@ export default function BasketPage() {
                     </>
                   )}
                 </div>
-                {fulfillmentType === 'delivery' && (
-                  <div className="form-group">
-                    <label>Delivery Time</label>
-                    {branchTimeslot ? (
-                      <div style={{
-                        padding: '10px 14px',
-                        background: '#f0f7f0',
-                        border: '1px solid #28a745',
-                        borderRadius: '6px',
-                        color: '#1a5c1a',
-                        fontSize: '15px',
-                        fontWeight: '500'
-                      }}>
-                        {formatTime(branchTimeslot.start)} – {formatTime(branchTimeslot.end)}
-                        <div style={{ fontSize: '12px', color: '#555', fontWeight: 'normal', marginTop: '4px' }}>
-                          Set by your branch
-                        </div>
-                      </div>
-                    ) : (
-                      <div style={{
-                        padding: '10px 14px',
-                        background: '#f8f8f8',
-                        border: '1px solid #ccc',
-                        borderRadius: '6px',
-                        color: '#888',
-                        fontSize: '14px'
-                      }}>
-                        Validate your address to see your delivery timeslot
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           )}

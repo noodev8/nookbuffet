@@ -74,11 +74,8 @@ const getBuffetVersionById = async (req, res) => {
  */
 const getAllBuffetVersions = async (req, res) => {
   try {
-    const { branch_id } = req.query;
-    const branchId = branch_id && !isNaN(branch_id) ? parseInt(branch_id) : null;
-
     // Ask the model to get all buffet versions from the database
-    const versions = await buffetVersionModel.getAllBuffetVersions(branchId);
+    const versions = await buffetVersionModel.getAllBuffetVersions();
 
     // Send all the buffet versions back to the website
     res.json({
@@ -100,14 +97,11 @@ const getAllBuffetVersions = async (req, res) => {
 // ===== GET ALL BUFFET VERSIONS FOR MANAGEMENT =====
 /**
  * Get all buffet versions for admin management (protected, manager/admin only)
- * GET /api/buffet-versions/manage?branch_id=1
+ * GET /api/buffet-versions/manage
  */
 const getAllBuffetVersionsForManagement = async (req, res) => {
   try {
-    const { branch_id } = req.query;
-    const branchId = branch_id && !isNaN(branch_id) ? parseInt(branch_id) : null;
-
-    const versions = await buffetVersionModel.getAllBuffetVersionsForManagement(branchId);
+    const versions = await buffetVersionModel.getAllBuffetVersionsForManagement();
 
     res.json({
       return_code: 'SUCCESS',
@@ -125,7 +119,7 @@ const getAllBuffetVersionsForManagement = async (req, res) => {
 
 // ===== UPDATE BUFFET VERSION =====
 /**
- * Update price_per_person and branch_id for a buffet version (protected, manager/admin only)
+ * Update title, description and price_per_person for a buffet version (protected, manager/admin only)
  * PATCH /api/buffet-versions/manage/:id
  */
 const updateBuffetVersion = async (req, res) => {
@@ -139,7 +133,7 @@ const updateBuffetVersion = async (req, res) => {
       });
     }
 
-    const { title, description, price_per_person, branch_id } = req.body;
+    const { title, description, price_per_person } = req.body;
 
     if (!title || typeof title !== 'string' || title.trim() === '') {
       return res.json({ return_code: 'INVALID_DATA', message: 'title is required' });
@@ -152,9 +146,8 @@ const updateBuffetVersion = async (req, res) => {
       });
     }
 
-    const branchId = branch_id ? parseInt(branch_id) : null;
     const updated = await buffetVersionModel.updateBuffetVersion(
-      id, title.trim(), description ? description.trim() : null, parseFloat(price_per_person), branchId
+      id, title.trim(), description ? description.trim() : null, parseFloat(price_per_person)
     );
 
     res.json({
@@ -183,7 +176,7 @@ const updateBuffetVersion = async (req, res) => {
  */
 const createBuffetVersion = async (req, res) => {
   try {
-    const { title, description, price_per_person, branch_id } = req.body;
+    const { title, description, price_per_person } = req.body;
 
     if (!title || typeof title !== 'string' || title.trim() === '') {
       return res.json({
@@ -199,12 +192,10 @@ const createBuffetVersion = async (req, res) => {
       });
     }
 
-    const branchId = branch_id ? parseInt(branch_id) : null;
     const created = await buffetVersionModel.createBuffetVersion(
       title.trim(),
       description ? description.trim() : null,
-      parseFloat(price_per_person),
-      branchId
+      parseFloat(price_per_person)
     );
 
     res.json({

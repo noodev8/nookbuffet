@@ -52,7 +52,7 @@ describe('createBuffetVersion', () => {
   test('returns SUCCESS when all required data is valid', async () => {
     buffetVersionModel.createBuffetVersion.mockResolvedValue({
       id: 1, title: 'Standard Buffet', description: null,
-      price_per_person: 15.99, is_active: true, created_at: new Date(), branch_id: null
+      price_per_person: 15.99, is_active: true, created_at: new Date()
     });
     const { req, res, getResult } = setup({ title: 'Standard Buffet', price_per_person: 15.99 });
     await buffetVersionController.createBuffetVersion(req, res);
@@ -61,18 +61,18 @@ describe('createBuffetVersion', () => {
     expect(getResult().data.price_per_person).toBe(15.99);
   });
 
-  test('returns SUCCESS with description and branch_id', async () => {
+  test('returns SUCCESS with a description', async () => {
     buffetVersionModel.createBuffetVersion.mockResolvedValue({
       id: 2, title: 'Kids Buffet', description: 'For children',
-      price_per_person: 9.99, is_active: true, created_at: new Date(), branch_id: 3
+      price_per_person: 9.99, is_active: true, created_at: new Date()
     });
     const { req, res, getResult } = setup({
       title: 'Kids Buffet', description: 'For children',
-      price_per_person: 9.99, branch_id: 3
+      price_per_person: 9.99
     });
     await buffetVersionController.createBuffetVersion(req, res);
     expect(getResult().return_code).toBe('SUCCESS');
-    expect(getResult().data.branch_id).toBe(3);
+    expect(getResult().data.description).toBe('For children');
   });
 });
 
@@ -112,7 +112,7 @@ describe('updateBuffetVersion', () => {
   test('returns SUCCESS when update is valid', async () => {
     buffetVersionModel.updateBuffetVersion.mockResolvedValue({
       id: 1, title: 'Premium Buffet', description: null,
-      price_per_person: 19.99, is_active: true, branch_id: null
+      price_per_person: 19.99, is_active: true
     });
     const { req, res, getResult } = setup(
       { title: 'Premium Buffet', price_per_person: 19.99 }, { id: '1' }

@@ -47,32 +47,6 @@
   align-items: center;
 }
 
-.branch-filter {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.branch-filter label {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.branch-select {
-  padding: 0.5rem 1rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  font-size: 0.9rem;
-  cursor: pointer;
-  min-width: 150px;
-}
-
-.branch-select:focus {
-  outline: none;
-  border-color: #4a5568;
-}
-
 .stat-item {
   display: flex;
   flex-direction: column;
@@ -172,6 +146,11 @@
 
 .order-card-content {
   padding: 1.25rem 1.5rem;
+}
+
+/* Hidden on screen — only visible when printing */
+.order-print-details {
+  display: none;
 }
 
 .order-card-main {
@@ -902,7 +881,7 @@
    PRINT STYLES - ONE ORDER PER PAGE
    ======================================== */
 @media print {
-  /* Hide everything except essential info */
+  /* Hide chrome — keep only order cards */
   .admin-header,
   .page-header,
   .mark-done-btn,
@@ -911,13 +890,17 @@
   .print-single-btn,
   .order-actions,
   .view-details-icon,
-  .order-badges,
-  .order-header-left,
-  .order-header-right,
-  .order-dates,
-  .fulfillment-section,
-  .buffet-summary {
+  .page-actions {
     display: none !important;
+  }
+
+  /* Hide the on-screen summary card, show the full print block */
+  .order-card-content {
+    display: none !important;
+  }
+
+  .order-print-details {
+    display: block !important;
   }
 
   /* Reset page styles */
@@ -1245,13 +1228,106 @@
     color: #000;
   }
 
+  /* ---- Print details block (opd-*) ---- */
+  .opd-order-number {
+    font-size: 16pt;
+    font-weight: 700;
+    margin: 0 0 0.3cm 0;
+    color: #000;
+  }
+
+  .opd-meta {
+    display: flex;
+    gap: 12pt;
+    font-size: 9pt;
+    color: #333;
+    margin-bottom: 0.35cm;
+    padding-bottom: 0.3cm;
+    border-bottom: 2pt solid #000;
+    flex-wrap: wrap;
+  }
+
+  .opd-meta .opd-type {
+    text-transform: capitalize;
+    font-weight: 700;
+  }
+
+  .opd-row {
+    font-size: 10pt;
+    margin-bottom: 0.15cm;
+    color: #000;
+  }
+
+  .opd-label {
+    font-weight: 700;
+    min-width: 70pt;
+    display: inline-block;
+  }
+
+  .opd-staff {
+    background: #f0f0f0;
+    padding: 3pt 5pt;
+    margin-top: 0.15cm;
+  }
+
+  .opd-buffets {
+    margin-top: 0.4cm;
+    border-top: 1pt solid #000;
+    padding-top: 0.3cm;
+  }
+
+  .opd-buffet {
+    margin-bottom: 0.4cm;
+    padding-bottom: 0.3cm;
+    border-bottom: 1pt dotted #aaa;
+  }
+
+  .opd-buffet:last-child {
+    border-bottom: none;
+  }
+
+  .opd-buffet-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10pt;
+    font-weight: 700;
+    margin-bottom: 0.2cm;
+    gap: 8pt;
+  }
+
+  .opd-cat-row {
+    font-size: 9pt;
+    margin-bottom: 0.1cm;
+    padding-left: 0.3cm;
+    color: #000;
+  }
+
+  .opd-cat-name {
+    font-weight: 600;
+  }
+
+  .opd-upgrade-row {
+    font-size: 9pt;
+    font-style: italic;
+    padding-left: 0.3cm;
+    color: #444;
+    margin-top: 0.1cm;
+  }
+
+  .opd-note-row {
+    font-size: 9pt;
+    padding-left: 0.3cm;
+    margin-top: 0.1cm;
+    color: #000;
+  }
+
 }
 
 /* ========================================
    SINGLE ORDER PRINT
    ======================================== */
 @media print {
-  /* When printing a single order, hide all orders by default */
+  /* When printing a single order, hide all other order cards */
   body.print-single-order .order-card {
     display: none !important;
   }
