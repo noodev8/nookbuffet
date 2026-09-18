@@ -101,6 +101,8 @@
 .badge-collection { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #2c7a7b; }
 .badge-people { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
 .badge-total { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; font-size: 1rem; }
+.badge-paid { background: #c6f6d5; color: #22543d; }
+.badge-unpaid { background: #fed7d7; color: #9b2c2c; }
 
 .print-btn, .done-btn {
   padding: 0.75rem 1.5rem;
@@ -125,10 +127,30 @@
 }
 
 .action-buttons .print-btn,
+.action-buttons .paid-btn,
+.action-buttons .unpaid-btn,
 .action-buttons .done-btn,
 .action-buttons .cancel-btn {
   flex: 1;
 }
+
+.paid-btn,
+.unpaid-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paid-btn { background: #2f855a; color: white; border: none; }
+.paid-btn:hover:not(:disabled) { background: #276749; }
+
+.unpaid-btn { background: white; color: #4a5568; border: 2px solid #cbd5e0; }
+.unpaid-btn:hover:not(:disabled) { border-color: #a0aec0; }
+
+.paid-btn:disabled,
+.unpaid-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .cancel-btn {
   background: #e53e3e;

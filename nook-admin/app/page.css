@@ -223,6 +223,16 @@
   font-weight: 700;
 }
 
+.badge-paid {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.badge-unpaid {
+  background: #fed7d7;
+  color: #9b2c2c;
+}
+
 /* ========================================
    ORDER ACTIONS
    ======================================== */

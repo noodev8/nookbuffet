@@ -23,8 +23,7 @@ ENDPOINTS:
          "fulfillment_time": "12:00",
          "total_price": 109.00,
          "status": "pending",
-         "payment_status": "pending",
-         "payment_method": "card",
+         "payment_status": "unpaid",
          "notes": "Acme Corp",
          "created_at": "2024-01-15T10:30:00Z",
          "buffets": [...]
@@ -110,6 +109,10 @@ router.patch('/:id/status', verifyToken, checkRole(['staff', 'admin', 'manager']
 
 // ===== ROUTE: UPDATE STAFF NOTES (PROTECTED) =====
 router.patch('/:id/staff-notes', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.updateStaffNotes);
+
+// ===== ROUTE: MARK ORDER PAID / UNPAID (PROTECTED) =====
+// Body: { "payment_status": "paid" | "unpaid" }
+router.patch('/:id/payment-status', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.updatePaymentStatus);
 
 // Export the router so server.js can use it
 module.exports = router;

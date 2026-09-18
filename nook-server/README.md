@@ -5,7 +5,7 @@ The backend API for the Nook Buffet platform. Built with Node.js and Express, ta
 
 WHAT IT DOES
 
-Handles everything behind the scenes — orders, menus, customer accounts, payments, emails, and staff auth. Both the customer website and the admin portal talk to this.
+Handles everything behind the scenes — orders, menus, customer accounts, emails, and staff auth. Both the customer website and the admin portal talk to this.
 
 
 TECH
@@ -14,7 +14,6 @@ TECH
   - PostgreSQL (via pg)
   - JWT for auth
   - bcrypt for password hashing
-  - Stripe for payments
   - Resend for emails
   - Multer for file uploads (menu images)
 
@@ -28,7 +27,6 @@ Create a .env file:
 
   DATABASE_URL=postgres://...
   JWT_SECRET=...
-  STRIPE_SECRET_KEY=sk_...
   RESEND_API_KEY=re_...
 
   npm run dev     - dev (auto-restarts on changes)
@@ -42,11 +40,10 @@ API ROUTES
 
   /api/auth             - Staff login (password + 2FA code), verify 2FA, staff management
   /api/customers        - Customer register, login, profile update, order history
-  /api/orders           - Create orders, get orders, update status, staff notes
+  /api/orders           - Create orders, get orders, update status, staff notes, mark paid/unpaid
   /api/menu             - Menu categories and items
   /api/buffet-versions  - Buffet types and pricing (Standard, Kids, etc.)
   /api/upgrades         - Buffet upgrade options
-  /api/payments         - Stripe payment intent creation
   /api/upload           - Image uploads for menu items and categories
   /api/contact          - Contact form submissions
 

@@ -39,20 +39,13 @@ const createOrder = async (orderData) => {
     const orderNumber = `ORD-${nextNum.toString().padStart(3, '0')}`;
     
     // Insert the main order record
-    // Staff skip takes priority - mark as waived. Otherwise check for Stripe payment.
-    let paymentStatus = 'pending';
-    if (orderData.staffSkipReason) {
-      paymentStatus = 'waived';
-    } else if (orderData.paymentIntentId) {
-      paymentStatus = 'paid';
-    }
-
+    // No payment is taken online - every order starts unpaid and staff mark it paid in the admin portal
     const orderQuery = `
       INSERT INTO orders (
         order_number, customer_email, customer_phone,
         fulfillment_type, fulfillment_address, fulfillment_date, fulfillment_time,
-        total_price, status, payment_status, payment_method, notes, customer_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        total_price, status, payment_status, notes, customer_id
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING id, order_number, created_at
     `;
 
@@ -66,8 +59,7 @@ const createOrder = async (orderData) => {
       orderData.fulfillmentTime || null,
       orderData.totalPrice,
       'pending',
-      paymentStatus,
-      orderData.staffSkipReason ? `Staff skip: ${orderData.staffSkipReason}` : (orderData.paymentIntentId ? 'stripe' : 'card'),
+      'unpaid',
       orderData.businessName || null,
       orderData.customerId || null
     ];
@@ -558,6 +550,16 @@ const updateStaffNotes = async (orderId, staffNotes) => {
   return result.rows[0];
 };
 
+// ===== UPDATE PAYMENT STATUS =====
+// Staff mark an order paid (or back to unpaid) once they've taken payment
+const updatePaymentStatus = async (orderId, paymentStatus) => {
+  const result = await query(
+    `UPDATE orders SET payment_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, payment_status`,
+    [paymentStatus, orderId]
+  );
+  return result.rows[0];
+};
+
 // Export the functions so other files can use them
 module.exports = {
   createOrder,
@@ -565,6 +567,7 @@ module.exports = {
   getOrderById,
   updateOrderStatus,
   getOrdersByCustomerId,
-  updateStaffNotes
+  updateStaffNotes,
+  updatePaymentStatus
 };
 

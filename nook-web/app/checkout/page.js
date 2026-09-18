@@ -1,67 +1,8 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect, useMemo, useSyncExternalStore, Suspense } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useState, useMemo, Suspense } from 'react';
 import './checkout.css';
-
-// Load Stripe outside of component to avoid recreating on every render
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-
-function PaymentForm({ orders, onSuccess, onError }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    setLoading(true);
-    setErrorMessage('');
-
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: window.location.origin + '/checkout/success',
-      },
-      redirect: 'if_required', // Only redirect if 3D Secure is needed
-    });
-
-    if (error) {
-      setErrorMessage(error.message);
-      setLoading(false);
-      onError(error.message);
-    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-      onSuccess(paymentIntent.id);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <PaymentElement
-        options={{
-          layout: 'tabs',
-        }}
-      />
-      {errorMessage && (
-        <div className="payment-error-message">
-          {errorMessage}
-        </div>
-      )}
-      <button
-        type="submit"
-        disabled={!stripe || loading}
-        className="checkout-submit-button"
-        style={{ width: '100%', marginTop: '1.5rem' }}
-      >
-        {loading ? 'Processing...' : `Pay £${orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0).toFixed(2)}`}
-      </button>
-    </form>
-  );
-}
 
 function CheckoutContent() {
   const router = useRouter();
@@ -82,130 +23,14 @@ function CheckoutContent() {
   }, [ordersParam]);
 
   const [loading, setLoading] = useState(false);
-  const [clientSecret, setClientSecret] = useState('');
-  const [paymentError, setPaymentError] = useState('');
-  const [showSkipInput, setShowSkipInput] = useState(false);
-  const [skipReason, setSkipReason] = useState('');
-  const [skipLoading, setSkipLoading] = useState(false);
+  const [orderError, setOrderError] = useState('');
 
-  // Check if the logged-in user is staff (never on the server, localStorage is browser only)
-  const isStaff = useSyncExternalStore(
-    () => () => {},
-    () => {
-      try {
-        return JSON.parse(localStorage.getItem('customer'))?.accountType === 'staff';
-      } catch {
-        return false;
-      }
-    },
-    () => false
-  );
-
-  // ===== STAFF SKIP HANDLER =====
-  // Bypasses Stripe entirely - creates the order with the skip reason as the payment method
-  const handleStaffSkip = async () => {
-    if (!skipReason.trim()) {
-      setPaymentError('Please enter a reason for skipping payment.');
-      return;
-    }
-
-    setSkipLoading(true);
-    setPaymentError('');
-
-    try {
-      const storedCustomer = localStorage.getItem('customer');
-      const parsedCustomer = storedCustomer ? JSON.parse(storedCustomer) : null;
-      // Staff IDs live in admin_users, not customers 
-      const customerId = parsedCustomer && parsedCustomer.accountType !== 'staff' ? parsedCustomer.id : null;
-
-      const orderData = {
-        email: orders[0]?.email || '',
-        phone: orders[0]?.phone || '',
-        businessName: orders[0]?.businessName || '',
-        address: orders[0]?.address || '',
-        fulfillmentType: 'collection',
-        fulfillmentDate: orders[0]?.fulfillmentDate || '',
-        totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
-        customerId,
-        staffSkipReason: skipReason.trim(),
-        buffets: orders.map(order => ({
-          buffetVersionId: order.buffetVersionId,
-          numPeople: order.numPeople,
-          pricePerPerson: order.pricePerPerson,
-          totalPrice: order.totalPrice,
-          items: order.items,
-          notes: order.notes || '',
-          dietaryInfo: order.dietaryInfo || '',
-          allergens: order.allergens || '',
-          upgrades: (order.upgrades || []).map(upgrade => ({
-            upgradeId: upgrade.upgradeId,
-            selectedItems: upgrade.selectedItems || []
-          }))
-        }))
-      };
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const response = await fetch(`${apiUrl}/api/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
-      });
-
-      const result = await response.json();
-
-      if (result.return_code === 'SUCCESS') {
-        localStorage.removeItem('basketData');
-        router.push(`/checkout/success?orderNumber=${result.data.orderNumber}`);
-      } else {
-        setPaymentError('Order creation failed. Please try again.');
-      }
-    } catch (err) {
-      console.error('Staff skip error:', err);
-      setPaymentError('Unable to connect to server. Please try again.');
-    } finally {
-      setSkipLoading(false);
-    }
-  };
-
-  // Create payment intent when orders are loaded
-  useEffect(() => {
-    if (orders.length === 0) return;
-
-    const createPaymentIntent = async () => {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
-      const totalPrice = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
-
-      try {
-        const response = await fetch(`${apiUrl}/api/payments/create-payment-intent`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            amount: totalPrice,
-            email: orders[0]?.email || '',
-            metadata: {
-              businessName: orders[0]?.businessName || '',
-              numBuffets: orders.length.toString(),
-            }
-          })
-        });
-
-        const result = await response.json();
-        if (result.return_code === 'SUCCESS') {
-          setClientSecret(result.data.clientSecret);
-        } else {
-          setPaymentError('Failed to initialize payment. Please try again.');
-        }
-      } catch (error) {
-        console.error('Error creating payment intent:', error);
-        setPaymentError('Failed to connect to payment server.');
-      }
-    };
-
-    createPaymentIntent();
-  }, [orders]);
-
-  const handlePaymentSuccess = async (paymentIntentId) => {
+  // No payment is taken online - the order goes through as unpaid and staff
+  // mark it paid in the admin portal once the customer has paid
+  const handlePlaceOrder = async () => {
     setLoading(true);
+    setOrderError('');
+
     try {
       // Staff IDs live in admin_users, not customers
       const storedCustomer = localStorage.getItem('customer');
@@ -221,7 +46,6 @@ function CheckoutContent() {
         fulfillmentDate: orders[0]?.fulfillmentDate || '',
         totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
         customerId,
-        paymentIntentId: paymentIntentId,
         buffets: orders.map(order => ({
           buffetVersionId: order.buffetVersionId,
           numPeople: order.numPeople,
@@ -251,19 +75,14 @@ function CheckoutContent() {
         localStorage.removeItem('basketData');
         router.push(`/checkout/success?orderNumber=${result.data.orderNumber}`);
       } else {
-        // Payment was taken but order creation failed - this needs manual handling
-        alert(`Payment successful but order creation failed. Please contact us with payment ID: ${paymentIntentId}`);
+        setOrderError(result.message || 'Order could not be placed. Please try again.');
+        setLoading(false);
       }
     } catch (error) {
       console.error('Error creating order:', error);
-      alert('Payment successful but order creation failed. Please contact us.');
-    } finally {
+      setOrderError('Unable to connect to server. Please try again.');
       setLoading(false);
     }
-  };
-
-  const handlePaymentError = (message) => {
-    setPaymentError(message);
   };
 
   return (
@@ -351,107 +170,27 @@ function CheckoutContent() {
             </div>
           )}
 
-          {/* Payment section with Stripe Elements */}
+          {/* Place order - no payment is taken online */}
           <div className="checkout-section">
-            <h2 className="checkout-section-title">Payment Details</h2>
+            <h2 className="checkout-section-title">Place Your Order</h2>
+            <p className="checkout-payment-note">
+              No payment is taken online. We&apos;ll arrange payment with you directly.
+            </p>
 
-            {paymentError && (
+            {orderError && (
               <div className="payment-error-message">
-                {paymentError}
+                {orderError}
               </div>
             )}
 
-            {/* Staff-only skip payment block */}
-            {isStaff && (
-              <div className="staff-skip-section">
-                <p className="staff-skip-label">You&apos;re logged in as staff — you can skip payment if needed.</p>
-                {!showSkipInput ? (
-                  <button
-                    className="staff-skip-toggle-button"
-                    onClick={() => setShowSkipInput(true)}
-                  >
-                    Skip Payment
-                  </button>
-                ) : (
-                  <div className="staff-skip-form">
-                    <label className="staff-skip-reason-label" htmlFor="skipReason">
-                      Why are you skipping payment?
-                    </label>
-                    <textarea
-                      id="skipReason"
-                      className="staff-skip-reason-input"
-                      placeholder="e.g. Staff meal, Testing, Manager approved..."
-                      value={skipReason}
-                      onChange={(e) => setSkipReason(e.target.value)}
-                      rows={3}
-                    />
-                    <div className="staff-skip-actions">
-                      <button
-                        className="staff-skip-confirm-button"
-                        onClick={handleStaffSkip}
-                        disabled={skipLoading || !skipReason.trim()}
-                      >
-                        {skipLoading ? 'Placing Order...' : 'Confirm & Place Order'}
-                      </button>
-                      <button
-                        className="staff-skip-cancel-button"
-                        onClick={() => { setShowSkipInput(false); setSkipReason(''); }}
-                        disabled={skipLoading}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-                <div className="staff-skip-divider">
-                  <span>or pay by card below</span>
-                </div>
-              </div>
-            )}
-
-            {clientSecret ? (
-              <Elements
-                stripe={stripePromise}
-                options={{
-                  clientSecret,
-                  appearance: {
-                    theme: 'night',
-                    variables: {
-                      colorPrimary: '#ffffff',
-                      colorBackground: 'rgba(255, 255, 255, 0.08)',
-                      colorText: '#ffffff',
-                      colorDanger: '#ff6b6b',
-                      fontFamily: 'Source Sans Pro, sans-serif',
-                      borderRadius: '6px',
-                    },
-                    rules: {
-                      '.Input': {
-                        border: '2px solid rgba(255, 255, 255, 0.2)',
-                        padding: '12px',
-                      },
-                      '.Input:focus': {
-                        border: '2px solid rgba(255, 255, 255, 0.4)',
-                        boxShadow: '0 0 10px rgba(255, 255, 255, 0.15)',
-                      },
-                      '.Label': {
-                        color: '#ffffff',
-                        fontWeight: '600',
-                      },
-                    },
-                  },
-                }}
-              >
-                <PaymentForm
-                  orders={orders}
-                  onSuccess={handlePaymentSuccess}
-                  onError={handlePaymentError}
-                />
-              </Elements>
-            ) : (
-              <div className="checkout-loading-state">
-                <p>Loading payment form...</p>
-              </div>
-            )}
+            <button
+              className="checkout-submit-button"
+              onClick={handlePlaceOrder}
+              disabled={loading || orders.length === 0}
+              style={{ width: '100%', marginTop: '1.5rem' }}
+            >
+              {loading ? 'Placing Order...' : `Place Order (£${orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0).toFixed(2)})`}
+            </button>
           </div>
 
           {/* Back button */}

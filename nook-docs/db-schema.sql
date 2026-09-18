@@ -550,7 +550,7 @@ CREATE TABLE public.orders (
     fulfillment_address text,
     total_price numeric(10,2) NOT NULL,
     status character varying(50) DEFAULT 'pending'::character varying,
-    payment_status character varying(50) DEFAULT 'pending'::character varying,
+    payment_status character varying(50) DEFAULT 'unpaid'::character varying,
     payment_method character varying(50),
     notes text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
@@ -558,7 +558,6 @@ CREATE TABLE public.orders (
     completed_at timestamp without time zone,
     fulfillment_date date,
     fulfillment_time character varying(20),
-    stripe_payment_intent_id character varying(255),
     customer_id integer,
     staff_notes text
 );

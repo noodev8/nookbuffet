@@ -12,10 +12,10 @@ const { sendOrderConfirmationEmail } = require('../utils/emailService');
 const orderController = require('../controllers/orderController');
 
 // Helper: build fake req and res objects
-function setup(body = {}) {
+function setup(body = {}, params = {}) {
   let result;
   const res = { json: (data) => { result = data; } };
-  const req = { body, params: {}, query: {} };
+  const req = { body, params, query: {} };
   return { req, res, getResult: () => result };
 }
 
@@ -88,5 +88,42 @@ describe('createOrder', () => {
     await orderController.createOrder(req, res);
     expect(getResult().return_code).toBe('INVALID_DATE');
     expect(orderModel.createOrder).not.toHaveBeenCalled();
+  });
+});
+
+describe('updatePaymentStatus', () => {
+  test('marks an order as paid', async () => {
+    orderModel.updatePaymentStatus.mockResolvedValue({ id: 7, payment_status: 'paid' });
+    const { req, res, getResult } = setup({ payment_status: 'paid' }, { id: '7' });
+    await orderController.updatePaymentStatus(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(orderModel.updatePaymentStatus).toHaveBeenCalledWith('7', 'paid');
+  });
+
+  test('marks an order back to unpaid', async () => {
+    orderModel.updatePaymentStatus.mockResolvedValue({ id: 7, payment_status: 'unpaid' });
+    const { req, res, getResult } = setup({ payment_status: 'unpaid' }, { id: '7' });
+    await orderController.updatePaymentStatus(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+  });
+
+  test('rejects any other payment status', async () => {
+    const { req, res, getResult } = setup({ payment_status: 'waived' }, { id: '7' });
+    await orderController.updatePaymentStatus(req, res);
+    expect(getResult().return_code).toBe('VALIDATION_ERROR');
+    expect(orderModel.updatePaymentStatus).not.toHaveBeenCalled();
+  });
+
+  test('rejects a non-numeric order ID', async () => {
+    const { req, res, getResult } = setup({ payment_status: 'paid' }, { id: 'abc' });
+    await orderController.updatePaymentStatus(req, res);
+    expect(getResult().return_code).toBe('INVALID_ID');
+  });
+
+  test('returns NOT_FOUND when the order does not exist', async () => {
+    orderModel.updatePaymentStatus.mockResolvedValue(undefined);
+    const { req, res, getResult } = setup({ payment_status: 'paid' }, { id: '999' });
+    await orderController.updatePaymentStatus(req, res);
+    expect(getResult().return_code).toBe('NOT_FOUND');
   });
 });

@@ -354,6 +354,27 @@ const updateStaffNotes = async (req, res) => {
   }
 };
 
+// ===== UPDATE PAYMENT STATUS =====
+// No payment is taken online, so staff mark orders paid here once the customer has paid
+const updatePaymentStatus = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    if (!orderId || isNaN(orderId)) {
+      return res.json({ return_code: 'INVALID_ID', message: 'Invalid order ID' });
+    }
+    const { payment_status } = req.body;
+    if (!['paid', 'unpaid'].includes(payment_status)) {
+      return res.json({ return_code: 'VALIDATION_ERROR', message: 'payment_status must be paid or unpaid' });
+    }
+    const updated = await orderModel.updatePaymentStatus(orderId, payment_status);
+    if (!updated) return res.json({ return_code: 'NOT_FOUND', message: 'Order not found' });
+    res.json({ return_code: 'SUCCESS', message: 'Payment status updated', data: updated });
+  } catch (error) {
+    console.error('Error updating payment status:', error);
+    res.json({ return_code: 'SERVER_ERROR', message: 'Failed to update payment status' });
+  }
+};
+
 // Export the functions so routes can use them
 module.exports = {
   createOrder,
@@ -361,7 +382,8 @@ module.exports = {
   getOrderById,
   updateOrderStatus,
   getEarliestOrderDate,
-  updateStaffNotes
+  updateStaffNotes,
+  updatePaymentStatus
 };
 
 

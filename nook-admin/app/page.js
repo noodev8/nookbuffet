@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import './page.css';
 
+// No payment is taken online, so every order starts unpaid until staff mark it paid.
+// 'waived' only appears on older orders placed through the old staff skip-payment option.
+const paymentLabel = (paymentStatus) =>
+  paymentStatus === 'paid' ? 'Paid' : paymentStatus === 'waived' ? 'Waived' : 'Unpaid';
+const paymentBadgeClass = (paymentStatus) =>
+  paymentStatus === 'paid' || paymentStatus === 'waived' ? 'badge-paid' : 'badge-unpaid';
+
 export default function AdminPage() {
   const router = useRouter();
   const [orders, setOrders] = useState([]);
@@ -303,6 +310,7 @@ export default function AdminPage() {
                       {order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people
                     </span>
                     <span className="badge badge-total">£{parseFloat(order.total_price).toFixed(2)}</span>
+                    <span className={`badge ${paymentBadgeClass(order.payment_status)}`}>{paymentLabel(order.payment_status)}</span>
                   </div>
                 </div>
               </div>
@@ -318,6 +326,7 @@ export default function AdminPage() {
                   </span>
                   <span>{order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people</span>
                   <span>£{parseFloat(order.total_price).toFixed(2)}</span>
+                  <span>{paymentLabel(order.payment_status)}</span>
                 </div>
 
                 <div className="opd-row"><span className="opd-label">Email:</span> {order.customer_email}</div>

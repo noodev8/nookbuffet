@@ -19,7 +19,6 @@ const buffetVersionRoutes = require('./routes/buffetVersionRoutes'); // Routes f
 const orderRoutes = require('./routes/orderRoutes');            // Routes for order creation
 const authRoutes = require('./routes/authRoutes');              // Routes for admin authentication
 const upgradeRoutes = require('./routes/upgradeRoutes');        // Routes for buffet upgrades
-const paymentRoutes = require('./routes/paymentRoutes');        // Routes for Stripe payments
 const customerRoutes = require('./routes/customerRoutes');      // Routes for customer accounts
 const uploadRoutes = require('./routes/uploadRoutes');          // Routes for image uploads
 
@@ -60,7 +59,6 @@ app.use('/api/buffet-versions', buffetVersionRoutes); // Buffet version endpoint
 app.use('/api/orders', orderRoutes);                 // Order endpoints
 app.use('/api/auth', authRoutes);                    // Admin authentication endpoints
 app.use('/api/upgrades', upgradeRoutes);             // Upgrade endpoints
-app.use('/api/payments', paymentRoutes);             // Stripe payment endpoints
 app.use('/api/customers', customerRoutes);          // Customer account endpoints
 app.use('/api/uploads', uploadRoutes);             // Image upload endpoints
 

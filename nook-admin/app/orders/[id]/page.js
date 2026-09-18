@@ -4,6 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import './order-details.css';
 
+// No payment is taken online, so every order starts unpaid until staff mark it paid.
+// 'waived' only appears on older orders placed through the old staff skip-payment option.
+const paymentLabel = (paymentStatus) =>
+  paymentStatus === 'paid' ? 'Paid' : paymentStatus === 'waived' ? 'Waived' : 'Unpaid';
+const paymentBadgeClass = (paymentStatus) =>
+  paymentStatus === 'paid' || paymentStatus === 'waived' ? 'badge-paid' : 'badge-unpaid';
+
 export default function OrderDetailsPage() {
   const router = useRouter();
   const params = useParams();
@@ -16,6 +23,7 @@ export default function OrderDetailsPage() {
   const [staffNotes, setStaffNotes] = useState('');
   const [staffNotesSaving, setStaffNotesSaving] = useState(false);
   const [staffNotesSaved, setStaffNotesSaved] = useState(false);
+  const [paymentSaving, setPaymentSaving] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -177,6 +185,41 @@ export default function OrderDetailsPage() {
     }
   };
 
+  // Toggle between paid and unpaid (a waived order can still be marked paid)
+  const togglePaymentStatus = async () => {
+    const newStatus = order.payment_status === 'paid' ? 'unpaid' : 'paid';
+    if (newStatus === 'unpaid' && !confirm('Mark this order as unpaid?')) {
+      return;
+    }
+
+    setPaymentSaving(true);
+    try {
+      const token = localStorage.getItem('admin_token');
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      const response = await fetch(`${apiUrl}/api/orders/${orderId}/payment-status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ payment_status: newStatus })
+      });
+
+      const data = await response.json();
+
+      if (data.return_code === 'SUCCESS') {
+        setOrder(prev => ({ ...prev, payment_status: data.data.payment_status }));
+      } else {
+        alert('Failed to update payment status: ' + data.message);
+      }
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      alert('Failed to update payment status. Please try again.');
+    } finally {
+      setPaymentSaving(false);
+    }
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -260,6 +303,7 @@ export default function OrderDetailsPage() {
               {order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people
             </span>
             <span className="badge badge-total">£{parseFloat(order.total_price).toFixed(2)}</span>
+            <span className={`badge ${paymentBadgeClass(order.payment_status)}`}>{paymentLabel(order.payment_status)}</span>
           </div>
         </div>
       </header>
@@ -280,12 +324,20 @@ export default function OrderDetailsPage() {
             <span>{order.fulfillment_type}</span>
             <span>{order.buffets?.reduce((sum, b) => sum + b.num_people, 0) || 0} people</span>
             <span>£{parseFloat(order.total_price).toFixed(2)}</span>
+            <span>{paymentLabel(order.payment_status)}</span>
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="action-buttons">
           <button className="print-btn" onClick={handlePrint}>Print</button>
+          <button
+            className={order.payment_status === 'paid' ? 'unpaid-btn' : 'paid-btn'}
+            onClick={togglePaymentStatus}
+            disabled={paymentSaving}
+          >
+            {paymentSaving ? 'Saving...' : order.payment_status === 'paid' ? 'Mark as Unpaid' : 'Mark as Paid'}
+          </button>
           <button className="done-btn" onClick={markOrderAsDone}>Mark as Done</button>
           <button className="cancel-btn" onClick={cancelOrder}>Cancel Order</button>
         </div>
