@@ -174,7 +174,7 @@ function CheckoutContent() {
           <div className="checkout-section">
             <h2 className="checkout-section-title">Place Your Order</h2>
             <p className="checkout-payment-note">
-              No payment is taken online. We&apos;ll arrange payment with you directly.
+              No payment is taken online – please pay when you collect your order.
             </p>
 
             {orderError && (
