@@ -25,27 +25,6 @@ const getAllUpgrades = async () => {
   }
 };
 
-// ===== GET UPGRADE BY ID =====
-const getUpgradeById = async (upgradeId) => {
-  try {
-    const result = await query(
-      `SELECT id, name, description, price_per_person, is_active, created_at
-       FROM upgrades
-       WHERE id = $1 AND is_active = true`,
-      [upgradeId]
-    );
-    
-    if (!result.rows || result.rows.length === 0) {
-      return null;
-    }
-    
-    return result.rows[0];
-  } catch (error) {
-    console.error('Could not get upgrade:', error);
-    throw error;
-  }
-};
-
 // ===== GET UPGRADES FOR A SPECIFIC BUFFET =====
 // returns only upgrades that are linked to this buffet version
 const getUpgradesForBuffet = async (buffetVersionId) => {
@@ -371,7 +350,6 @@ const deactivateUpgradeItem = async (id) => {
 
 module.exports = {
   getAllUpgrades,
-  getUpgradeById,
   getUpgradesForBuffet,
   getUpgradeWithItems,
   getAllUpgradesForManagement,

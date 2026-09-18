@@ -192,7 +192,6 @@ export default function UpgradePage() {
 
   const upgradeTotal = parseFloat(upgrade.price_per_person) * (pendingOrder?.numPeople || 1);
   const buffetSubtotal = pendingOrder?.totalPrice || 0;
-  const grandTotal = buffetSubtotal + upgradeTotal;
 
   return (
     <div className="welcome-page-option3">

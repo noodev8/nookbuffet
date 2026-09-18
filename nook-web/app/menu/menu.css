@@ -14,19 +14,6 @@
   padding: 2rem;
 }
 
-.menu-page-title {
-  font-family: 'Oswald', sans-serif;
-  font-size: 3rem;
-  color: white;
-  text-align: left;
-  margin-bottom: 3rem;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  font-weight: 600;
-  border-bottom: 2px solid #333;
-  padding-bottom: 1rem;
-}
-
 /* Buffet section container */
 .buffet-section {
   background: rgba(255, 255, 255, 0.05);
@@ -279,9 +266,6 @@
 
 /* Responsive Design */
 @media (max-width: 800px) {
-  .menu-page-title {
-    font-size: 1.5rem;
-  }
 
   .image-grid {
     grid-template-columns: repeat(3, 1fr);
@@ -299,9 +283,6 @@
 }
 
 @media (max-width: 768px) {
-  .menu-page-title {
-    font-size: 2rem;
-  }
 
   .section-title {
     font-size: 1.3rem;

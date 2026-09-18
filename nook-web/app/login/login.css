@@ -86,21 +86,6 @@
   color: rgba(255, 255, 255, 0.35);
 }
 
-.auth-forgot-link {
-  text-align: right;
-}
-
-.auth-forgot-link a {
-  color: #aaa;
-  font-size: 0.85rem;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.auth-forgot-link a:hover {
-  color: white;
-}
-
 /* ===== ERROR MESSAGE ===== */
 .auth-error {
   background: rgba(255, 107, 107, 0.12);
