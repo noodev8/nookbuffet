@@ -7,11 +7,12 @@ import { usePathname, useRouter } from 'next/navigation';
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 export const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
 
-// Everyone sees Orders and Prep Summary. Only admins see Menu and Staff.
+// Everyone sees Orders and Prep Summary. Only admins see Menu, Sandwiches and Staff.
 const NAV = [
   { href: '/', label: 'Orders' },
   { href: '/summary', label: 'Prep Summary' },
   { href: '/menu', label: 'Menu', roles: ['admin'] },
+  { href: '/sandwiches', label: 'Sandwiches', roles: ['admin'] },
   { href: '/staff', label: 'Staff', roles: ['admin'] },
 ];
 

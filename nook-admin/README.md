@@ -43,8 +43,9 @@ logged-in user and Log out. It also checks the login and provides an api() helpe
   /               - Orders - open orders grouped by collection day, overdue first
   /orders/[id]    - One order - mark paid, mark ready (emails the customer), print, cancel, note to customer
   /summary        - Prep Summary - everything to make, added up per collection day
-  /menu           - Menu - pick a buffet to change its price, categories, items and stock; Upgrades tab
-  /staff          - Staff accounts (managers only)
+  /menu           - Menu - pick a buffet to change its price, categories, items and stock; Upgrades tab (admins only)
+  /sandwiches     - Build-your-own sandwich menu - base price, on/off, steps (bread, fillings...) and their options (admins only)
+  /staff          - Staff accounts (admins only)
 
 /prices and /menu-builder redirect to /menu.
 

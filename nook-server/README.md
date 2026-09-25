@@ -44,6 +44,7 @@ API ROUTES
   /api/menu             - Menu categories and items
   /api/buffet-versions  - Buffet types and pricing (Standard, Kids, etc.)
   /api/upgrades         - Buffet upgrade options
+  /api/sandwiches       - Build-your-own sandwich menu: base price, steps and options (admin)
   /api/upload           - Image uploads for menu items and categories
   /api/contact          - Contact form submissions
 

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAdmin } from '../components/AdminShell';
 import { money } from '../lib/format';
+import useSave from '../lib/useSave';
 
 /**
  * Upgrades are optional extras (e.g. Continental) offered after a customer builds a buffet.
@@ -240,26 +241,6 @@ function UpgradeCard({ upgrade, versions, linked, setLinked, update, onDeleted, 
       </div>
     </div>
   );
-}
-
-// Small shared submit helper for the three upgrade forms
-function useSave(onSaved) {
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState('');
-  const save = async (request) => {
-    setSaving(true);
-    setFormError('');
-    try {
-      const data = await request();
-      if (data.return_code === 'SUCCESS') onSaved(data.data);
-      else setFormError(data.message || 'Could not save');
-    } catch {
-      setFormError('Could not reach the server. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
-  return { saving, formError, setFormError, save };
 }
 
 function UpgradeForm({ existing, onCancel, onSaved }) {
