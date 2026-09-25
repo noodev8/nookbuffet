@@ -38,7 +38,7 @@ Runs on port 3013 by default.
 
 API ROUTES
 
-  /api/auth             - Staff login (password + 2FA code), verify 2FA, staff management
+  /api/auth             - Staff login (username/email + password), staff management
   /api/customers        - Customer register, login, profile update, order history
   /api/orders           - Create orders, get orders, update status, staff notes, mark paid/unpaid
   /api/menu             - Menu categories and items

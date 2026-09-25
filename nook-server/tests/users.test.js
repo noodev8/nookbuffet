@@ -4,7 +4,6 @@
 jest.mock('../models/authModel');
 // Provide a factory so Jest never loads the real emailService (it calls `new Resend()` at module level)
 jest.mock('../utils/emailService', () => ({
-  sendTwoFaCodeEmail: jest.fn().mockResolvedValue(undefined),
   sendOrderConfirmationEmail: jest.fn().mockResolvedValue(undefined),
 }));
 

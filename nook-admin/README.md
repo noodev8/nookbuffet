@@ -39,7 +39,7 @@ PAGES
 Every page shares one header (app/components/AdminShell.js) with the navigation, the
 logged-in user and Log out. It also checks the login and provides an api() helper.
 
-  /login          - Staff login (2FA)
+  /login          - Staff login
   /               - Orders - open orders grouped by collection day, overdue first
   /orders/[id]    - One order - mark paid, mark ready (emails the customer), print, cancel, note to customer
   /summary        - Prep Summary - everything to make, added up per collection day
