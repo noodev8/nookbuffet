@@ -90,14 +90,14 @@ router.get('/earliest-date', orderController.getEarliestOrderDate);
 // ===== ROUTE: GET ALL ORDERS (PROTECTED) =====
 // When someone GETs /api/orders, run the getAllOrders function
 // GET is used because just reading data
-// All authenticated users (staff, admin, manager) can view orders
-router.get('/', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.getAllOrders);
+// General and admin users can view orders
+router.get('/', verifyToken, checkRole(['general', 'admin']), orderController.getAllOrders);
 
 // ===== ROUTE: GET SINGLE ORDER BY ID (PROTECTED) =====
 // When someone GETs /api/orders/:id, run the getOrderById function
 // GET is used 
-// All authenticated users (staff, admin, manager) can view orders
-router.get('/:id', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.getOrderById);
+// General and admin users can view orders
+router.get('/:id', verifyToken, checkRole(['general', 'admin']), orderController.getOrderById);
 
 // ===== ROUTE: CREATE NEW ORDER =====
 // When someone POSTs to /api/orders, run the createOrder function
@@ -105,14 +105,14 @@ router.get('/:id', verifyToken, checkRole(['staff', 'admin', 'manager']), orderC
 router.post('/', orderController.createOrder);
 
 // ===== ROUTE: UPDATE ORDER STATUS (PROTECTED) =====
-router.patch('/:id/status', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.updateOrderStatus);
+router.patch('/:id/status', verifyToken, checkRole(['general', 'admin']), orderController.updateOrderStatus);
 
 // ===== ROUTE: UPDATE STAFF NOTES (PROTECTED) =====
-router.patch('/:id/staff-notes', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.updateStaffNotes);
+router.patch('/:id/staff-notes', verifyToken, checkRole(['general', 'admin']), orderController.updateStaffNotes);
 
 // ===== ROUTE: MARK ORDER PAID / UNPAID (PROTECTED) =====
 // Body: { "payment_status": "paid" | "unpaid" }
-router.patch('/:id/payment-status', verifyToken, checkRole(['staff', 'admin', 'manager']), orderController.updatePaymentStatus);
+router.patch('/:id/payment-status', verifyToken, checkRole(['general', 'admin']), orderController.updatePaymentStatus);
 
 // Export the router so server.js can use it
 module.exports = router;

@@ -54,7 +54,7 @@ const upload = multer({
 router.post(
   '/image',
   verifyToken,
-  checkRole(['admin', 'manager']),
+  checkRole(['admin']),
   upload.single('image'),
   (req, res) => {
     if (!req.file) {
@@ -71,7 +71,7 @@ router.post(
 router.delete(
   '/image/:filename',
   verifyToken,
-  checkRole(['admin', 'manager']),
+  checkRole(['admin']),
   (req, res) => {
     const { filename } = req.params;
     // Safety: strip any path separators so they can't traverse outside UPLOAD_DIR

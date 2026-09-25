@@ -5,7 +5,7 @@ The internal portal for Nook Buffet staff. Not public facing — this is where t
 
 WHAT IT DOES
 
-Gives staff and managers a place to see incoming orders, update statuses, manage the menu and set prices. Different roles see different things depending on their access level.
+Gives staff a place to see incoming orders, update statuses, manage the menu and set prices. Different roles see different things depending on their access level.
 
 Login uses 2-factor authentication — password first, then a 6-digit code sent to the staff member's email.
 
@@ -51,11 +51,10 @@ logged-in user and Log out. It also checks the login and provides an api() helpe
 
 ROLES
 
-There are three roles. Permissions are enforced on the server - the frontend just hides things that aren't relevant.
+There are two roles. Permissions are enforced on the server - the frontend just hides things that aren't relevant.
 
-  staff    - Orders, prep summary, and marking menu items in or out of stock
-  admin    - Everything staff can do, plus editing the menu, prices and upgrades
-  manager  - Everything admin can do, plus managing staff accounts
+  general  - Orders and prep summary
+  admin    - Everything: orders, prep summary, the menu (stock, prices, upgrades) and staff accounts
 
 
 NOTES

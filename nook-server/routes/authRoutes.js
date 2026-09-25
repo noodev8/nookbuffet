@@ -27,7 +27,7 @@ ENDPOINTS:
    }
    Return Codes: SUCCESS, MISSING_FIELDS, INVALID_CREDENTIALS, ACCOUNT_DISABLED, SERVER_ERROR
 
-2. GET /api/auth/users (PROTECTED - Manager only)
+2. GET /api/auth/users (PROTECTED - Admin only)
    Purpose: Get all users for staff management
    Success Response:
    {
@@ -49,7 +49,7 @@ ENDPOINTS:
    }
    Return Codes: SUCCESS, UNAUTHORIZED, FORBIDDEN, SERVER_ERROR
 
-3. POST /api/auth/users (PROTECTED - Manager only)
+3. POST /api/auth/users (PROTECTED - Admin only)
    Purpose: Create a new staff member
    Request Body:
    {
@@ -57,7 +57,7 @@ ENDPOINTS:
      "email": "newuser@example.com",      // string, required - unique email
      "password": "securepassword123",     // string, required - user's password
      "full_name": "New User",             // string, required - user's full name
-     "role": "staff"                      // string, required - staff, admin, or manager
+     "role": "general"                      // string, required - general or admin
    }
    Success Response:
    {
@@ -68,14 +68,14 @@ ENDPOINTS:
        "username": "newuser",
        "email": "newuser@example.com",
        "full_name": "New User",
-       "role": "staff",
+       "role": "general",
        "is_active": true,
        "created_at": "2024-01-15T10:30:00Z"
      }
    }
    Return Codes: SUCCESS, MISSING_FIELDS, INVALID_ROLE, EMAIL_EXISTS, USERNAME_EXISTS, UNAUTHORIZED, FORBIDDEN, SERVER_ERROR
 
-4. PUT /api/auth/users/:id (PROTECTED - Manager only)
+4. PUT /api/auth/users/:id (PROTECTED - Admin only)
    Purpose: Update an existing user's details
    URL Parameters: id (integer, required) - the user ID
    Request Body (all fields optional):
@@ -104,7 +104,7 @@ ENDPOINTS:
    }
    Return Codes: SUCCESS, USER_NOT_FOUND, INVALID_ROLE, EMAIL_EXISTS, USERNAME_EXISTS, UNAUTHORIZED, FORBIDDEN, SERVER_ERROR
 
-5. DELETE /api/auth/users/:id (PROTECTED - Manager only)
+5. DELETE /api/auth/users/:id (PROTECTED - Admin only)
    Purpose: Delete a user from the system
    URL Parameters: id (integer, required) - the user ID
    Success Response:
@@ -136,23 +136,23 @@ router.post('/staff-web-login', authController.staffWebLogin);
 
 // ===== GET ALL USERS ROUTE (PROTECTED) =====
 // GET /api/auth/users
-// Returns all users - only managers can access this
-router.get('/users', verifyToken, checkRole(['manager']), authController.getAllUsers);
+// Returns all users - only admins can access this
+router.get('/users', verifyToken, checkRole(['admin']), authController.getAllUsers);
 
 // ===== CREATE USER ROUTE (PROTECTED) =====
 // POST /api/auth/users
-// Creates a new user - only managers can do this
-router.post('/users', verifyToken, checkRole(['manager']), authController.createUser);
+// Creates a new user - only admins can do this
+router.post('/users', verifyToken, checkRole(['admin']), authController.createUser);
 
 // ===== UPDATE USER ROUTE (PROTECTED) =====
 // PUT /api/auth/users/:id
-// Updates an existing user - only managers can do this
-router.put('/users/:id', verifyToken, checkRole(['manager']), authController.updateUser);
+// Updates an existing user - only admins can do this
+router.put('/users/:id', verifyToken, checkRole(['admin']), authController.updateUser);
 
 // ===== DELETE USER ROUTE (PROTECTED) =====
 // DELETE /api/auth/users/:id
-// Deletes a user - only managers can do this
-router.delete('/users/:id', verifyToken, checkRole(['manager']), authController.deleteUser);
+// Deletes a user - only admins can do this
+router.delete('/users/:id', verifyToken, checkRole(['admin']), authController.deleteUser);
 
 module.exports = router;
 

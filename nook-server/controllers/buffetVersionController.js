@@ -96,7 +96,7 @@ const getAllBuffetVersions = async (req, res) => {
 
 // ===== GET ALL BUFFET VERSIONS FOR MANAGEMENT =====
 /**
- * Get all buffet versions for admin management (protected, manager/admin only)
+ * Get all buffet versions for admin management (protected, admin only)
  * GET /api/buffet-versions/manage
  */
 const getAllBuffetVersionsForManagement = async (req, res) => {
@@ -119,7 +119,7 @@ const getAllBuffetVersionsForManagement = async (req, res) => {
 
 // ===== UPDATE BUFFET VERSION =====
 /**
- * Update title, description and price_per_person for a buffet version (protected, manager/admin only)
+ * Update title, description and price_per_person for a buffet version (protected, admin only)
  * PATCH /api/buffet-versions/manage/:id
  */
 const updateBuffetVersion = async (req, res) => {
@@ -171,7 +171,7 @@ const updateBuffetVersion = async (req, res) => {
 
 // ===== CREATE BUFFET VERSION =====
 /**
- * Create a new buffet version (protected, manager/admin only)
+ * Create a new buffet version (protected, admin only)
  * POST /api/buffet-versions/manage
  */
 const createBuffetVersion = async (req, res) => {
@@ -213,7 +213,7 @@ const createBuffetVersion = async (req, res) => {
 
 // ===== DELETE BUFFET VERSION (SOFT DELETE) =====
 /**
- * Soft-delete a buffet version (protected, manager/admin only)
+ * Soft-delete a buffet version (protected, admin only)
  * DELETE /api/buffet-versions/manage/:id
  */
 const deleteBuffetVersion = async (req, res) => {

@@ -65,7 +65,7 @@ const verifyToken = (req, res, next) => {
  * Returns a middleware function that checks if the authenticated user
  * has one of the allowed roles.
  * 
- * Usage: checkRole(['admin', 'manager'])
+ * Usage: checkRole(['admin'])
  * 
  * @param {array} allowedRoles - Array of role strings that are allowed
  * @returns {function} Middleware function

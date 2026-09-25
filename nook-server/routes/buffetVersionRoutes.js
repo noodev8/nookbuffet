@@ -66,16 +66,16 @@ router.get('/', buffetVersionController.getAllBuffetVersions);
 
 // ===== ROUTE 2: GET ALL BUFFET VERSIONS FOR MANAGEMENT (PROTECTED) =====
 // NOTE: Must come BEFORE /:id so "manage" isn't treated as an ID
-router.get('/manage', verifyToken, checkRole(['staff', 'admin', 'manager']), buffetVersionController.getAllBuffetVersionsForManagement);
+router.get('/manage', verifyToken, checkRole(['admin']), buffetVersionController.getAllBuffetVersionsForManagement);
 
 // ===== ROUTE 3: CREATE A NEW BUFFET VERSION (PROTECTED) =====
-router.post('/manage', verifyToken, checkRole(['admin', 'manager']), buffetVersionController.createBuffetVersion);
+router.post('/manage', verifyToken, checkRole(['admin']), buffetVersionController.createBuffetVersion);
 
 // ===== ROUTE 4: UPDATE A BUFFET VERSION PRICE (PROTECTED) =====
-router.patch('/manage/:id', verifyToken, checkRole(['admin', 'manager']), buffetVersionController.updateBuffetVersion);
+router.patch('/manage/:id', verifyToken, checkRole(['admin']), buffetVersionController.updateBuffetVersion);
 
 // ===== ROUTE 5: DELETE (SOFT DELETE) A BUFFET VERSION (PROTECTED) =====
-router.delete('/manage/:id', verifyToken, checkRole(['admin', 'manager']), buffetVersionController.deleteBuffetVersion);
+router.delete('/manage/:id', verifyToken, checkRole(['admin']), buffetVersionController.deleteBuffetVersion);
 
 // ===== ROUTE 6: GET ONE SPECIFIC BUFFET VERSION =====
 // NOTE: This must come AFTER any other specific routes

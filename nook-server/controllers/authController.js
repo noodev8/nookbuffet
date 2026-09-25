@@ -107,7 +107,7 @@ const login = async (req, res) => {
 
 // ===== GET ALL USERS =====
 // Get all users for the staff management page
-// Only managers should be able to access this
+// Only admins should be able to access this
 const getAllUsers = async (req, res) => {
   try {
     // Get all users from the database
@@ -132,7 +132,7 @@ const getAllUsers = async (req, res) => {
 
 // ===== CREATE USER =====
 // Create a new staff member
-// Only managers should be able to do this
+// Only admins should be able to do this
 const createUser = async (req, res) => {
   try {
     // Get the user data from the request
@@ -147,11 +147,11 @@ const createUser = async (req, res) => {
       });
     }
 
-    // Validate role - only allow staff, admin, or manager
-    if (!['staff', 'admin', 'manager'].includes(role)) {
+    // Validate role - only allow general or admin
+    if (!['general', 'admin'].includes(role)) {
       return res.json({
         return_code: 'INVALID_ROLE',
-        message: 'Role must be staff, admin, or manager'
+        message: 'Role must be general or admin'
       });
     }
 
@@ -213,7 +213,7 @@ const createUser = async (req, res) => {
 };
 
 // ===== UPDATE USER FUNCTION =====
-// Updates an existing user's details (manager only)
+// Updates an existing user's details (admin only)
 const updateUser = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -229,10 +229,10 @@ const updateUser = async (req, res) => {
     }
 
     // ===== VALIDATE ROLE =====
-    if (role && !['staff', 'admin', 'manager'].includes(role)) {
+    if (role && !['general', 'admin'].includes(role)) {
       return res.json({
         return_code: 'INVALID_ROLE',
-        message: 'Role must be staff, admin, or manager'
+        message: 'Role must be general or admin'
       });
     }
 
@@ -300,7 +300,7 @@ const updateUser = async (req, res) => {
 };
 
 // ===== DELETE USER FUNCTION =====
-// Deletes a user from the system (manager only)
+// Deletes a user from the system (admin only)
 const deleteUser = async (req, res) => {
   try {
     const userId = req.params.id;
@@ -315,7 +315,7 @@ const deleteUser = async (req, res) => {
     }
 
     // ===== PREVENT SELF-DELETION =====
-    // Don't let managers delete themselves
+    // Don't let admins delete themselves
     if (req.user.id === parseInt(userId)) {
       return res.json({
         return_code: 'CANNOT_DELETE_SELF',

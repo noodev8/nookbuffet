@@ -12,7 +12,7 @@ import { money } from '../lib/format';
 
 export default function MenuPage() {
   return (
-    <AdminShell>
+    <AdminShell roles={['admin']}>
       <Menu />
     </AdminShell>
   );
@@ -26,8 +26,7 @@ const isKidsBuffet = (version) => version?.title?.toLowerCase().includes('kids')
 const IMAGE_FIELDS = ['image_url', 'image_url_2', 'image_url_3', 'image_url_4'];
 
 function Menu() {
-  const { api, user } = useAdmin();
-  const canEdit = user.role === 'admin' || user.role === 'manager';
+  const { api } = useAdmin();
 
   const [versions, setVersions] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -49,14 +48,14 @@ function Menu() {
         setVersions(v.data || []);
         setCategories((c.data || []).map(({ items: _items, ...cat }) => cat));
         setItems(i.data || []);
-        setTab(v.data?.[0]?.id ?? (canEdit ? 'new' : null));
+        setTab(v.data?.[0]?.id ?? 'new');
         // Also offer any uploaded pictures that categories are already using
         const inUse = (c.data || []).flatMap(cat => IMAGE_FIELDS.map(f => cat[f])).filter(Boolean);
         setImages(prev => [...new Set([...prev, ...inUse])]);
       })
       .catch(() => setError('Could not reach the server. Please try again.'))
       .finally(() => setLoading(false));
-  }, [api, canEdit]);
+  }, [api]);
 
   const showToast = (message) => {
     setToast(message);
@@ -74,9 +73,7 @@ function Menu() {
         <div>
           <h1 className="page-title">Menu</h1>
           <p className="page-sub">
-            {canEdit
-              ? 'Pick a buffet to change its price, categories and items. Changes show on the website straight away.'
-              : 'Mark items out of stock to take them off the website until they are back.'}
+            Pick a buffet to change its price, categories and items. Changes show on the website straight away.
           </p>
         </div>
       </div>
@@ -85,8 +82,8 @@ function Menu() {
         {versions.map(v => (
           <button key={v.id} className={`tab${tab === v.id ? ' active' : ''}`} onClick={() => setTab(v.id)}>{v.title}</button>
         ))}
-        {canEdit && <button className={`tab${tab === 'upgrades' ? ' active' : ''}`} onClick={() => setTab('upgrades')}>Upgrades</button>}
-        {canEdit && <button className={`tab tab-add${tab === 'new' ? ' active' : ''}`} onClick={() => setTab('new')}>+ New buffet</button>}
+        <button className={`tab${tab === 'upgrades' ? ' active' : ''}`} onClick={() => setTab('upgrades')}>Upgrades</button>
+        <button className={`tab tab-add${tab === 'new' ? ' active' : ''}`} onClick={() => setTab('new')}>+ New buffet</button>
       </div>
 
       {tab === 'new' && (
@@ -108,7 +105,6 @@ function Menu() {
           version={version}
           categories={categories.filter(c => c.buffet_version_id === version.id).sort(byPosition)}
           items={items}
-          canEdit={canEdit}
           images={images}
           setImages={setImages}
           setVersions={setVersions}
@@ -123,15 +119,13 @@ function Menu() {
         />
       )}
 
-      {versions.length === 0 && !canEdit && <div className="notice">No buffets set up yet.</div>}
-
       {toast && <div className="toast">{toast}</div>}
     </>
   );
 }
 
 // ===== ONE BUFFET: price, categories and items =====
-function BuffetView({ version, categories, items, canEdit, images, setImages, setVersions, setCategories, setItems, showToast, onDeleted }) {
+function BuffetView({ version, categories, items, images, setImages, setVersions, setCategories, setItems, showToast, onDeleted }) {
   const { api } = useAdmin();
   const [editingBuffet, setEditingBuffet] = useState(false);
   const [addingCategory, setAddingCategory] = useState(false);
@@ -188,17 +182,15 @@ function BuffetView({ version, categories, items, canEdit, images, setImages, se
               {version.description && <p className="card-sub">{version.description}</p>}
               <p className="price-line"><strong>{money(version.price_per_person)}</strong> per person</p>
             </div>
-            {canEdit && (
-              <div className="page-actions">
-                <button className="btn" onClick={() => setEditingBuffet(true)}>Edit name / price</button>
-                <button className="btn btn-danger" onClick={deleteBuffet}>Delete buffet</button>
-              </div>
-            )}
+            <div className="page-actions">
+              <button className="btn" onClick={() => setEditingBuffet(true)}>Edit name / price</button>
+              <button className="btn btn-danger" onClick={deleteBuffet}>Delete buffet</button>
+            </div>
           </div>
         </div>
       )}
 
-      {categories.length === 0 && <div className="notice">No categories yet{canEdit ? ' — add the first one below.' : '.'}</div>}
+      {categories.length === 0 && <div className="notice">No categories yet — add the first one below.</div>}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={reorder}>
         <SortableContext items={categories.map(c => c.id)} strategy={verticalListSortingStrategy}>
@@ -208,7 +200,6 @@ function BuffetView({ version, categories, items, canEdit, images, setImages, se
               category={category}
               version={version}
               items={items.filter(i => i.category_id === category.id).sort((a, b) => a.name.localeCompare(b.name))}
-              canEdit={canEdit}
               images={images}
               setImages={setImages}
               setCategories={setCategories}
@@ -219,7 +210,7 @@ function BuffetView({ version, categories, items, canEdit, images, setImages, se
         </SortableContext>
       </DndContext>
 
-      {canEdit && (addingCategory ? (
+      {addingCategory ? (
         <CategoryForm
           version={version}
           nextPosition={categories.length ? Math.max(...categories.map(c => c.position ?? 0)) + 1 : 0}
@@ -234,20 +225,20 @@ function BuffetView({ version, categories, items, canEdit, images, setImages, se
         />
       ) : (
         <button className="btn" onClick={() => setAddingCategory(true)}>+ Add category</button>
-      ))}
+      )}
     </>
   );
 }
 
 // ===== CATEGORY CARD with its items =====
-function CategoryCard({ category, version, items, canEdit, images, setImages, setCategories, setItems, showToast }) {
+function CategoryCard({ category, version, items, images, setImages, setCategories, setItems, showToast }) {
   const { api } = useAdmin();
   const [editing, setEditing] = useState(false);
   const [editingItemId, setEditingItemId] = useState(null); // an item id, or 'new'
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: category.id,
-    disabled: !canEdit || editing,
+    disabled: editing,
   });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1, position: 'relative', zIndex: isDragging ? 10 : 'auto' };
 
@@ -307,21 +298,17 @@ function CategoryCard({ category, version, items, canEdit, images, setImages, se
   return (
     <div ref={setNodeRef} style={style} className="card menu-cat">
       <div className="menu-cat-head">
-        {canEdit && <span className="drag-handle" {...attributes} {...listeners} title="Drag to move this category up or down">⠿</span>}
+        <span className="drag-handle" {...attributes} {...listeners} title="Drag to move this category up or down">⠿</span>
         <div className="grow">
           <h3>{category.name}</h3>
           {category.is_required && <span className="badge">Required</span>}
           {outOfStock > 0 && <span className="badge badge-unpaid">{outOfStock} out of stock</span>}
         </div>
-        {canEdit && (
-          <>
-            <div className="thumbs">
-              {pictures.map((img, i) => (img ? <img key={i} src={`${WEB_URL}${img}`} alt="" /> : <span key={i} className="thumb-empty" />))}
-            </div>
-            <button className="btn-link" onClick={() => setEditing(true)}>Edit</button>
-            <button className="btn-link danger" onClick={deleteCategory}>Delete</button>
-          </>
-        )}
+        <div className="thumbs">
+          {pictures.map((img, i) => (img ? <img key={i} src={`${WEB_URL}${img}`} alt="" /> : <span key={i} className="thumb-empty" />))}
+        </div>
+        <button className="btn-link" onClick={() => setEditing(true)}>Edit</button>
+        <button className="btn-link danger" onClick={deleteCategory}>Delete</button>
       </div>
 
       <div className="menu-cat-body">
@@ -352,17 +339,13 @@ function CategoryCard({ category, version, items, canEdit, images, setImages, se
               <button className={`stock-toggle ${item.is_active ? 'in' : 'out'}`} onClick={() => toggleStock(item)} title="Click to change">
                 {item.is_active ? 'In stock' : 'Out of stock'}
               </button>
-              {canEdit && (
-                <>
-                  <button className="btn-link" onClick={() => setEditingItemId(item.id)}>Edit</button>
-                  <button className="btn-link danger" onClick={() => deleteItem(item)}>Delete</button>
-                </>
-              )}
+              <button className="btn-link" onClick={() => setEditingItemId(item.id)}>Edit</button>
+              <button className="btn-link danger" onClick={() => deleteItem(item)}>Delete</button>
             </div>
           )
         ))}
 
-        {canEdit && (editingItemId === 'new' ? (
+        {editingItemId === 'new' ? (
           <ItemForm
             category={category}
             onCancel={() => setEditingItemId(null)}
@@ -374,7 +357,7 @@ function CategoryCard({ category, version, items, canEdit, images, setImages, se
           />
         ) : (
           <button className="btn btn-sm" style={{ marginTop: '0.5rem' }} onClick={() => setEditingItemId('new')}>+ Add item</button>
-        ))}
+        )}
       </div>
     </div>
   );

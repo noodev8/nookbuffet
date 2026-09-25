@@ -7,16 +7,15 @@ import { usePathname, useRouter } from 'next/navigation';
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 export const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
 
-// Everyone sees Orders, Prep Summary and Menu (staff can only change stock there).
-// Only managers see Staff.
+// Everyone sees Orders and Prep Summary. Only admins see Menu and Staff.
 const NAV = [
   { href: '/', label: 'Orders' },
   { href: '/summary', label: 'Prep Summary' },
-  { href: '/menu', label: 'Menu' },
-  { href: '/staff', label: 'Staff', roles: ['manager'] },
+  { href: '/menu', label: 'Menu', roles: ['admin'] },
+  { href: '/staff', label: 'Staff', roles: ['admin'] },
 ];
 
-const ROLE_NAMES = { staff: 'Staff', admin: 'Admin', manager: 'Manager' };
+const ROLE_NAMES = { general: 'General', admin: 'Admin' };
 
 const AdminContext = createContext(null);
 

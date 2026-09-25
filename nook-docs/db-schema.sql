@@ -44,7 +44,7 @@ CREATE TABLE public.admin_users (
     email character varying(255) NOT NULL,
     password_hash character varying(255) NOT NULL,
     full_name character varying(150),
-    role character varying(50) DEFAULT 'staff'::character varying NOT NULL,
+    role character varying(50) DEFAULT 'general'::character varying NOT NULL,
     is_active boolean DEFAULT true,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
@@ -64,7 +64,7 @@ ALTER TABLE public.admin_users OWNER TO nook_prod_user;
 -- Name: COLUMN admin_users.role; Type: COMMENT; Schema: public; Owner: nook_prod_user
 --
 
-COMMENT ON COLUMN public.admin_users.role IS 'User role: admin, manager, staff';
+COMMENT ON COLUMN public.admin_users.role IS 'User role: admin, general';
 
 
 --

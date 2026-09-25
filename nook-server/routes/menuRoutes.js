@@ -64,35 +64,35 @@ router.get('/', menuController.getAllMenuSections);
 router.get('/buffet-version/:id', menuController.getMenuSectionsByBuffetVersion);
 
 // ===== ROUTE 3: GET ALL MENU ITEMS FOR MANAGEMENT (PROTECTED) =====
-router.get('/manage', verifyToken, checkRole(['staff', 'admin', 'manager']), menuController.getAllMenuItemsForManagement);
+router.get('/manage', verifyToken, checkRole(['admin']), menuController.getAllMenuItemsForManagement);
 
 // ===== ROUTE 4: GET CATEGORIES FOR MANAGEMENT (PROTECTED) =====
 // GET /api/menu/manage/categories?buffet_version_id=1
-router.get('/manage/categories', verifyToken, checkRole(['admin', 'manager']), menuController.getCategoriesForManagement);
+router.get('/manage/categories', verifyToken, checkRole(['admin']), menuController.getCategoriesForManagement);
 
 // ===== ROUTE 5: CREATE A NEW CATEGORY (PROTECTED) =====
-router.post('/manage/categories', verifyToken, checkRole(['admin', 'manager']), menuController.createCategory);
+router.post('/manage/categories', verifyToken, checkRole(['admin']), menuController.createCategory);
 
 // ===== ROUTE 5b: REORDER CATEGORIES (PROTECTED) - must be before /:id =====
-router.patch('/manage/categories/reorder', verifyToken, checkRole(['admin', 'manager']), menuController.reorderCategories);
+router.patch('/manage/categories/reorder', verifyToken, checkRole(['admin']), menuController.reorderCategories);
 
 // ===== ROUTE 6: UPDATE AN EXISTING CATEGORY (PROTECTED) =====
-router.patch('/manage/categories/:id', verifyToken, checkRole(['admin', 'manager']), menuController.updateCategory);
+router.patch('/manage/categories/:id', verifyToken, checkRole(['admin']), menuController.updateCategory);
 
 // ===== ROUTE 7: CREATE A NEW MENU ITEM (PROTECTED) =====
-router.post('/manage/items', verifyToken, checkRole(['admin', 'manager']), menuController.createMenuItem);
+router.post('/manage/items', verifyToken, checkRole(['admin']), menuController.createMenuItem);
 
 // ===== ROUTE 8: UPDATE AN EXISTING MENU ITEM (PROTECTED) =====
-router.patch('/manage/items/:id', verifyToken, checkRole(['admin', 'manager']), menuController.updateMenuItem);
+router.patch('/manage/items/:id', verifyToken, checkRole(['admin']), menuController.updateMenuItem);
 
 // ===== ROUTE 9: UPDATE MENU ITEM STOCK STATUS (PROTECTED) =====
-router.patch('/manage/:id', verifyToken, checkRole(['staff', 'admin', 'manager']), menuController.updateMenuItemStockStatus);
+router.patch('/manage/:id', verifyToken, checkRole(['admin']), menuController.updateMenuItemStockStatus);
 
 // ===== ROUTE 10: DELETE (SOFT DELETE) A CATEGORY (PROTECTED) =====
-router.delete('/manage/categories/:id', verifyToken, checkRole(['admin', 'manager']), menuController.deleteCategory);
+router.delete('/manage/categories/:id', verifyToken, checkRole(['admin']), menuController.deleteCategory);
 
 // ===== ROUTE 11: DELETE (SOFT DELETE) A MENU ITEM (PROTECTED) =====
-router.delete('/manage/items/:id', verifyToken, checkRole(['admin', 'manager']), menuController.deleteMenuItem);
+router.delete('/manage/items/:id', verifyToken, checkRole(['admin']), menuController.deleteMenuItem);
 
 // ===== EXPORTS =====
 // Make this router available to server.js

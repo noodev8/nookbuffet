@@ -37,7 +37,7 @@ router.get('/', upgradeController.getAllUpgrades);
 router.get('/buffet/:buffetId', upgradeController.getUpgradesForBuffet);
 
 // ===== MANAGEMENT ROUTES (protected) =====
-const mgmt = ['admin', 'manager'];
+const mgmt = ['admin'];
 
 // GET all upgrades with categories and items (for menu builder)
 router.get('/manage', verifyToken, checkRole(mgmt), upgradeController.getAllUpgradesForManagement);

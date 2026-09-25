@@ -94,7 +94,7 @@ const getMenuSectionsByBuffetVersion = async (req, res) => {
  * This is called when someone visits /api/menu/manage
  *
  * Returns all menu items with their stock status for the admin panel.
- * Only accessible by admin and manager roles.
+ * Only accessible by admins.
  *
  * @param {object} req - The request object
  * @param {object} res - The response object
@@ -126,7 +126,7 @@ const getAllMenuItemsForManagement = async (req, res) => {
  * This is called when someone makes a PATCH request to /api/menu/manage/:id
  *
  * Updates whether an item is in stock or out of stock.
- * Only accessible by admin and manager roles.
+ * Only accessible by admins.
  *
  * @param {object} req - The request object (contains item ID and new status)
  * @param {object} res - The response object
@@ -180,7 +180,7 @@ const updateMenuItemStockStatus = async (req, res) => {
 
 // ===== GET CATEGORIES FOR MANAGEMENT =====
 /**
- * Get all categories for a buffet version (protected, manager/admin only)
+ * Get all categories for a buffet version (protected, admin only)
  * GET /api/menu/manage/categories?buffet_version_id=1
  */
 const getCategoriesForManagement = async (req, res) => {
@@ -204,7 +204,7 @@ const getCategoriesForManagement = async (req, res) => {
 
 // ===== CREATE CATEGORY =====
 /**
- * Create a new menu category (protected, manager/admin only)
+ * Create a new menu category (protected, admin only)
  * POST /api/menu/manage/categories
  */
 const createCategory = async (req, res) => {
@@ -239,7 +239,7 @@ const createCategory = async (req, res) => {
 
 // ===== CREATE MENU ITEM =====
 /**
- * Create a new menu item (protected, manager/admin only)
+ * Create a new menu item (protected, admin only)
  * POST /api/menu/manage/items
  */
 const createMenuItem = async (req, res) => {
@@ -271,7 +271,7 @@ const createMenuItem = async (req, res) => {
 
 // ===== UPDATE CATEGORY =====
 /**
- * Update an existing category (protected, manager/admin only)
+ * Update an existing category (protected, admin only)
  * PATCH /api/menu/manage/categories/:id
  */
 const updateCategory = async (req, res) => {
@@ -302,7 +302,7 @@ const updateCategory = async (req, res) => {
 
 // ===== UPDATE MENU ITEM =====
 /**
- * Update an existing menu item's details (protected, manager/admin only)
+ * Update an existing menu item's details (protected, admin only)
  * PATCH /api/menu/manage/items/:id
  */
 const updateMenuItem = async (req, res) => {
@@ -353,7 +353,7 @@ const reorderCategories = async (req, res) => {
 
 // ===== DELETE CATEGORY (SOFT DELETE) =====
 /**
- * Soft-delete a category (protected, manager/admin only)
+ * Soft-delete a category (protected, admin only)
  * DELETE /api/menu/manage/categories/:id
  */
 const deleteCategory = async (req, res) => {
@@ -374,7 +374,7 @@ const deleteCategory = async (req, res) => {
 
 // ===== DELETE MENU ITEM (SOFT DELETE) =====
 /**
- * Soft-delete a menu item (protected, manager/admin only)
+ * Soft-delete a menu item (protected, admin only)
  * DELETE /api/menu/manage/items/:id
  */
 const deleteMenuItem = async (req, res) => {

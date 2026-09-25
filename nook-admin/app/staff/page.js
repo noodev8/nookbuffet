@@ -4,19 +4,18 @@ import { useCallback, useEffect, useState } from 'react';
 import AdminShell, { useAdmin } from '../components/AdminShell';
 import { formatDateTime } from '../lib/format';
 
-const MANAGERS_ONLY = ['manager'];
+const ADMINS_ONLY = ['admin'];
 
 const ROLES = [
-  { value: 'staff', label: 'Staff', help: 'orders, prep summary and marking items in or out of stock' },
-  { value: 'admin', label: 'Admin', help: 'everything staff can do, plus editing the menu, prices and upgrades' },
-  { value: 'manager', label: 'Manager', help: 'everything, including adding and removing staff' },
+  { value: 'general', label: 'General', help: 'orders and prep summary' },
+  { value: 'admin', label: 'Admin', help: 'everything, including the menu, prices, upgrades and staff accounts' },
 ];
 
-const EMPTY_FORM = { full_name: '', username: '', email: '', password: '', role: 'staff' };
+const EMPTY_FORM = { full_name: '', username: '', email: '', password: '', role: 'general' };
 
 export default function StaffPage() {
   return (
-    <AdminShell roles={MANAGERS_ONLY}>
+    <AdminShell roles={ADMINS_ONLY}>
       <StaffList />
     </AdminShell>
   );
