@@ -48,6 +48,22 @@ const readOption = (body) => {
   return { option: { name, description: body.description?.trim() || null, extra_price: extra } };
 };
 
+// ===== GET MENU (customers) =====
+// Public - what the website needs to build a sandwich. Nothing but enabled: false when switched off.
+const getMenuForCustomers = async (req, res) => {
+  try {
+    const settings = await sandwichModel.getSettings();
+    if (!settings.enabled) {
+      return res.json({ return_code: 'SUCCESS', message: 'Sandwiches are not available', data: { enabled: false, sold_out: false, steps: [] } });
+    }
+    const menu = await sandwichModel.getMenuForCustomers();
+    res.json({ return_code: 'SUCCESS', message: 'Got sandwich menu', data: { ...settings, ...menu } });
+  } catch (error) {
+    console.error('Get customer sandwich menu error:', error);
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not get the sandwich menu' });
+  }
+};
+
 // ===== GET MENU (management) =====
 const getMenuForManagement = async (req, res) => {
   try {
@@ -65,7 +81,11 @@ const updateSettings = async (req, res) => {
     const basePrice = parsePrice(req.body.base_price);
     if (basePrice === null) return res.json({ return_code: 'INVALID_DATA', message: 'base_price must be 0 or more' });
     if (typeof req.body.enabled !== 'boolean') return res.json({ return_code: 'INVALID_DATA', message: 'enabled must be true or false' });
-    const settings = await sandwichModel.updateSettings(basePrice, req.body.enabled);
+    const cutoff = req.body.cutoff_time;
+    if (cutoff !== undefined && !/^([01]\d|2[0-3]):[0-5]\d$/.test(cutoff)) {
+      return res.json({ return_code: 'INVALID_DATA', message: 'cutoff_time must be a time like 11:00' });
+    }
+    const settings = await sandwichModel.updateSettings(basePrice, req.body.enabled, cutoff);
     res.json({ return_code: 'SUCCESS', message: 'Settings saved', data: settings });
   } catch (error) {
     console.error('Update sandwich settings error:', error);
@@ -192,6 +212,7 @@ const deleteOption = async (req, res) => {
 };
 
 module.exports = {
+  getMenuForCustomers,
   getMenuForManagement,
   updateSettings,
   createStep,

@@ -35,7 +35,7 @@ describe('updateSettings', () => {
     sandwichModel.updateSettings.mockResolvedValue({ base_price: '5.50', enabled: true });
     const { req, res, getResult } = setup({ base_price: '5.499', enabled: true });
     await sandwichController.updateSettings(req, res);
-    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(5.5, true);
+    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(5.5, true, undefined); // no cutoff_time sent - left as it is
     expect(getResult().return_code).toBe('SUCCESS');
   });
 });
@@ -132,5 +132,41 @@ describe('setOptionStock', () => {
     const { req, res, getResult } = setup({ is_active: 'no' }, { id: '1' });
     await sandwichController.setOptionStock(req, res);
     expect(getResult().return_code).toBe('INVALID_DATA');
+  });
+});
+
+// ─── CUSTOMER MENU ──────────────────────────────────────────────────────────
+
+describe('getMenuForCustomers', () => {
+  test('returns nothing but enabled: false when sandwiches are switched off', async () => {
+    sandwichModel.getSettings.mockResolvedValue({ base_price: '5.00', enabled: false, cutoff_time: '11:00' });
+    const { req, res, getResult } = setup();
+    await sandwichController.getMenuForCustomers(req, res);
+    expect(getResult().data).toEqual({ enabled: false, sold_out: false, steps: [] });
+    expect(sandwichModel.getMenuForCustomers).not.toHaveBeenCalled();
+  });
+
+  test('returns the settings and in-stock menu when switched on', async () => {
+    sandwichModel.getSettings.mockResolvedValue({ base_price: '5.00', enabled: true, cutoff_time: '11:00' });
+    sandwichModel.getMenuForCustomers.mockResolvedValue({ sold_out: false, steps: [{ id: 1 }] });
+    const { req, res, getResult } = setup();
+    await sandwichController.getMenuForCustomers(req, res);
+    expect(getResult().data).toMatchObject({ enabled: true, base_price: '5.00', steps: [{ id: 1 }] });
+  });
+});
+
+describe('updateSettings cutoff_time', () => {
+  test('rejects a badly formatted cutoff time', async () => {
+    const { req, res, getResult } = setup({ base_price: 5, enabled: true, cutoff_time: '11am' });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATA');
+  });
+
+  test('saves a valid cutoff time', async () => {
+    sandwichModel.updateSettings.mockResolvedValue({ base_price: '5.00', enabled: true, cutoff_time: '11:30' });
+    const { req, res, getResult } = setup({ base_price: 5, enabled: true, cutoff_time: '11:30' });
+    await sandwichController.updateSettings(req, res);
+    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(5, true, '11:30');
+    expect(getResult().return_code).toBe('SUCCESS');
   });
 });

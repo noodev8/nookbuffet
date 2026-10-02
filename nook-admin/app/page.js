@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AdminShell, { useAdmin } from './components/AdminShell';
 import {
-  dayKey, dayLabel, isPast, formatDate, money, peopleCount, isPaid, paymentLabel, groupByCategory
+  dayKey, dayLabel, isPast, formatDate, money, orderSize, isPaid, paymentLabel, groupByCategory, describeSandwich
 } from './lib/format';
 
 export default function OrdersPage() {
@@ -85,7 +85,7 @@ function Orders() {
                     {key === 'overdue' && ` · was due ${formatDate(order.fulfillment_date)}`}
                   </span>
                 </div>
-                <span className="order-row-people">{peopleCount(order)} people</span>
+                <span className="order-row-people">{orderSize(order)}</span>
                 <span className="order-row-total">{money(order.total_price)}</span>
                 <span className={`badge ${isPaid(order) ? 'badge-paid' : 'badge-unpaid'}`}>{paymentLabel(order)}</span>
               </Link>
@@ -110,7 +110,7 @@ function PrintedOrder({ order }) {
         {order.notes && <><strong>{order.notes}</strong> · </>}
         {order.customer_email}{order.customer_phone && ` · ${order.customer_phone}`}
       </p>
-      <p>{peopleCount(order)} people · {money(order.total_price)} · {paymentLabel(order)}</p>
+      <p>{orderSize(order)} · {money(order.total_price)} · {paymentLabel(order)}</p>
       {order.staff_notes && <p><strong>Staff notes:</strong> {order.staff_notes}</p>}
 
       {(order.buffets || []).map((buffet, i) => (
@@ -128,6 +128,13 @@ function PrintedOrder({ order }) {
           {buffet.dietary_info && <p><strong>Dietary:</strong> {buffet.dietary_info}</p>}
           {buffet.allergens && <p><strong>Allergens:</strong> {buffet.allergens}</p>}
           {buffet.notes && <p><strong>Notes:</strong> {buffet.notes}</p>}
+        </div>
+      ))}
+
+      {(order.sandwiches || []).map((sandwich, i) => (
+        <div key={`s${i}`} style={{ marginTop: '0.4rem' }}>
+          <p><strong>{sandwich.quantity} × Sandwich</strong> — {describeSandwich(sandwich)}</p>
+          {sandwich.notes && <p><strong>Notes:</strong> {sandwich.notes}</p>}
         </div>
       ))}
     </div>

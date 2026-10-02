@@ -13,19 +13,23 @@ The cutoff time is stored in the database
 
 const { query } = require('../database');
 
+// "YYYY-MM-DD" for a date in the server's local time. toISOString() would give the UTC day,
+// which is the day before between midnight and 1am during BST.
+const toDateKey = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+const getConfigValue = async (key, fallback) => {
+  const result = await query('SELECT config_value FROM order_config WHERE config_key = $1', [key]);
+  return result.rows[0]?.config_value || fallback;
+};
+
 // ===== CALCULATE EARLIEST ORDER DATE =====
 // Figures out the soonest date a customer can collect their order
 // Takes into account the daily cutoff time from the database
 const calculateEarliestOrderDate = async () => {
   try {
-    // Grab the cutoff time from the database
-    const configResult = await query(
-      'SELECT config_value FROM order_config WHERE config_key = $1',
-      ['daily_cutoff_time']
-    );
-
-    // Default to 4pm if not set in database
-    const cutoffTime = configResult.rows[0]?.config_value || '16:00';
+    // Grab the cutoff time from the database, defaulting to 4pm
+    const cutoffTime = await getConfigValue('daily_cutoff_time', '16:00');
 
     // Get current time in HH:MM format 
     const now = new Date();
@@ -44,7 +48,7 @@ const calculateEarliestOrderDate = async () => {
 
     return {
       success: true,
-      earliestDate: earliestDate.toISOString().split('T')[0],  // Format as YYYY-MM-DD
+      earliestDate: toDateKey(earliestDate),  // Format as YYYY-MM-DD
       cutoffTime,
       isAfterCutoff: currentTime >= cutoffTime  // Let the frontend know if it is past cutoff
     };
@@ -58,7 +62,35 @@ const calculateEarliestOrderDate = async () => {
   }
 };
 
+// ===== CALCULATE EARLIEST SANDWICH DATE =====
+// Orders with only sandwiches (no buffets) can be collected the same day if placed before
+// the sandwich cutoff (default 11am), otherwise from tomorrow.
+const calculateEarliestSandwichDate = async () => {
+  try {
+    const cutoffTime = await getConfigValue('sandwich_cutoff_time', '11:00');
+    const now = new Date();
+    const currentTime = now.toTimeString().slice(0, 5);
+    const isAfterCutoff = currentTime >= cutoffTime;
+
+    const earliestDate = new Date();
+    if (isAfterCutoff) earliestDate.setDate(earliestDate.getDate() + 1);
+
+    return {
+      success: true,
+      earliestDate: toDateKey(earliestDate),
+      today: toDateKey(now),
+      currentTime,
+      cutoffTime,
+      isAfterCutoff
+    };
+  } catch (error) {
+    console.error('Error calculating earliest sandwich date:', error);
+    return { success: false, error: 'Unable to calculate earliest sandwich date' };
+  }
+};
+
 // ===== EXPORTS =====
 module.exports = {
-  calculateEarliestOrderDate
+  calculateEarliestOrderDate,
+  calculateEarliestSandwichDate
 };

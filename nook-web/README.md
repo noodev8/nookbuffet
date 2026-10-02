@@ -5,7 +5,7 @@ The customer-facing website for Nook Buffet. This is what customers use to brows
 
 WHAT IT DOES
 
-Lets customers pick a buffet, choose their food, add upgrades, and check out. They can create an account to view their order history and reorder.
+Lets customers pick a buffet, choose their food, add upgrades, and check out. They can also build their own sandwich (bread, fillings, sauce...) on its own or alongside buffets. Sandwich-only orders can be collected the same day if placed before the sandwich cutoff (11:00 by default, set in the admin portal); the sandwich options only appear when staff have switched sandwiches on. They can create an account to view their order history and reorder.
 
 No payment is taken online. Customers pay on collection. Every order goes through as unpaid, and staff mark it paid in the admin portal once the customer has paid.
 
@@ -42,7 +42,8 @@ PAGES
   /select-buffet    - Pick a buffet type
   /order            - Build your buffet — choose items per category
   /upgrade          - Add upgrade packages to your order
-  /basket           - Review everything and pick a collection date
+  /sandwiches       - Build your own sandwich and add it to the basket
+  /basket           - Review everything and pick a collection date (and time, for sandwiches)
   /checkout         - Confirm details and place the order (unpaid)
   /checkout/success - Order confirmed page
   /account          - Order history, reorder, and profile

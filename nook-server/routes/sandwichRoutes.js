@@ -2,7 +2,7 @@
 =======================================================================================================================================
 SANDWICH ROUTES - API endpoints for the build-your-own sandwich menu
 =======================================================================================================================================
-All routes are admin only. Every response has a return_code; errors also have a message.
+GET /api/sandwiches is public; everything under /manage is admin only. Every response has a return_code; errors also have a message.
 Common return codes: SUCCESS, INVALID_ID, INVALID_DATA, NOT_FOUND, UNAUTHORIZED, FORBIDDEN, SERVER_ERROR
 
 A step looks like:
@@ -28,13 +28,21 @@ An option looks like:
 
 ENDPOINTS:
 
+0. GET /api/sandwiches
+   Purpose: The sandwich menu for the website - in-stock options only (public)
+   Success Response: { return_code, data: { enabled: true, base_price: "5.00", cutoff_time: "11:00", sold_out: false, steps: [...] } }
+   When sandwiches are switched off: data is { enabled: false, sold_out: false, steps: [] }
+   sold_out is true when a required step has nothing in stock (steps is then empty)
+
 1. GET /api/sandwiches/manage
    Purpose: The whole sandwich menu for the admin portal, including out-of-stock options
    Success Response: { return_code, data: { settings: { base_price: "5.00", enabled: false }, steps: [...] } }
 
 2. PATCH /api/sandwiches/manage/settings
-   Request Body: { "base_price": 5.00, "enabled": true }   // number >= 0, boolean - both required
-   Success Response: { return_code, data: { base_price, enabled } }
+   Request Body: { "base_price": 5.00, "enabled": true, "cutoff_time": "11:00" }
+     base_price (number >= 0) and enabled (boolean) are required. cutoff_time ("HH:MM") is optional -
+     sandwich-only orders placed before it can be collected the same day.
+   Success Response: { return_code, data: { base_price, enabled, cutoff_time } }
 
 3. POST /api/sandwiches/manage/steps
    Request Body: { "name": "Bread", "description": null, "min_choices": 1, "max_choices": 1 }
@@ -75,6 +83,7 @@ const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
 const admin = [verifyToken, checkRole(['admin'])];
 
+router.get('/', sandwichController.getMenuForCustomers);
 router.get('/manage', admin, sandwichController.getMenuForManagement);
 router.patch('/manage/settings', admin, sandwichController.updateSettings);
 

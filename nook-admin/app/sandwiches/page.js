@@ -133,10 +133,10 @@ function SettingsCard({ settings, setSettings, showToast }) {
     setEditing(false);
     showToast('Settings saved');
   });
-  const [form, setForm] = useState({ price: '', enabled: false });
+  const [form, setForm] = useState({ price: '', enabled: false, cutoff: '' });
 
   const startEditing = () => {
-    setForm({ price: parseFloat(settings.base_price).toFixed(2), enabled: settings.enabled });
+    setForm({ price: parseFloat(settings.base_price).toFixed(2), enabled: settings.enabled, cutoff: settings.cutoff_time });
     setFormError('');
     setEditing(true);
   };
@@ -145,7 +145,11 @@ function SettingsCard({ settings, setSettings, showToast }) {
     e.preventDefault();
     const price = parseFloat(form.price);
     if (isNaN(price) || price < 0) return setFormError('Enter the price of a sandwich before extras, e.g. 5.00');
-    save(() => api('/api/sandwiches/manage/settings', { method: 'PATCH', body: { base_price: price, enabled: form.enabled } }));
+    if (!form.cutoff) return setFormError('Enter the same-day cutoff time, e.g. 11:00');
+    save(() => api('/api/sandwiches/manage/settings', {
+      method: 'PATCH',
+      body: { base_price: price, enabled: form.enabled, cutoff_time: form.cutoff }
+    }));
   };
 
   if (editing) {
@@ -159,6 +163,12 @@ function SettingsCard({ settings, setSettings, showToast }) {
             <input id="base-price" className="input" type="number" step="0.01" min="0" value={form.price}
               onChange={e => setForm(p => ({ ...p, price: e.target.value }))} autoFocus />
             <span className="field-hint">What a sandwich costs before any extras</span>
+          </div>
+          <div className="field">
+            <label htmlFor="cutoff-time">Same-day cutoff</label>
+            <input id="cutoff-time" className="input" type="time" value={form.cutoff}
+              onChange={e => setForm(p => ({ ...p, cutoff: e.target.value }))} />
+            <span className="field-hint">Sandwich orders placed before this can be collected the same day</span>
           </div>
           <div className="field" style={{ justifyContent: 'center' }}>
             <label className="check">
@@ -180,11 +190,12 @@ function SettingsCard({ settings, setSettings, showToast }) {
       <div className="card-head" style={{ marginBottom: 0 }}>
         <div>
           <p className="price-line"><strong>{money(settings.base_price)}</strong> per sandwich, plus extras</p>
+          <p className="card-sub">Order before {settings.cutoff_time} to collect the same day</p>
           <span className={`badge ${settings.enabled ? 'badge-paid' : 'badge-unpaid'}`}>
             {settings.enabled ? 'Taking sandwich orders' : 'Not taking sandwich orders'}
           </span>
         </div>
-        <button className="btn" onClick={startEditing}>Edit price / on-off</button>
+        <button className="btn" onClick={startEditing}>Edit settings</button>
       </div>
     </div>
   );

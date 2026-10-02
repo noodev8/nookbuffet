@@ -33,16 +33,29 @@ const getMenuForManagement = async () => {
   return steps;
 };
 
-// ===== SETTINGS (base price, on/off) =====
+// ===== THE SANDWICH MENU CUSTOMERS SEE =====
+// Only in-stock options. Optional steps with nothing in stock are left out. If a required
+// step has nothing in stock no sandwich can be built, so sold_out is set instead.
+const getMenuForCustomers = async () => {
+  const steps = await getMenuForManagement();
+  const available = steps
+    .map(step => ({ ...step, options: step.options.filter(o => o.is_active) }))
+    .filter(step => step.options.length > 0 || step.min_choices > 0);
+  const soldOut = available.some(step => step.options.length < step.min_choices);
+  return { steps: soldOut ? [] : available, sold_out: soldOut };
+};
+
+// ===== SETTINGS (base price, on/off, same-day cutoff) =====
 const getSettings = async () => {
   const result = await query(
     `SELECT config_key, config_value FROM order_config
-     WHERE config_key IN ('sandwich_base_price', 'sandwiches_enabled')`
+     WHERE config_key IN ('sandwich_base_price', 'sandwiches_enabled', 'sandwich_cutoff_time')`
   );
   const config = Object.fromEntries(result.rows.map(r => [r.config_key, r.config_value]));
   return {
     base_price: config.sandwich_base_price ?? '0.00',
     enabled: config.sandwiches_enabled === 'true',
+    cutoff_time: config.sandwich_cutoff_time ?? '11:00',
   };
 };
 
@@ -60,9 +73,13 @@ const setConfig = async (key, value, description) => {
   }
 };
 
-const updateSettings = async (basePrice, enabled) => {
+// cutoffTime is optional ("HH:MM") - left as it is when not given
+const updateSettings = async (basePrice, enabled, cutoffTime) => {
   await setConfig('sandwich_base_price', basePrice.toFixed(2), 'Price of a sandwich before any extras');
   await setConfig('sandwiches_enabled', enabled ? 'true' : 'false', 'Whether customers can order sandwiches on the website');
+  if (cutoffTime) {
+    await setConfig('sandwich_cutoff_time', cutoffTime, 'Order sandwiches before this time to collect them the same day');
+  }
   return getSettings();
 };
 
@@ -142,6 +159,7 @@ const deleteOption = async (id) => {
 
 module.exports = {
   getMenuForManagement,
+  getMenuForCustomers,
   getSettings,
   updateSettings,
   createStep,

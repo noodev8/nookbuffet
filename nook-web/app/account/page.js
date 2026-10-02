@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { describeSandwich } from '../lib/basket';
 import './account.css';
 
 const EMPTY_CUSTOMER = {
@@ -71,9 +72,16 @@ export default function AccountPage() {
       .finally(() => setOrdersLoading(false));
   }, [router]);
 
+  // Turns a saved sandwich's options back into the basket's picks
+  const sandwichPicks = (sandwich) => sandwich.options.map(o => ({
+    stepName: o.step_name,
+    optionName: o.option_name,
+    extraPrice: parseFloat(o.extra_price)
+  }));
+
   const handleReorder = (order) => {
     // Convert each buffet from the old order into the basket format
-    const basketItems = order.buffets.map(buffet => ({
+    const buffetItems = order.buffets.map(buffet => ({
       buffetVersionId: buffet.buffet_version_id,
       buffetName: buffet.buffet_name,
       numPeople: buffet.num_people,
@@ -93,7 +101,19 @@ export default function AccountPage() {
       timestamp: new Date().toISOString()
     }));
 
-    localStorage.setItem('basketData', JSON.stringify(basketItems));
+    // Sandwiches keep their old prices here - the server prices them again from today's menu,
+    // and turns away anything that is no longer available
+    const sandwichItems = (order.sandwiches || []).map(sandwich => ({
+      type: 'sandwich',
+      quantity: sandwich.quantity,
+      optionIds: sandwich.options.map(o => o.sandwich_option_id),
+      picks: sandwichPicks(sandwich),
+      unitPrice: parseFloat(sandwich.unit_price),
+      totalPrice: parseFloat(sandwich.subtotal),
+      notes: sandwich.notes || ''
+    }));
+
+    localStorage.setItem('basketData', JSON.stringify([...buffetItems, ...sandwichItems]));
     router.push('/basket');
   };
 
@@ -193,7 +213,7 @@ export default function AccountPage() {
             ) : orders.length === 0 ? (
               <div className="account-empty">
                 <p>You haven&apos;t placed any orders yet.</p>
-                <Link href="/select-buffet" className="account-cta-button">Order a Buffet</Link>
+                <Link href="/select-buffet" className="account-cta-button">Start an Order</Link>
               </div>
             ) : (
               <div className="orders-list">
@@ -213,13 +233,21 @@ export default function AccountPage() {
                         <span className="order-total">£{parseFloat(order.total_price).toFixed(2)}</span>
                       </div>
                       <div className="order-card-body">
-                        <div className="order-detail-row">
-                          <span className="order-detail-label">Buffet</span>
-                          <span>{order.buffets.map(b => `${b.buffet_name} (${b.num_people} people)`).join(', ')}</span>
-                        </div>
+                        {order.buffets.length > 0 && (
+                          <div className="order-detail-row">
+                            <span className="order-detail-label">Buffet</span>
+                            <span>{order.buffets.map(b => `${b.buffet_name} (${b.num_people} people)`).join(', ')}</span>
+                          </div>
+                        )}
+                        {(order.sandwiches || []).map(sandwich => (
+                          <div key={sandwich.id} className="order-detail-row">
+                            <span className="order-detail-label">{sandwich.quantity} × Sandwich</span>
+                            <span>{describeSandwich(sandwichPicks(sandwich))}</span>
+                          </div>
+                        ))}
                         <div className="order-detail-row">
                           <span className="order-detail-label">Date</span>
-                          <span>{fulfilmentDate}</span>
+                          <span>{fulfilmentDate}{order.fulfillment_time ? ` at ${order.fulfillment_time}` : ''}</span>
                         </div>
                         <div className="order-detail-row">
                           <span className="order-detail-label">Type</span>

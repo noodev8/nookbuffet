@@ -4,14 +4,51 @@ ORDER MODEL - Database queries for orders
 =======================================================================================================================================
 This model handles all order-related database operations.
 
-The order structure has 3 tables:
+The order structure has these tables:
 1. orders - Main order info (customer, fulfillment, total price)
 2. order_buffets - Each buffet in the order (people count, dietary info, etc.)
 3. order_items - Individual menu items selected for each buffet
+4. order_sandwiches - Each build-your-own sandwich in the order (quantity, price)
+5. order_sandwich_options - What was picked for each sandwich
 =======================================================================================================================================
 */
 
 const { query, getClient } = require('../database');
+
+// The sandwiches in an order as a JSON array, each with the options picked. Used by every
+// query that returns orders, alongside the buffets.
+const SANDWICHES_JSON = `
+      COALESCE(
+        (
+          SELECT JSON_AGG(
+            JSON_BUILD_OBJECT(
+              'id', os.id,
+              'quantity', os.quantity,
+              'unit_price', os.unit_price,
+              'subtotal', os.subtotal,
+              'notes', os.notes,
+              'options', COALESCE(
+                (
+                  SELECT JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                      'sandwich_option_id', oso.sandwich_option_id,
+                      'step_name', oso.step_name,
+                      'option_name', oso.option_name,
+                      'extra_price', oso.extra_price
+                    ) ORDER BY oso.position
+                  )
+                  FROM order_sandwich_options oso
+                  WHERE oso.order_sandwich_id = os.id
+                ),
+                '[]'::json
+              )
+            ) ORDER BY os.id
+          )
+          FROM order_sandwiches os
+          WHERE os.order_id = o.id
+        ),
+        '[]'::json
+      ) as sandwiches`;
 
 // ===== CREATE A NEW ORDER =====
 /**
@@ -54,7 +91,7 @@ const createOrder = async (orderData) => {
       orderData.email,
       orderData.phone,
       orderData.fulfillmentType,
-      orderData.address,
+      orderData.address?.trim() || null, // sandwich-only orders don't ask for an address
       orderData.fulfillmentDate || null,
       orderData.fulfillmentTime || null,
       orderData.totalPrice,
@@ -195,6 +232,26 @@ const createOrder = async (orderData) => {
       }
     }
     
+    // Insert each sandwich and the options picked for it.
+    // These have already been checked and priced by the controller (utils/sandwichOrder.js)
+    for (const sandwich of orderData.sandwiches || []) {
+      const sandwichResult = await client.query(
+        `INSERT INTO order_sandwiches (order_id, quantity, unit_price, subtotal, notes)
+         VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+        [orderId, sandwich.quantity, sandwich.unitPrice, sandwich.subtotal, sandwich.notes]
+      );
+      const orderSandwichId = sandwichResult.rows[0].id;
+
+      for (const option of sandwich.options) {
+        await client.query(
+          `INSERT INTO order_sandwich_options
+             (order_sandwich_id, order_id, sandwich_option_id, step_name, option_name, extra_price, position)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [orderSandwichId, orderId, option.optionId, option.stepName, option.optionName, option.extraPrice, option.position]
+        );
+      }
+    }
+
     // Commit the transaction - save everything
     await client.query('COMMIT');
     
@@ -304,7 +361,8 @@ const getAllOrders = async () => {
           WHERE ob.order_id = o.id
         ),
         '[]'::json
-      ) as buffets
+      ) as buffets,
+${SANDWICHES_JSON}
 
     FROM orders o
     WHERE o.status NOT IN ('completed', 'cancelled')
@@ -433,7 +491,8 @@ const getOrderById = async (orderId) => {
           WHERE ob.order_id = o.id
         ),
         '[]'::json
-      ) as buffets
+      ) as buffets,
+${SANDWICHES_JSON}
 
     FROM orders o
     WHERE o.id = $1
@@ -529,7 +588,8 @@ const getOrdersByCustomerId = async (customerId, customerEmail) => {
           WHERE ob.order_id = o.id
         ),
         '[]'::json
-      ) as buffets
+      ) as buffets,
+${SANDWICHES_JSON}
 
     FROM orders o
     WHERE o.customer_id = $1

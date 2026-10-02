@@ -9,10 +9,23 @@ import './page.css';
 const CONFIG = {
   hero: {
     title: 'THE LITTLE NOOK BUFFET',
-    description: 'Crafting exceptional workplace dining experiences with fresh, customizable sandwich buffets',
-    ctaText: 'Start Your Order',
-    ctaLink: '/select-buffet',
+    description: 'Fresh sandwiches made your way, and buffets for the whole office',
+    choicesTitle: 'What would you like to order?',
     backgroundImage: '/assets/nook.jpg',
+  },
+  // The two ways to order, sandwich first. The sandwich one only shows when sandwiches are switched on.
+  choices: {
+    sandwich: {
+      title: 'Order a Sandwich',
+      link: '/sandwiches',
+      button: 'Build a Sandwich',
+    },
+    buffet: {
+      title: 'Order a Buffet',
+      text: 'Sandwich buffets for 5 or more people, ready for next-day collection.',
+      link: '/select-buffet',
+      button: 'Choose a Buffet',
+    },
   },
   infoCards: [
     {
@@ -60,6 +73,18 @@ export default function Home() {
   const heroSectionRef = useRef(null);
   const router = useRouter();
   const [hasBasket, setHasBasket] = useState(getInitialBasketState);
+  const [sandwichMenu, setSandwichMenu] = useState(null);
+
+  // Only offer sandwiches when staff have switched them on in the admin portal
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+    fetch(`${apiUrl}/api/sandwiches`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.return_code === 'SUCCESS' && data.data.enabled && !data.data.sold_out) setSandwichMenu(data.data);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -107,9 +132,24 @@ export default function Home() {
             <p className="hero-description">
               {CONFIG.hero.description}
             </p>
-            <Link href={CONFIG.hero.ctaLink} className="cta-button">
-              {CONFIG.hero.ctaText}
-            </Link>
+            <h2 className="order-choices-title">{CONFIG.hero.choicesTitle}</h2>
+            <div className={`order-choices${sandwichMenu ? '' : ' single'}`}>
+              {sandwichMenu && (
+                <Link href={CONFIG.choices.sandwich.link} className="order-choice order-choice-primary">
+                  <span className="order-choice-title">{CONFIG.choices.sandwich.title}</span>
+                  <span className="order-choice-text">
+                    Build your own for lunch from £{parseFloat(sandwichMenu.base_price).toFixed(2)}.
+                    Order by {sandwichMenu.cutoff_time} to collect today.
+                  </span>
+                  <span className="order-choice-button">{CONFIG.choices.sandwich.button} →</span>
+                </Link>
+              )}
+              <Link href={CONFIG.choices.buffet.link} className="order-choice">
+                <span className="order-choice-title">{CONFIG.choices.buffet.title}</span>
+                <span className="order-choice-text">{CONFIG.choices.buffet.text}</span>
+                <span className="order-choice-button">{CONFIG.choices.buffet.button} →</span>
+              </Link>
+            </div>
           </div>
         </div>
 

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import AdminShell, { useAdmin } from '../../components/AdminShell';
 import {
-  formatDate, formatDateTime, money, peopleCount, isPaid, paymentLabel, groupByCategory
+  formatDate, formatDateTime, money, orderSize, isPaid, paymentLabel, groupByCategory
 } from '../../lib/format';
 
 export default function OrderPage() {
@@ -108,7 +108,7 @@ function OrderDetails() {
           </h1>
           <p className="page-sub">
             Collect <strong>{formatDate(order.fulfillment_date)}{order.fulfillment_time ? ` at ${order.fulfillment_time}` : ''}</strong>
-            {' · '}{peopleCount(order)} people · {money(order.total_price)}
+            {' · '}{orderSize(order)} · {money(order.total_price)}
           </p>
         </div>
       </div>
@@ -142,7 +142,7 @@ function OrderDetails() {
       <div className="card">
         <h2 className="card-title" style={{ marginBottom: '0.75rem' }}>Customer</h2>
         <div className="detail-grid">
-          <Detail label="Business" value={order.notes || '—'} />
+          <Detail label={(order.buffets || []).length > 0 ? 'Business' : 'Name'} value={order.notes || '—'} />
           <Detail label="Email" value={<a href={`mailto:${order.customer_email}`}>{order.customer_email}</a>} />
           <Detail label="Phone" value={order.customer_phone ? <a href={`tel:${order.customer_phone}`}>{order.customer_phone}</a> : '—'} />
           <Detail label="Address" value={order.fulfillment_address || '—'} />
@@ -201,6 +201,26 @@ function OrderDetails() {
           ))}
         </div>
       ))}
+
+      {(order.sandwiches || []).length > 0 && (
+        <div className="card">
+          <h2 className="card-title">Sandwiches</h2>
+          {order.sandwiches.map(sandwich => (
+            <div key={sandwich.id} className="upgrade-box">
+              <strong>{sandwich.quantity} × Sandwich</strong> — {sandwich.quantity} × {money(sandwich.unit_price)} = {money(sandwich.subtotal)}
+              <ul className="item-list">
+                {sandwich.options.map((option, i) => (
+                  <li key={i}>
+                    {option.step_name}: {option.option_name}
+                    {parseFloat(option.extra_price) > 0 && ` (+${money(option.extra_price)})`}
+                  </li>
+                ))}
+              </ul>
+              {sandwich.notes && <div className="note-box"><strong>Notes:</strong> {sandwich.notes}</div>}
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

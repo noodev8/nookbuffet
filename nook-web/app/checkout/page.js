@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useMemo, Suspense } from 'react';
+import { isSandwich, money, describeSandwich } from '../lib/basket';
 import './checkout.css';
 
 function CheckoutContent() {
@@ -21,6 +22,10 @@ function CheckoutContent() {
       return [];
     }
   }, [ordersParam]);
+
+  const buffets = orders.filter(order => !isSandwich(order));
+  const sandwiches = orders.filter(isSandwich);
+  const grandTotal = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
 
   const [loading, setLoading] = useState(false);
   const [orderError, setOrderError] = useState('');
@@ -44,9 +49,15 @@ function CheckoutContent() {
         address: orders[0]?.address || '',
         fulfillmentType: 'collection',
         fulfillmentDate: orders[0]?.fulfillmentDate || '',
-        totalPrice: orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0),
+        fulfillmentTime: orders[0]?.fulfillmentTime || '',
+        totalPrice: grandTotal, // the server works the total out again
         customerId,
-        buffets: orders.map(order => ({
+        sandwiches: sandwiches.map(sandwich => ({
+          quantity: sandwich.quantity,
+          optionIds: sandwich.optionIds,
+          notes: sandwich.notes || ''
+        })),
+        buffets: buffets.map(order => ({
           buffetVersionId: order.buffetVersionId,
           numPeople: order.numPeople,
           pricePerPerson: order.pricePerPerson,
@@ -98,9 +109,9 @@ function CheckoutContent() {
           </div> */}
 
           <div className="checkout-section">
-            <h2 className="checkout-section-title">Order Summary ({orders.length} buffet{orders.length !== 1 ? 's' : ''})</h2>
+            <h2 className="checkout-section-title">Order Summary ({orders.length} item{orders.length !== 1 ? 's' : ''})</h2>
             <div className="checkout-orders-list">
-              {orders.map((order, index) => (
+              {buffets.map((order, index) => (
                 <div key={index} className="checkout-order-item">
                   <div className="checkout-order-header">
                     <span className="checkout-order-number">{order.buffetName || `Buffet #${index + 1}`}</span>
@@ -126,30 +137,43 @@ function CheckoutContent() {
                   </div>
                 </div>
               ))}
+              {sandwiches.map((sandwich, index) => (
+                <div key={`sandwich-${index}`} className="checkout-order-item">
+                  <div className="checkout-order-header">
+                    <span className="checkout-order-number">Sandwich</span>
+                    <span className="checkout-order-people">× {sandwich.quantity}</span>
+                  </div>
+                  <div className="checkout-order-details">
+                    <span>{describeSandwich(sandwich.picks)}</span>
+                    {sandwich.notes && <span>Notes: {sandwich.notes}</span>}
+                    <span className="checkout-order-price">Total: {money(sandwich.totalPrice)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
             {orders.length > 0 && (
               <div className="checkout-grand-total">
                 <span>Grand Total:</span>
-                <span className="checkout-grand-total-value">
-                  £{orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0).toFixed(2)}
-                </span>
+                <span className="checkout-grand-total-value">{money(grandTotal)}</span>
               </div>
             )}
           </div>
 
-          {/* Business details - only shown if they have orders and a business name */}
+          {/* Customer details - only shown if they have orders and a name */}
           {orders.length > 0 && orders[0].businessName && (
             <div className="checkout-section">
-              <h2 className="checkout-section-title">Business Details</h2>
+              <h2 className="checkout-section-title">{buffets.length > 0 ? 'Business Details' : 'Your Details'}</h2>
               <div className="checkout-details-display">
                 <div className="detail-row">
-                  <span className="detail-label">Business:</span>
+                  <span className="detail-label">{buffets.length > 0 ? 'Business:' : 'Name:'}</span>
                   <span className="detail-value">{orders[0].businessName}</span>
                 </div>
-                <div className="detail-row">
-                  <span className="detail-label">Address:</span>
-                  <span className="detail-value">{orders[0].address}</span>
-                </div>
+                {orders[0].address && (
+                  <div className="detail-row">
+                    <span className="detail-label">Address:</span>
+                    <span className="detail-value">{orders[0].address}</span>
+                  </div>
+                )}
                 <div className="detail-row">
                   <span className="detail-label">Email:</span>
                   <span className="detail-value">{orders[0].email}</span>
@@ -166,6 +190,12 @@ function CheckoutContent() {
                   <span className="detail-label">Date:</span>
                   <span className="detail-value">{orders[0].fulfillmentDate}</span>
                 </div>
+                {orders[0].fulfillmentTime && (
+                  <div className="detail-row">
+                    <span className="detail-label">Time:</span>
+                    <span className="detail-value">{orders[0].fulfillmentTime}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -189,7 +219,7 @@ function CheckoutContent() {
               disabled={loading || orders.length === 0}
               style={{ width: '100%', marginTop: '1.5rem' }}
             >
-              {loading ? 'Placing Order...' : `Place Order (£${orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0).toFixed(2)})`}
+              {loading ? 'Placing Order...' : `Place Order (${money(grandTotal)})`}
             </button>
           </div>
 

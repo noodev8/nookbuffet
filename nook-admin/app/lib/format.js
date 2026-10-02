@@ -42,6 +42,30 @@ export const money = (value) => `£${parseFloat(value || 0).toFixed(2)}`;
 export const peopleCount = (order) =>
   (order.buffets || []).reduce((sum, b) => sum + (b.num_people || 0), 0);
 
+export const sandwichCount = (order) =>
+  (order.sandwiches || []).reduce((sum, s) => sum + (s.quantity || 0), 0);
+
+// "12 people", "3 sandwiches" or "12 people · 3 sandwiches"
+export const orderSize = (order) => {
+  const parts = [];
+  const people = peopleCount(order);
+  const sandwiches = sandwichCount(order);
+  if (people > 0 || sandwiches === 0) parts.push(`${people} people`);
+  if (sandwiches > 0) parts.push(`${sandwiches} sandwich${sandwiches !== 1 ? 'es' : ''}`);
+  return parts.join(' · ');
+};
+
+// "Bread: White · Fillings: Ham, Cheese"
+export const describeSandwich = (sandwich) => {
+  const byStep = [];
+  for (const option of sandwich.options || []) {
+    const last = byStep[byStep.length - 1];
+    if (last && last.step === option.step_name) last.names.push(option.option_name);
+    else byStep.push({ step: option.step_name, names: [option.option_name] });
+  }
+  return byStep.map(s => `${s.step}: ${s.names.join(', ')}`).join(' · ');
+};
+
 // No payment is taken online, so every order starts unpaid until staff mark it paid.
 // 'waived' only appears on older orders placed through the old staff skip-payment option.
 export const isPaid = (order) => order.payment_status === 'paid' || order.payment_status === 'waived';

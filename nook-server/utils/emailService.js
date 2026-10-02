@@ -27,7 +27,7 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
     let buffetsHtml = '';
     let buffetNumber = 1;
 
-    for (const buffet of orderData.buffets) {
+    for (const buffet of orderData.buffets || []) {
       // Fetch item details from database 
       let itemDetails = buffet.itemDetails || [];
       if (buffet.items && buffet.items.length > 0 && itemDetails.length === 0) {
@@ -85,6 +85,24 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
       buffetNumber++;
     }
 
+    // Build the sandwiches HTML section (already checked and priced by the controller)
+    let sandwichesHtml = '';
+    for (const sandwich of orderData.sandwiches || []) {
+      const picks = sandwich.options.map(o => `${o.stepName}: ${o.optionName}`).join('<br>');
+      sandwichesHtml += `
+        <div style="background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+          <h3 style="margin: 0 0 10px 0; color: #1a1a1a; font-size: 16px;">
+            ${sandwich.quantity} × Sandwich
+          </h3>
+          <div style="color: #333;">${picks}</div>
+          ${sandwich.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${sandwich.notes}</div>` : ''}
+          <div style="margin-top: 10px; font-weight: bold; color: #1a1a1a;">
+            Subtotal: £${sandwich.subtotal.toFixed(2)}
+          </div>
+        </div>
+      `;
+    }
+
     // Format collection info
     const fulfillmentText = 'Collection';
     const dateText = orderData.fulfillmentDate || 'TBC';
@@ -130,7 +148,7 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
                 </tr>
                 ${orderData.businessName ? `
                 <tr>
-                  <td style="padding: 8px 0; color: #666;">Business:</td>
+                  <td style="padding: 8px 0; color: #666;">${orderData.buffets.length > 0 ? 'Business' : 'Name'}:</td>
                   <td style="padding: 8px 0; font-weight: bold;">${orderData.businessName}</td>
                 </tr>
                 ` : ''}
@@ -141,6 +159,7 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
                 Your Order
               </h2>
               ${buffetsHtml}
+              ${sandwichesHtml}
 
               <!-- Total -->
               <div style="background: #1a1a1a; color: white; padding: 20px; border-radius: 8px; text-align: right; margin-top: 20px;">

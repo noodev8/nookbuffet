@@ -56,8 +56,18 @@ ENDPOINTS:
          "dietaryInfo": "Vegetarian",
          "allergens": "Dairy"
        }
+     ],
+     "sandwiches": [
+       { "quantity": 2, "optionIds": [3, 8, 12], "notes": "Cut in half" }
      ]
    }
+   An order needs at least one buffet or one sandwich. buffets and sandwiches may each be left out.
+   - address is only required when there are buffets
+   - with sandwiches, fulfillmentTime ("HH:MM") is required
+   - sandwiches are priced on the server from the current menu, and totalPrice is worked out
+     on the server too (buffet totals + sandwich totals) - the totalPrice sent is ignored
+   - sandwich-only orders can be collected the same day if placed before sandwich_cutoff_time;
+     anything with a buffet follows the usual daily_cutoff_time rule
    Success Response:
    {
      "return_code": "SUCCESS",
@@ -68,7 +78,15 @@ ENDPOINTS:
        "createdAt": "2024-01-15T10:30:00Z"
      }
    }
-   Return Codes: SUCCESS, VALIDATION_ERROR, SERVER_ERROR
+   Return Codes: SUCCESS, VALIDATION_ERROR, INVALID_DATE, SANDWICHES_UNAVAILABLE, SERVER_ERROR
+
+   Orders returned by GET also have "sandwiches": [{ id, quantity, unit_price, subtotal, notes,
+   options: [{ sandwich_option_id, step_name, option_name, extra_price }] }]
+
+3. GET /api/orders/earliest-date
+   Purpose: Earliest collection dates (public)
+   Success Response: { return_code, data: { earliestDate, cutoffTime, isAfterCutoff,
+     sandwiches: { earliestDate, today, cutoffTime, isAfterCutoff } } }
 
 =======================================================================================================================================
 */

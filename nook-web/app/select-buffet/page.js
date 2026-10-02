@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import './select-buffet.css';
 
@@ -9,9 +10,18 @@ export default function SelectBuffetPage() {
   const [buffetVersions, setBuffetVersions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sandwichMenu, setSandwichMenu] = useState(null);
 
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+
+    // Offer sandwiches too, if staff have switched them on
+    fetch(`${apiUrl}/api/sandwiches`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.return_code === 'SUCCESS' && data.data.enabled && !data.data.sold_out) setSandwichMenu(data.data);
+      })
+      .catch(() => {});
 
     fetch(`${apiUrl}/api/buffet-versions`)
       .then(res => res.json())
@@ -43,6 +53,18 @@ export default function SelectBuffetPage() {
             <strong>BETA VERSION - TESTING ONLY</strong>
             <p>This is a test version of our ordering system. No real orders will be processed and no payments will be charged.</p>
           </div> */}
+
+          {sandwichMenu && (
+            <div className="sandwich-offer">
+              <div>
+                <h2 className="sandwich-offer-title">Just want a sandwich?</h2>
+                <p className="sandwich-offer-text">
+                  Build your own from £{parseFloat(sandwichMenu.base_price).toFixed(2)}. Order before {sandwichMenu.cutoff_time} to collect it today.
+                </p>
+              </div>
+              <Link href="/sandwiches" className="sandwich-offer-button">Build a Sandwich</Link>
+            </div>
+          )}
 
           {loading && (
             <div className="loading-state">

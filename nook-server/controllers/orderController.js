@@ -7,7 +7,9 @@ This file handles requests for creating new orders.
 */
 
 const orderModel = require('../models/orderModel');
-const { calculateEarliestOrderDate } = require('../utils/orderDateCalculator');
+const sandwichModel = require('../models/sandwichModel');
+const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
+const { checkSandwiches } = require('../utils/sandwichOrder');
 const { sendOrderConfirmationEmail } = require('../utils/emailService');
 
 // ===== CREATE A NEW ORDER =====
@@ -53,29 +55,33 @@ const createOrder = async (req, res) => {
       });
     }
 
-    if (!orderData.address || !orderData.address.trim()) {
+    // An order can have buffets, sandwiches, or both
+    const buffets = orderData.buffets ?? [];
+    const rawSandwiches = orderData.sandwiches ?? [];
+    if (!Array.isArray(buffets) || !Array.isArray(rawSandwiches)) {
+      return res.json({
+        return_code: 'VALIDATION_ERROR',
+        message: 'buffets and sandwiches must be arrays'
+      });
+    }
+
+    if (buffets.length === 0 && rawSandwiches.length === 0) {
+      return res.json({
+        return_code: 'VALIDATION_ERROR',
+        message: 'Your order is empty'
+      });
+    }
+
+    // Business address is only asked for on buffet orders
+    if (buffets.length > 0 && (!orderData.address || !orderData.address.trim())) {
       return res.json({
         return_code: 'VALIDATION_ERROR',
         message: 'Address is required'
       });
     }
 
-    if (!orderData.buffets || !Array.isArray(orderData.buffets) || orderData.buffets.length === 0) {
-      return res.json({
-        return_code: 'VALIDATION_ERROR',
-        message: 'At least one buffet is required'
-      });
-    }
-
-    if (!orderData.totalPrice || orderData.totalPrice <= 0) {
-      return res.json({
-        return_code: 'VALIDATION_ERROR',
-        message: 'Valid total price is required'
-      });
-    }
-
     // Validate each buffet
-    for (const buffet of orderData.buffets) {
+    for (const buffet of buffets) {
       if (!buffet.buffetVersionId || !buffet.numPeople || !buffet.pricePerPerson || !buffet.totalPrice) {
         return res.json({
           return_code: 'VALIDATION_ERROR',
@@ -99,8 +105,47 @@ const createOrder = async (req, res) => {
       }
     }
 
-    // Validate the collection date against cutoff rules
-    const dateValidation = await calculateEarliestOrderDate();
+    // Sandwiches are checked and priced from the current menu, not from what the browser sent
+    let sandwiches = [];
+    let sandwichTotal = 0;
+    if (rawSandwiches.length > 0) {
+      if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(orderData.fulfillmentTime || '')) {
+        return res.json({
+          return_code: 'VALIDATION_ERROR',
+          message: 'Please choose a collection time for your sandwiches'
+        });
+      }
+
+      const settings = await sandwichModel.getSettings();
+      const menu = settings.enabled ? await sandwichModel.getMenuForCustomers() : null;
+      if (!menu || menu.sold_out) {
+        return res.json({
+          return_code: 'SANDWICHES_UNAVAILABLE',
+          message: 'Sorry, sandwiches are not available to order right now'
+        });
+      }
+
+      const checked = checkSandwiches(rawSandwiches, menu.steps, settings.base_price);
+      if (checked.error) {
+        return res.json({ return_code: 'VALIDATION_ERROR', message: checked.error });
+      }
+      sandwiches = checked.sandwiches;
+      sandwichTotal = checked.total;
+    }
+
+    const buffetTotal = buffets.reduce((sum, buffet) => sum + Number(buffet.totalPrice), 0);
+    const totalPrice = Math.round((buffetTotal + sandwichTotal) * 100) / 100;
+    if (!(totalPrice > 0)) {
+      return res.json({
+        return_code: 'VALIDATION_ERROR',
+        message: 'Valid total price is required'
+      });
+    }
+
+    // Validate the collection date against cutoff rules. Buffets need the usual notice;
+    // sandwich-only orders can be collected the same day if placed before the sandwich cutoff.
+    const sandwichOnly = buffets.length === 0;
+    const dateValidation = sandwichOnly ? await calculateEarliestSandwichDate() : await calculateEarliestOrderDate();
     if (!dateValidation.success) {
       return res.json({
         return_code: 'SERVER_ERROR',
@@ -122,6 +167,20 @@ const createOrder = async (req, res) => {
         }
       });
     }
+
+    // Same-day collection has to be later than now
+    if (sandwichOnly && String(orderData.fulfillmentDate).slice(0, 10) === dateValidation.today &&
+        orderData.fulfillmentTime <= dateValidation.currentTime) {
+      return res.json({
+        return_code: 'INVALID_DATE',
+        message: 'Please choose a collection time later today'
+      });
+    }
+
+    orderData.buffets = buffets;
+    orderData.sandwiches = sandwiches;
+    orderData.totalPrice = totalPrice;
+    if (sandwiches.length === 0) orderData.fulfillmentTime = null;
 
     // Ask the model to create the order in the database
     const createdOrder = await orderModel.createOrder(orderData);
@@ -263,9 +322,9 @@ const updateOrderStatus = async (req, res) => {
 
 const getEarliestOrderDate = async (req, res) => {
   try {
-    const result = await calculateEarliestOrderDate();
-    
-    if (!result.success) {
+    const [result, sandwichResult] = await Promise.all([calculateEarliestOrderDate(), calculateEarliestSandwichDate()]);
+
+    if (!result.success || !sandwichResult.success) {
       return res.json({
         return_code: 'SERVER_ERROR',
         message: 'Unable to calculate earliest order date'
@@ -277,7 +336,14 @@ const getEarliestOrderDate = async (req, res) => {
       data: {
         earliestDate: result.earliestDate,
         cutoffTime: result.cutoffTime,
-        isAfterCutoff: result.isAfterCutoff
+        isAfterCutoff: result.isAfterCutoff,
+        // For orders with only sandwiches - same day if before the sandwich cutoff
+        sandwiches: {
+          earliestDate: sandwichResult.earliestDate,
+          today: sandwichResult.today,
+          cutoffTime: sandwichResult.cutoffTime,
+          isAfterCutoff: sandwichResult.isAfterCutoff
+        }
       }
     });
 
