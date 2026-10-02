@@ -46,6 +46,9 @@ function OrderDetails() {
   if (error) return <div className="notice notice-error">{error}</div>;
 
   const isOpen = order.status !== 'completed' && order.status !== 'cancelled';
+  // Back to the list this order is on - orders with any buffet are on the buffet list
+  const listHref = (order.buffets || []).length > 0 ? '/buffet-orders' : '/';
+  const listName = listHref === '/' ? 'sandwich orders' : 'buffet orders';
 
   const togglePaid = async () => {
     const newStatus = order.payment_status === 'paid' ? 'unpaid' : 'paid';
@@ -68,7 +71,7 @@ function OrderDetails() {
     setBusy(true);
     try {
       const data = await api(`/api/orders/${orderId}/status`, { method: 'PATCH', body: { status } });
-      if (data.return_code === 'SUCCESS') router.push('/');
+      if (data.return_code === 'SUCCESS') router.push(listHref);
       else alert(data.message || 'Could not update the order');
     } catch {
       alert('Could not reach the server. Please try again.');
@@ -97,7 +100,7 @@ function OrderDetails() {
 
   return (
     <>
-      <Link href="/" className="back-link no-print">← All orders</Link>
+      <Link href={listHref} className="back-link no-print">← All {listName}</Link>
 
       <div className="page-head">
         <div>
@@ -211,7 +214,7 @@ function OrderDetails() {
               <ul className="item-list">
                 {sandwich.options.map((option, i) => (
                   <li key={i}>
-                    {option.step_name}: {option.option_name}
+                    {option.option_name}
                     {parseFloat(option.extra_price) > 0 && ` (+${money(option.extra_price)})`}
                   </li>
                 ))}

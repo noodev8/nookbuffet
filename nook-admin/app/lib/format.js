@@ -55,16 +55,9 @@ export const orderSize = (order) => {
   return parts.join(' · ');
 };
 
-// "Bread: White · Fillings: Ham, Cheese"
-export const describeSandwich = (sandwich) => {
-  const byStep = [];
-  for (const option of sandwich.options || []) {
-    const last = byStep[byStep.length - 1];
-    if (last && last.step === option.step_name) last.names.push(option.option_name);
-    else byStep.push({ step: option.step_name, names: [option.option_name] });
-  }
-  return byStep.map(s => `${s.step}: ${s.names.join(', ')}`).join(' · ');
-};
+// Just the choices, in menu order: "White, Ham, Cheese, Mayo, Toasted"
+export const describeSandwich = (sandwich) =>
+  (sandwich.options || []).map(option => option.option_name).join(', ');
 
 // No payment is taken online, so every order starts unpaid until staff mark it paid.
 // 'waived' only appears on older orders placed through the old staff skip-payment option.

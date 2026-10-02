@@ -7,9 +7,11 @@ import { usePathname, useRouter } from 'next/navigation';
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 export const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
 
-// Everyone sees Orders and Prep Summary. Only admins see Menu, Sandwiches and Staff.
+// Everyone sees the orders screens and Prep Summary. Only admins see Menu, Sandwiches and Staff.
+// count: which open-order count to show as a badge on the tab
 const NAV = [
-  { href: '/', label: 'Orders' },
+  { href: '/', label: 'Sandwich Orders', count: 'sandwich' },
+  { href: '/buffet-orders', label: 'Buffet Orders', count: 'buffet' },
   { href: '/summary', label: 'Prep Summary' },
   { href: '/menu', label: 'Menu', roles: ['admin'] },
   { href: '/sandwiches', label: 'Sandwiches', roles: ['admin'] },
@@ -18,13 +20,17 @@ const NAV = [
 
 const ROLE_NAMES = { general: 'General', admin: 'Admin' };
 
+// How often the open-order badges check for new orders
+const COUNT_REFRESH_MS = 60 * 1000;
+
 const AdminContext = createContext(null);
 
 // { user, api, logout } for any page wrapped in <AdminShell>
 export const useAdmin = () => useContext(AdminContext);
 
+// A single order's page (/orders/7) sits under neither list, so it highlights neither
 const isActive = (href, pathname) =>
-  href === '/' ? pathname === '/' || pathname.startsWith('/orders') : pathname.startsWith(href);
+  href === '/' ? pathname === '/' : pathname.startsWith(href);
 
 /**
  * The header, navigation and login check shared by every admin page.
@@ -36,6 +42,7 @@ export default function AdminShell({ roles, children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState(null);
+  const [counts, setCounts] = useState({ sandwich: 0, buffet: 0 });
   const allowed = roles ? roles.join(',') : '';
 
   useEffect(() => {
@@ -77,6 +84,28 @@ export default function AdminShell({ roles, children }) {
     return data;
   }, [logout]);
 
+  // Open-order counts for the badges on the Sandwich Orders and Buffet Orders tabs.
+  // Checked on every page change and every minute, so new orders show up without a refresh.
+  // An order with both buffets and sandwiches counts on both tabs.
+  useEffect(() => {
+    if (!user) return;
+    const loadCounts = () => {
+      api('/api/orders')
+        .then(data => {
+          if (data.return_code !== 'SUCCESS') return;
+          const orders = data.data || [];
+          setCounts({
+            sandwich: orders.filter(o => (o.sandwiches || []).length > 0).length,
+            buffet: orders.filter(o => (o.buffets || []).length > 0).length,
+          });
+        })
+        .catch(() => {}); // the badges just keep their last numbers
+    };
+    loadCounts();
+    const timer = setInterval(loadCounts, COUNT_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [user, api, pathname]);
+
   if (!user) return null;
 
   return (
@@ -94,6 +123,9 @@ export default function AdminShell({ roles, children }) {
           {NAV.filter(item => !item.roles || item.roles.includes(user.role)).map(item => (
             <Link key={item.href} href={item.href} className={`shell-nav-item${isActive(item.href, pathname) ? ' active' : ''}`}>
               {item.label}
+              {item.count && counts[item.count] > 0 && (
+                <span className="nav-badge" aria-label={`${counts[item.count]} open`}>{counts[item.count]}</span>
+              )}
             </Link>
           ))}
         </nav>

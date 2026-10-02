@@ -40,12 +40,15 @@ Every page shares one header (app/components/AdminShell.js) with the navigation,
 logged-in user and Log out. It also checks the login and provides an api() helper.
 
   /login          - Staff login
-  /               - Orders - open orders grouped by collection day, overdue first
+  /               - Sandwich Orders - open sandwich orders by collection time, with what to make listed in each row
+  /buffet-orders  - Buffet Orders - open buffet orders grouped by collection day, overdue first
   /orders/[id]    - One order - mark paid, mark ready (emails the customer), print, cancel, note to customer
-  /summary        - Prep Summary - everything to make, added up per collection day
+  /summary        - Prep Summary - everything to make for buffets, added up per collection day
   /menu           - Menu - pick a buffet to change its price, categories, items and stock; Upgrades tab (admins only)
   /sandwiches     - Build-your-own sandwich menu - base price, on/off, same-day cutoff, steps (bread, fillings...) and their options (admins only)
   /staff          - Staff accounts (admins only)
+
+The Sandwich Orders and Buffet Orders tabs show a red count of open orders, checked every minute.
 
 /prices and /menu-builder redirect to /menu.
 
