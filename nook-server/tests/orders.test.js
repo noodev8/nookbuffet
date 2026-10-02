@@ -51,6 +51,10 @@ const SANDWICH_STEPS = [
   ] }
 ];
 
+const SANDWICH_SETTINGS = {
+  base_price: '5.00', enabled: true, cutoff_time: '11:00', open_time: '11:00', close_time: '14:00', slot_capacity: 5
+};
+
 // A sandwich-only order - no business name, address or buffets
 function sandwichOrder(overrides = {}) {
   return {
@@ -81,7 +85,7 @@ beforeEach(() => {
     cutoffTime: '11:00',
     isAfterCutoff: false
   });
-  sandwichModel.getSettings.mockResolvedValue({ base_price: '5.00', enabled: true, cutoff_time: '11:00' });
+  sandwichModel.getSettings.mockResolvedValue(SANDWICH_SETTINGS);
   sandwichModel.getMenuForCustomers.mockResolvedValue({ sold_out: false, steps: SANDWICH_STEPS });
   orderModel.createOrder.mockResolvedValue({ id: 7, order_number: 'ORD-007', created_at: '2026-09-18' });
   sendOrderConfirmationEmail.mockResolvedValue({ success: true });
@@ -146,7 +150,11 @@ describe('createOrder with sandwiches', () => {
   });
 
   test('rejects a same-day time that has already passed', async () => {
-    const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '09:00' }));
+    // 11:30 is within collection hours, but it is already 12:00
+    calculateEarliestSandwichDate.mockResolvedValue({
+      success: true, earliestDate: '2026-09-18', today: '2026-09-18', currentTime: '12:00', cutoffTime: '11:00', isAfterCutoff: true
+    });
+    const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '11:30' }));
     await orderController.createOrder(req, res);
     expect(getResult().return_code).toBe('INVALID_DATE');
     expect(orderModel.createOrder).not.toHaveBeenCalled();
@@ -206,11 +214,38 @@ describe('createOrder with sandwiches', () => {
   });
 
   test('rejects sandwiches when they are switched off', async () => {
-    sandwichModel.getSettings.mockResolvedValue({ base_price: '5.00', enabled: false, cutoff_time: '11:00' });
+    sandwichModel.getSettings.mockResolvedValue({ ...SANDWICH_SETTINGS, enabled: false });
     const { req, res, getResult } = setup(sandwichOrder());
     await orderController.createOrder(req, res);
     expect(getResult().return_code).toBe('SANDWICHES_UNAVAILABLE');
     expect(orderModel.createOrder).not.toHaveBeenCalled();
+  });
+
+  test('passes the slot capacity on so the model can check the slot', async () => {
+    const { req, res } = setup(sandwichOrder());
+    await orderController.createOrder(req, res);
+    expect(orderModel.createOrder.mock.calls[0][0].slotCapacity).toBe(5);
+  });
+
+  test('rejects a time outside collection hours', async () => {
+    const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '15:00' }));
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('VALIDATION_ERROR');
+    expect(orderModel.createOrder).not.toHaveBeenCalled();
+  });
+
+  test('rejects a time between slots', async () => {
+    const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '12:32' }));
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('VALIDATION_ERROR');
+  });
+
+  test('tells the customer when their slot filled up', async () => {
+    orderModel.createOrder.mockRejectedValue(Object.assign(new Error('full'), { code: 'SLOT_FULL' }));
+    const { req, res, getResult } = setup(sandwichOrder());
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('SLOT_FULL');
+    expect(sendOrderConfirmationEmail).not.toHaveBeenCalled();
   });
 
   test('rejects an empty order', async () => {

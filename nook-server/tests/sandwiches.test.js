@@ -35,7 +35,7 @@ describe('updateSettings', () => {
     sandwichModel.updateSettings.mockResolvedValue({ base_price: '5.50', enabled: true });
     const { req, res, getResult } = setup({ base_price: '5.499', enabled: true });
     await sandwichController.updateSettings(req, res);
-    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(5.5, true, undefined); // no cutoff_time sent - left as it is
+    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ base_price: 5.5, enabled: true, cutoff_time: undefined })); // not sent - left as it is
     expect(getResult().return_code).toBe('SUCCESS');
   });
 });
@@ -166,7 +166,39 @@ describe('updateSettings cutoff_time', () => {
     sandwichModel.updateSettings.mockResolvedValue({ base_price: '5.00', enabled: true, cutoff_time: '11:30' });
     const { req, res, getResult } = setup({ base_price: 5, enabled: true, cutoff_time: '11:30' });
     await sandwichController.updateSettings(req, res);
-    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(5, true, '11:30');
+    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ cutoff_time: '11:30' }));
     expect(getResult().return_code).toBe('SUCCESS');
+  });
+});
+
+describe('updateSettings collection hours and slots', () => {
+  const base = { base_price: 5, enabled: true };
+
+  test('saves collection hours and slot capacity', async () => {
+    sandwichModel.updateSettings.mockResolvedValue({});
+    const { req, res, getResult } = setup({ ...base, open_time: '11:00', close_time: '14:00', slot_capacity: '4' });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({
+      open_time: '11:00', close_time: '14:00', slot_capacity: 4
+    }));
+  });
+
+  test('rejects closing before opening', async () => {
+    const { req, res, getResult } = setup({ ...base, open_time: '14:00', close_time: '11:00' });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATA');
+  });
+
+  test('rejects times off the 5-minute marks', async () => {
+    const { req, res, getResult } = setup({ ...base, open_time: '11:02', close_time: '14:00' });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATA');
+  });
+
+  test('rejects a slot capacity of 0', async () => {
+    const { req, res, getResult } = setup({ ...base, slot_capacity: 0 });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATA');
   });
 });

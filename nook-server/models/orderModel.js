@@ -65,6 +65,23 @@ const createOrder = async (orderData) => {
     // Start a transaction - this means all queries must succeed or none will
     await client.query('BEGIN');
 
+    // Sandwich collection slots only take so many orders. Lock so two orders for the same slot
+    // can't both see a free place, then check it isn't full. The lock is released at COMMIT/ROLLBACK.
+    if ((orderData.sandwiches || []).length > 0 && orderData.slotCapacity) {
+      await client.query(`SELECT pg_advisory_xact_lock(hashtext('sandwich-slots'))`);
+      const booked = await client.query(
+        `SELECT COUNT(*)::int AS orders FROM orders o
+         WHERE o.fulfillment_date = $1 AND o.fulfillment_time = $2 AND o.status <> 'cancelled'
+           AND EXISTS (SELECT 1 FROM order_sandwiches os WHERE os.order_id = o.id)`,
+        [orderData.fulfillmentDate, orderData.fulfillmentTime]
+      );
+      if (booked.rows[0].orders >= orderData.slotCapacity) {
+        const error = new Error('That collection slot is full');
+        error.code = 'SLOT_FULL';
+        throw error;
+      }
+    }
+
     // Generate a sequential order number (format: ORD-001, ORD-002, etc.)
     // Use MAX of the numeric part so gaps from deletions never cause collisions
     const numQuery = `

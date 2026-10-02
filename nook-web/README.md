@@ -43,7 +43,7 @@ PAGES
   /order            - Build your buffet — choose items per category
   /upgrade          - Add upgrade packages to your order
   /sandwiches       - Build your own sandwich and add it to the basket
-  /basket           - Review everything and pick a collection date (and time, for sandwiches)
+  /basket           - Review everything and pick a collection date (and a 5-minute collection slot, for sandwiches)
   /checkout         - Confirm details and place the order (unpaid)
   /checkout/success - Order confirmed page
   /account          - Order history, reorder, and profile

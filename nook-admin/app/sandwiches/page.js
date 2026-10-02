@@ -124,7 +124,7 @@ function Sandwiches() {
   );
 }
 
-// ===== BASE PRICE + ON/OFF =====
+// ===== PRICE, ON/OFF, CUTOFF, COLLECTION HOURS AND SLOTS =====
 function SettingsCard({ settings, setSettings, showToast }) {
   const { api } = useAdmin();
   const [editing, setEditing] = useState(false);
@@ -133,10 +133,17 @@ function SettingsCard({ settings, setSettings, showToast }) {
     setEditing(false);
     showToast('Settings saved');
   });
-  const [form, setForm] = useState({ price: '', enabled: false, cutoff: '' });
+  const [form, setForm] = useState({ price: '', enabled: false, cutoff: '', open: '', close: '', capacity: '' });
 
   const startEditing = () => {
-    setForm({ price: parseFloat(settings.base_price).toFixed(2), enabled: settings.enabled, cutoff: settings.cutoff_time });
+    setForm({
+      price: parseFloat(settings.base_price).toFixed(2),
+      enabled: settings.enabled,
+      cutoff: settings.cutoff_time,
+      open: settings.open_time,
+      close: settings.close_time,
+      capacity: String(settings.slot_capacity)
+    });
     setFormError('');
     setEditing(true);
   };
@@ -146,9 +153,24 @@ function SettingsCard({ settings, setSettings, showToast }) {
     const price = parseFloat(form.price);
     if (isNaN(price) || price < 0) return setFormError('Enter the price of a sandwich before extras, e.g. 5.00');
     if (!form.cutoff) return setFormError('Enter the same-day cutoff time, e.g. 11:00');
+    if (!form.open || !form.close) return setFormError('Enter the collection hours, e.g. 11:00 to 14:00');
+    if (form.open >= form.close) return setFormError('Collection must finish after it starts');
+    const onFiveMinutes = (time) => Number(time.split(':')[1]) % 5 === 0;
+    if (!onFiveMinutes(form.open) || !onFiveMinutes(form.close)) {
+      return setFormError('Collection hours must be on a 5-minute mark, e.g. 11:00 or 13:45');
+    }
+    const capacity = Number(form.capacity);
+    if (!Number.isInteger(capacity) || capacity < 1) return setFormError('Orders per 5 minutes must be 1 or more');
     save(() => api('/api/sandwiches/manage/settings', {
       method: 'PATCH',
-      body: { base_price: price, enabled: form.enabled, cutoff_time: form.cutoff }
+      body: {
+        base_price: price,
+        enabled: form.enabled,
+        cutoff_time: form.cutoff,
+        open_time: form.open,
+        close_time: form.close,
+        slot_capacity: capacity
+      }
     }));
   };
 
@@ -169,6 +191,24 @@ function SettingsCard({ settings, setSettings, showToast }) {
             <input id="cutoff-time" className="input" type="time" value={form.cutoff}
               onChange={e => setForm(p => ({ ...p, cutoff: e.target.value }))} />
             <span className="field-hint">Sandwich orders placed before this can be collected the same day</span>
+          </div>
+          <div className="field">
+            <label htmlFor="open-time">Collection from</label>
+            <input id="open-time" className="input" type="time" step="300" value={form.open}
+              onChange={e => setForm(p => ({ ...p, open: e.target.value }))} />
+            <span className="field-hint">First time customers can collect a sandwich</span>
+          </div>
+          <div className="field">
+            <label htmlFor="close-time">Collection until</label>
+            <input id="close-time" className="input" type="time" step="300" value={form.close}
+              onChange={e => setForm(p => ({ ...p, close: e.target.value }))} />
+            <span className="field-hint">Last collection is 5 minutes before this</span>
+          </div>
+          <div className="field">
+            <label htmlFor="slot-capacity">Orders per 5 minutes</label>
+            <input id="slot-capacity" className="input" type="number" min="1" step="1" value={form.capacity}
+              onChange={e => setForm(p => ({ ...p, capacity: e.target.value }))} />
+            <span className="field-hint">Once a 5-minute slot has this many orders, customers have to pick another time</span>
           </div>
           <div className="field" style={{ justifyContent: 'center' }}>
             <label className="check">
@@ -191,6 +231,9 @@ function SettingsCard({ settings, setSettings, showToast }) {
         <div>
           <p className="price-line"><strong>{money(settings.base_price)}</strong> per sandwich, plus extras</p>
           <p className="card-sub">Order before {settings.cutoff_time} to collect the same day</p>
+          <p className="card-sub">
+            Collection {settings.open_time}–{settings.close_time} · up to {settings.slot_capacity} order{settings.slot_capacity !== 1 ? 's' : ''} every 5 minutes
+          </p>
           <span className={`badge ${settings.enabled ? 'badge-paid' : 'badge-unpaid'}`}>
             {settings.enabled ? 'Taking sandwich orders' : 'Not taking sandwich orders'}
           </span>

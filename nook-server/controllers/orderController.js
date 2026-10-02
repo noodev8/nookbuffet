@@ -10,6 +10,7 @@ const orderModel = require('../models/orderModel');
 const sandwichModel = require('../models/sandwichModel');
 const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
 const { checkSandwiches } = require('../utils/sandwichOrder');
+const { slotTimes } = require('../utils/sandwichSlots');
 const { sendOrderConfirmationEmail } = require('../utils/emailService');
 
 // ===== CREATE A NEW ORDER =====
@@ -125,6 +126,16 @@ const createOrder = async (req, res) => {
         });
       }
 
+      // Must be one of the 5-minute slots within collection hours. Whether it is full is
+      // checked when the order is saved, so two customers can't take the last place at once.
+      if (!slotTimes(settings.open_time, settings.close_time).includes(orderData.fulfillmentTime)) {
+        return res.json({
+          return_code: 'VALIDATION_ERROR',
+          message: `Sandwiches can be collected between ${settings.open_time} and ${settings.close_time}, every 5 minutes`
+        });
+      }
+      orderData.slotCapacity = settings.slot_capacity;
+
       const checked = checkSandwiches(rawSandwiches, menu.steps, settings.base_price);
       if (checked.error) {
         return res.json({ return_code: 'VALIDATION_ERROR', message: checked.error });
@@ -183,7 +194,16 @@ const createOrder = async (req, res) => {
     if (sandwiches.length === 0) orderData.fulfillmentTime = null;
 
     // Ask the model to create the order in the database
-    const createdOrder = await orderModel.createOrder(orderData);
+    let createdOrder;
+    try {
+      createdOrder = await orderModel.createOrder(orderData);
+    } catch (error) {
+      if (error.code !== 'SLOT_FULL') throw error;
+      return res.json({
+        return_code: 'SLOT_FULL',
+        message: `Sorry, ${orderData.fulfillmentTime} has just filled up. Please choose another collection time.`
+      });
+    }
 
     // Send confirmation email to customer 
     const emailData = {

@@ -63,7 +63,8 @@ ENDPOINTS:
    }
    An order needs at least one buffet or one sandwich. buffets and sandwiches may each be left out.
    - address is only required when there are buffets
-   - with sandwiches, fulfillmentTime ("HH:MM") is required
+   - with sandwiches, fulfillmentTime ("HH:MM") is required and must be one of the 5-minute slots
+     within sandwich collection hours that still has room (see GET /api/sandwiches/slots)
    - sandwiches are priced on the server from the current menu, and totalPrice is worked out
      on the server too (buffet totals + sandwich totals) - the totalPrice sent is ignored
    - sandwich-only orders can be collected the same day if placed before sandwich_cutoff_time;
@@ -78,7 +79,7 @@ ENDPOINTS:
        "createdAt": "2024-01-15T10:30:00Z"
      }
    }
-   Return Codes: SUCCESS, VALIDATION_ERROR, INVALID_DATE, SANDWICHES_UNAVAILABLE, SERVER_ERROR
+   Return Codes: SUCCESS, VALIDATION_ERROR, INVALID_DATE, SANDWICHES_UNAVAILABLE, SLOT_FULL, SERVER_ERROR
 
    Orders returned by GET also have "sandwiches": [{ id, quantity, unit_price, subtotal, notes,
    options: [{ sandwich_option_id, step_name, option_name, extra_price }] }]

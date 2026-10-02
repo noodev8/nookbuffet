@@ -39,6 +39,8 @@ export default function BasketPage() {
   // Collection date and time state. Time is only asked for when there are sandwiches.
   const [fulfillmentDate, setFulfillmentDate] = useState('');
   const [fulfillmentTime, setFulfillmentTime] = useState('');
+  // 5-minute collection slots for the chosen day: { date, slots: [{ time, available }], error }
+  const [slotInfo, setSlotInfo] = useState(null);
 
   // Get basket data from localStorage
   useEffect(() => {
@@ -98,6 +100,23 @@ export default function BasketPage() {
   const dateValue = fulfillmentDate && fulfillmentDate >= minDate ? fulfillmentDate : minDate;
   const isToday = Boolean(dateInfo) && dateValue === dateInfo.sandwiches.today;
 
+  // Load the sandwich collection slots whenever the day changes
+  useEffect(() => {
+    if (!hasSandwiches || !dateValue) return;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+    fetch(`${apiUrl}/api/sandwiches/slots?date=${dateValue}`)
+      .then(res => res.json())
+      .then(data => setSlotInfo(data.return_code === 'SUCCESS'
+        ? { date: dateValue, slots: data.data.slots }
+        : { date: dateValue, slots: [], error: data.message || 'Could not load collection times' }))
+      .catch(() => setSlotInfo({ date: dateValue, slots: [], error: 'Could not load collection times. Please try again.' }));
+  }, [hasSandwiches, dateValue]);
+
+  const slots = slotInfo?.date === dateValue ? slotInfo.slots : null; // null while loading
+  const openSlots = (slots || []).filter(slot => slot.available);
+  // Drop a picked time that isn't free on the chosen day (e.g. after changing the date)
+  const timeValue = openSlots.some(slot => slot.time === fulfillmentTime) ? fulfillmentTime : '';
+
   const handleProceedToCheckout = () => {
     // Validate minimum 5 people total across all buffets
     if (hasBuffets && totalPeople < 5) {
@@ -135,12 +154,8 @@ export default function BasketPage() {
       alert('Please select a date');
       return;
     }
-    if (hasSandwiches && !fulfillmentTime) {
+    if (hasSandwiches && !timeValue) {
       alert('Please choose a collection time');
-      return;
-    }
-    if (hasSandwiches && isToday && fulfillmentTime <= new Date().toTimeString().slice(0, 5)) {
-      alert('Please choose a collection time later today');
       return;
     }
 
@@ -154,7 +169,7 @@ export default function BasketPage() {
       phone,
       fulfillmentType: 'collection',
       fulfillmentDate: dateValue,
-      fulfillmentTime: hasSandwiches ? fulfillmentTime : ''
+      fulfillmentTime: hasSandwiches ? timeValue : ''
     }));
 
     // Pass all orders to checkout page
@@ -443,17 +458,33 @@ export default function BasketPage() {
                 {hasSandwiches && (
                   <div className="form-group">
                     <label htmlFor="fulfillment-time">Time *</label>
-                    <input
-                      id="fulfillment-time"
-                      type="time"
-                      value={fulfillmentTime}
-                      onChange={(e) => setFulfillmentTime(e.target.value)}
-                      className="form-input"
-                    />
-                    {isToday && (
-                      <div style={{ marginTop: '5px', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
-                        Collecting today - please allow us time to make it
+                    {slots === null ? (
+                      <div style={{ padding: '10px', color: '#666' }}>Loading collection times...</div>
+                    ) : slotInfo.error ? (
+                      <div style={{ padding: '10px', color: '#ff6b35' }}>{slotInfo.error}</div>
+                    ) : openSlots.length === 0 ? (
+                      <div style={{ padding: '10px', color: '#ff6b35' }}>
+                        {isToday ? 'No collection times left today' : 'No collection times left on this day'} - please choose another date.
                       </div>
+                    ) : (
+                      <>
+                        <select
+                          id="fulfillment-time"
+                          value={timeValue}
+                          onChange={(e) => setFulfillmentTime(e.target.value)}
+                          className="form-input"
+                        >
+                          <option value="">Choose a time</option>
+                          {slots.map(slot => (
+                            <option key={slot.time} value={slot.time} disabled={!slot.available}>
+                              {slot.time}{slot.available ? '' : ' (full)'}
+                            </option>
+                          ))}
+                        </select>
+                        <div style={{ marginTop: '5px', fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                          {isToday ? 'Collecting today - please allow us time to make it' : 'Times shown are when your sandwiches will be ready'}
+                        </div>
+                      </>
                     )}
                   </div>
                 )}

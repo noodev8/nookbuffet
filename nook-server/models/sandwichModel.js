@@ -45,17 +45,32 @@ const getMenuForCustomers = async () => {
   return { steps: soldOut ? [] : available, sold_out: soldOut };
 };
 
-// ===== SETTINGS (base price, on/off, same-day cutoff) =====
+// ===== SETTINGS =====
+// Each setting's order_config key, description and default (used until staff save one)
+const SETTINGS = {
+  base_price:    { key: 'sandwich_base_price',   default: '0.00',  description: 'Price of a sandwich before any extras' },
+  enabled:       { key: 'sandwiches_enabled',    default: 'false', description: 'Whether customers can order sandwiches on the website' },
+  cutoff_time:   { key: 'sandwich_cutoff_time',  default: '11:00', description: 'Order sandwiches before this time to collect them the same day' },
+  open_time:     { key: 'sandwich_open_time',    default: '11:00', description: 'First sandwich collection time of the day' },
+  close_time:    { key: 'sandwich_close_time',   default: '14:00', description: 'Sandwich collections must be before this time' },
+  slot_capacity: { key: 'sandwich_slot_capacity', default: '5',    description: 'Most sandwich orders that can be collected in each 5-minute slot' },
+};
+
 const getSettings = async () => {
+  const keys = Object.values(SETTINGS).map(s => s.key);
   const result = await query(
-    `SELECT config_key, config_value FROM order_config
-     WHERE config_key IN ('sandwich_base_price', 'sandwiches_enabled', 'sandwich_cutoff_time')`
+    `SELECT config_key, config_value FROM order_config WHERE config_key = ANY($1)`,
+    [keys]
   );
   const config = Object.fromEntries(result.rows.map(r => [r.config_key, r.config_value]));
+  const value = (name) => config[SETTINGS[name].key] ?? SETTINGS[name].default;
   return {
-    base_price: config.sandwich_base_price ?? '0.00',
-    enabled: config.sandwiches_enabled === 'true',
-    cutoff_time: config.sandwich_cutoff_time ?? '11:00',
+    base_price: value('base_price'),
+    enabled: value('enabled') === 'true',
+    cutoff_time: value('cutoff_time'),
+    open_time: value('open_time'),
+    close_time: value('close_time'),
+    slot_capacity: parseInt(value('slot_capacity')),
   };
 };
 
@@ -73,14 +88,31 @@ const setConfig = async (key, value, description) => {
   }
 };
 
-// cutoffTime is optional ("HH:MM") - left as it is when not given
-const updateSettings = async (basePrice, enabled, cutoffTime) => {
-  await setConfig('sandwich_base_price', basePrice.toFixed(2), 'Price of a sandwich before any extras');
-  await setConfig('sandwiches_enabled', enabled ? 'true' : 'false', 'Whether customers can order sandwiches on the website');
-  if (cutoffTime) {
-    await setConfig('sandwich_cutoff_time', cutoffTime, 'Order sandwiches before this time to collect them the same day');
+// Saves whichever settings are given ({ base_price: 5, enabled: true, open_time: '11:00', ... }),
+// leaving the rest as they are. Values have already been checked by the controller.
+const updateSettings = async (changes) => {
+  for (const [name, value] of Object.entries(changes)) {
+    if (value === undefined || !SETTINGS[name]) continue;
+    const stored = name === 'base_price' ? value.toFixed(2) : String(value);
+    await setConfig(SETTINGS[name].key, stored, SETTINGS[name].description);
   }
   return getSettings();
+};
+
+// ===== SLOT BOOKINGS =====
+// How many open orders with sandwiches are already booked in each collection slot on a day.
+// Returns { "12:30": 3, ... }
+const getSlotCounts = async (date) => {
+  const result = await query(
+    `SELECT o.fulfillment_time, COUNT(*)::int AS orders
+     FROM orders o
+     WHERE o.fulfillment_date = $1
+       AND o.status <> 'cancelled'
+       AND EXISTS (SELECT 1 FROM order_sandwiches os WHERE os.order_id = o.id)
+     GROUP BY o.fulfillment_time`,
+    [date]
+  );
+  return Object.fromEntries(result.rows.map(r => [r.fulfillment_time, r.orders]));
 };
 
 // ===== STEPS =====
@@ -161,6 +193,7 @@ module.exports = {
   getMenuForManagement,
   getMenuForCustomers,
   getSettings,
+  getSlotCounts,
   updateSettings,
   createStep,
   updateStep,

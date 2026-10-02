@@ -45,7 +45,7 @@ logged-in user and Log out. It also checks the login and provides an api() helpe
   /orders/[id]    - One order - mark paid, mark ready (emails the customer), print, cancel, note to customer
   /summary        - Prep Summary - everything to make for buffets, added up per collection day
   /menu           - Menu - pick a buffet to change its price, categories, items and stock; Upgrades tab (admins only)
-  /sandwiches     - Build-your-own sandwich menu - base price, on/off, same-day cutoff, steps (bread, fillings...) and their options (admins only)
+  /sandwiches     - Build-your-own sandwich menu - base price, on/off, same-day cutoff, collection hours, orders per 5-minute slot, steps (bread, fillings...) and their options (admins only)
   /staff          - Staff accounts (admins only)
 
 The Sandwich Orders and Buffet Orders tabs show a red count of open orders, checked every minute.

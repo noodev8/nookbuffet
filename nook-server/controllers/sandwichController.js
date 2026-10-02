@@ -8,8 +8,12 @@ with any extra cost, and the base price. The customer side will read this to bui
 */
 
 const sandwichModel = require('../models/sandwichModel');
+const { calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
+const { buildSlots, toMinutes, SLOT_MINUTES } = require('../utils/sandwichSlots');
 
 // ===== HELPERS =====
+const isTime = (value) => typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
+
 const parseId = (value) => {
   const id = parseInt(value);
   return id > 0 ? id : null;
@@ -64,6 +68,34 @@ const getMenuForCustomers = async (req, res) => {
   }
 };
 
+// ===== GET COLLECTION SLOTS (customers) =====
+// Public - the 5-minute collection slots on a day, and whether each still has room.
+// Today only shows slots that haven't passed.
+const getSlots = async (req, res) => {
+  try {
+    const date = req.query.date;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || isNaN(new Date(date).getTime())) {
+      return res.json({ return_code: 'INVALID_DATA', message: 'date must be YYYY-MM-DD' });
+    }
+    const settings = await sandwichModel.getSettings();
+    if (!settings.enabled) {
+      return res.json({ return_code: 'SUCCESS', message: 'Sandwiches are not available', data: { slots: [] } });
+    }
+    const [counts, now] = await Promise.all([sandwichModel.getSlotCounts(date), calculateEarliestSandwichDate()]);
+    if (!now.success) return res.json({ return_code: 'SERVER_ERROR', message: 'Could not get collection times' });
+
+    const slots = date < now.today ? [] : buildSlots(settings, counts, date === now.today ? now.currentTime : null);
+    res.json({
+      return_code: 'SUCCESS',
+      message: 'Got collection times',
+      data: { open_time: settings.open_time, close_time: settings.close_time, slots }
+    });
+  } catch (error) {
+    console.error('Get sandwich slots error:', error);
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not get collection times' });
+  }
+};
+
 // ===== GET MENU (management) =====
 const getMenuForManagement = async (req, res) => {
   try {
@@ -81,11 +113,37 @@ const updateSettings = async (req, res) => {
     const basePrice = parsePrice(req.body.base_price);
     if (basePrice === null) return res.json({ return_code: 'INVALID_DATA', message: 'base_price must be 0 or more' });
     if (typeof req.body.enabled !== 'boolean') return res.json({ return_code: 'INVALID_DATA', message: 'enabled must be true or false' });
-    const cutoff = req.body.cutoff_time;
-    if (cutoff !== undefined && !/^([01]\d|2[0-3]):[0-5]\d$/.test(cutoff)) {
-      return res.json({ return_code: 'INVALID_DATA', message: 'cutoff_time must be a time like 11:00' });
+    // The rest are optional - anything not sent is left as it is
+    const { cutoff_time, open_time, close_time } = req.body;
+    for (const [name, value] of Object.entries({ cutoff_time, open_time, close_time })) {
+      if (value !== undefined && !isTime(value)) {
+        return res.json({ return_code: 'INVALID_DATA', message: `${name} must be a time like 11:00` });
+      }
     }
-    const settings = await sandwichModel.updateSettings(basePrice, req.body.enabled, cutoff);
+    for (const [name, value] of Object.entries({ open_time, close_time })) {
+      if (value !== undefined && toMinutes(value) % SLOT_MINUTES !== 0) {
+        return res.json({ return_code: 'INVALID_DATA', message: `${name} must be on a 5-minute mark, like 11:00 or 11:05` });
+      }
+    }
+    if ((open_time === undefined) !== (close_time === undefined)) {
+      return res.json({ return_code: 'INVALID_DATA', message: 'open_time and close_time must be sent together' });
+    }
+    if (open_time !== undefined && open_time >= close_time) {
+      return res.json({ return_code: 'INVALID_DATA', message: 'Collection must close after it opens' });
+    }
+    const capacity = req.body.slot_capacity === undefined ? undefined : Number(req.body.slot_capacity);
+    if (capacity !== undefined && (!Number.isInteger(capacity) || capacity < 1)) {
+      return res.json({ return_code: 'INVALID_DATA', message: 'slot_capacity must be 1 or more' });
+    }
+
+    const settings = await sandwichModel.updateSettings({
+      base_price: basePrice,
+      enabled: req.body.enabled,
+      cutoff_time,
+      open_time,
+      close_time,
+      slot_capacity: capacity
+    });
     res.json({ return_code: 'SUCCESS', message: 'Settings saved', data: settings });
   } catch (error) {
     console.error('Update sandwich settings error:', error);
@@ -213,6 +271,7 @@ const deleteOption = async (req, res) => {
 
 module.exports = {
   getMenuForCustomers,
+  getSlots,
   getMenuForManagement,
   updateSettings,
   createStep,
