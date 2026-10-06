@@ -55,9 +55,8 @@ const CONFIG = {
   },
 };
 
-// Helper to check basket state from localStorage
-function getInitialBasketState() {
-  if (typeof window === 'undefined') return false;
+// Helper to check basket state from localStorage (browser only - call it after hydration)
+function hasBasketItems() {
   try {
     const basketData = localStorage.getItem('basketData');
     if (!basketData) return false;
@@ -72,8 +71,14 @@ export default function Home() {
   const scrollIndicatorRef = useRef(null);
   const heroSectionRef = useRef(null);
   const router = useRouter();
-  const [hasBasket, setHasBasket] = useState(getInitialBasketState);
+  // Starts false so the first render matches the server, then picks up the saved basket
+  const [hasBasket, setHasBasket] = useState(false);
   const [sandwichMenu, setSandwichMenu] = useState(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
+    setHasBasket(hasBasketItems());
+  }, []);
 
   // Only offer sandwiches when staff have switched them on in the admin portal
   useEffect(() => {
