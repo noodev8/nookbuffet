@@ -7,15 +7,26 @@ import { usePathname, useRouter } from 'next/navigation';
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 export const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
 
-// Everyone sees the orders screens and Prep Summary. Only admins see Menu, Sandwiches and Staff.
+// The nav is split into a Sandwiches section and a Buffets section, each with its own
+// orders, prep and menu pages, one row each. Everyone sees Orders and Prep; only admins see the menus.
+// Staff sits up by Log out (admins only) so it doesn't need a row of its own.
 // count: which open-order count to show as a badge on the tab
-const NAV = [
-  { href: '/', label: 'Sandwich Orders', count: 'sandwich' },
-  { href: '/buffet-orders', label: 'Buffet Orders', count: 'buffet' },
-  { href: '/summary', label: 'Prep Summary' },
-  { href: '/menu', label: 'Menu', roles: ['admin'] },
-  { href: '/sandwiches', label: 'Sandwiches', roles: ['admin'] },
-  { href: '/staff', label: 'Staff', roles: ['admin'] },
+const SECTIONS = [
+  {
+    label: 'Sandwiches',
+    items: [
+      { href: '/', label: 'Orders', count: 'sandwich' },
+      { href: '/sandwich-menu', label: 'Menu', roles: ['admin'] },
+    ],
+  },
+  {
+    label: 'Buffets',
+    items: [
+      { href: '/buffet-orders', label: 'Orders', count: 'buffet' },
+      { href: '/buffet-prep', label: 'Prep' },
+      { href: '/buffet-menu', label: 'Menu', roles: ['admin'] },
+    ],
+  },
 ];
 
 const ROLE_NAMES = { general: 'General', admin: 'Admin' };
@@ -116,18 +127,30 @@ export default function AdminShell({ roles, children }) {
           <div className="shell-user">
             <span>{user.full_name || user.username}</span>
             <span className="shell-role">{ROLE_NAMES[user.role] || user.role}</span>
+            {user.role === 'admin' && (
+              <Link href="/staff" className={`shell-logout${pathname.startsWith('/staff') ? ' active' : ''}`}>Staff</Link>
+            )}
             <button className="shell-logout" onClick={logout}>Log out</button>
           </div>
         </div>
         <nav className="shell-nav">
-          {NAV.filter(item => !item.roles || item.roles.includes(user.role)).map(item => (
-            <Link key={item.href} href={item.href} className={`shell-nav-item${isActive(item.href, pathname) ? ' active' : ''}`}>
-              {item.label}
-              {item.count && counts[item.count] > 0 && (
-                <span className="nav-badge" aria-label={`${counts[item.count]} open`}>{counts[item.count]}</span>
-              )}
-            </Link>
-          ))}
+          {SECTIONS.map((section, i) => {
+            const items = section.items.filter(item => !item.roles || item.roles.includes(user.role));
+            if (items.length === 0) return null;
+            return (
+              <div key={i} className="shell-nav-group">
+                {section.label && <span className="shell-nav-label">{section.label}</span>}
+                {items.map(item => (
+                  <Link key={item.href} href={item.href} className={`shell-nav-item${isActive(item.href, pathname) ? ' active' : ''}`}>
+                    {item.label}
+                    {item.count && counts[item.count] > 0 && (
+                      <span className="nav-badge" aria-label={`${counts[item.count]} open`}>{counts[item.count]}</span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            );
+          })}
         </nav>
       </header>
       <main className="shell-main">{children}</main>

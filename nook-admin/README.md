@@ -39,26 +39,35 @@ PAGES
 Every page shares one header (app/components/AdminShell.js) with the navigation, the
 logged-in user and Log out. It also checks the login and provides an api() helper.
 
+The navigation is split into two sections, Sandwiches and Buffets, each with its own
+Orders and Menu pages (plus Prep for buffets).
+
   /login          - Staff login
+
+  Sandwiches
   /               - Sandwich Orders - open sandwich orders by collection time, with what to make listed in each row
+  /sandwich-menu  - Sandwich Menu - base price, on/off, same-day cutoff, collection hours, orders per 5-minute slot, steps (bread, fillings...) and their options (admins only)
+
+  Buffets
   /buffet-orders  - Buffet Orders - open buffet orders grouped by collection day, overdue first
+  /buffet-prep    - Buffet Prep - everything to make for buffets, added up per collection day
+  /buffet-menu    - Buffet Menu - pick a buffet to change its price, categories, items and stock; Upgrades tab (admins only)
+
   /orders/[id]    - One order - mark paid, mark ready (emails the customer), print, cancel, note to customer
-  /summary        - Prep Summary - everything to make for buffets, added up per collection day
-  /menu           - Menu - pick a buffet to change its price, categories, items and stock; Upgrades tab (admins only)
-  /sandwiches     - Build-your-own sandwich menu - base price, on/off, same-day cutoff, collection hours, orders per 5-minute slot, steps (bread, fillings...) and their options (admins only)
   /staff          - Staff accounts (admins only)
 
-The Sandwich Orders and Buffet Orders tabs show a red count of open orders, checked every minute.
+The two Orders tabs show a red count of open orders, checked every minute.
 
-/prices and /menu-builder redirect to /menu.
+Old addresses redirect: /summary to /buffet-prep, /menu (and /prices, /menu-builder) to /buffet-menu,
+/sandwiches to /sandwich-menu.
 
 
 ROLES
 
 There are two roles. Permissions are enforced on the server - the frontend just hides things that aren't relevant.
 
-  general  - Orders and prep summary
-  admin    - Everything: orders, prep summary, the menu (stock, prices, upgrades) and staff accounts
+  general  - Orders for sandwiches and buffets, and buffet prep
+  admin    - Everything: orders, prep, both menus (stock, prices, upgrades) and staff accounts
 
 
 NOTES

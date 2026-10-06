@@ -79,9 +79,9 @@ function Sandwiches() {
     <>
       <div className="page-head">
         <div>
-          <h1 className="page-title">Sandwiches</h1>
+          <h1 className="page-title">Sandwich Menu</h1>
           <p className="page-sub">
-            Customers build a sandwich by going through these steps in order. Each option can add to the base price.
+            The build-your-own sandwich menu. Customers build a sandwich by going through these steps in order. Each option can add to the base price.
           </p>
         </div>
       </div>

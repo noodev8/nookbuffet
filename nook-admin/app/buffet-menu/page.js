@@ -71,7 +71,7 @@ function Menu() {
     <>
       <div className="page-head">
         <div>
-          <h1 className="page-title">Menu</h1>
+          <h1 className="page-title">Buffet Menu</h1>
           <p className="page-sub">
             Pick a buffet to change its price, categories and items. Changes show on the website straight away.
           </p>

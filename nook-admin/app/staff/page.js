@@ -7,8 +7,8 @@ import { formatDateTime } from '../lib/format';
 const ADMINS_ONLY = ['admin'];
 
 const ROLES = [
-  { value: 'general', label: 'General', help: 'orders and prep summary' },
-  { value: 'admin', label: 'Admin', help: 'everything, including the menu, prices, upgrades and staff accounts' },
+  { value: 'general', label: 'General', help: 'orders for sandwiches and buffets, and buffet prep' },
+  { value: 'admin', label: 'Admin', help: 'everything, including the sandwich and buffet menus, prices, upgrades and staff accounts' },
 ];
 
 const EMPTY_FORM = { full_name: '', username: '', email: '', password: '', role: 'general' };

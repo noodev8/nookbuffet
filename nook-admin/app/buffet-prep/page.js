@@ -5,10 +5,10 @@ import Link from 'next/link';
 import AdminShell, { useAdmin } from '../components/AdminShell';
 import { dayKey, dayLabel, isPast, peopleCount } from '../lib/format';
 
-export default function SummaryPage() {
+export default function BuffetPrepPage() {
   return (
     <AdminShell>
-      <PrepSummary />
+      <BuffetPrep />
     </AdminShell>
   );
 }
@@ -35,7 +35,7 @@ const buildSummary = (dayOrders) => {
   return summary;
 };
 
-function PrepSummary() {
+function BuffetPrep() {
   const { api } = useAdmin();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,13 +51,13 @@ function PrepSummary() {
       .finally(() => setLoading(false));
   }, [api]);
 
-  if (loading) return <div className="notice">Loading prep summary...</div>;
+  if (loading) return <div className="notice">Loading buffet prep...</div>;
   if (error) return <div className="notice notice-error">{error}</div>;
 
   // Only today onwards - overdue orders are flagged on the Orders page instead
   const days = {};
   let overdue = 0;
-  // Buffets only - sandwiches are made to order and listed on the Sandwich Orders screen
+  // Buffets only - sandwiches have their own prep page
   for (const order of orders.filter(o => (o.buffets || []).length > 0)) {
     const key = dayKey(order.fulfillment_date) || 'none';
     if (isPast(key)) { overdue += 1; continue; }
@@ -69,7 +69,7 @@ function PrepSummary() {
     <>
       <div className="page-head">
         <div>
-          <h1 className="page-title">Prep Summary</h1>
+          <h1 className="page-title">Buffet Prep</h1>
           <p className="page-sub">Everything that needs making for buffets, added up per collection day.</p>
         </div>
         {dayKeys.length > 0 && (
@@ -85,7 +85,7 @@ function PrepSummary() {
         </div>
       )}
 
-      {dayKeys.length === 0 && <div className="notice">Nothing to prepare — no upcoming orders.</div>}
+      {dayKeys.length === 0 && <div className="notice">Nothing to prepare — no upcoming buffet orders.</div>}
 
       {dayKeys.map(key => {
         const dayOrders = days[key];
