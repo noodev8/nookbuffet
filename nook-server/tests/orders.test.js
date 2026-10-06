@@ -5,12 +5,15 @@ jest.mock('../models/orderModel');
 jest.mock('../models/sandwichModel');
 jest.mock('../utils/orderDateCalculator');
 // Factory mock - automocking would load the real module, which needs a Resend API key
-jest.mock('../utils/emailService', () => ({ sendOrderConfirmationEmail: jest.fn() }));
+jest.mock('../utils/emailService', () => ({
+  sendOrderConfirmationEmail: jest.fn(),
+  sendNewOrderNotificationEmail: jest.fn()
+}));
 
 const orderModel = require('../models/orderModel');
 const sandwichModel = require('../models/sandwichModel');
 const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
-const { sendOrderConfirmationEmail } = require('../utils/emailService');
+const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail } = require('../utils/emailService');
 const orderController = require('../controllers/orderController');
 
 // Helper: build fake req and res objects
@@ -89,6 +92,7 @@ beforeEach(() => {
   sandwichModel.getMenuForCustomers.mockResolvedValue({ sold_out: false, steps: SANDWICH_STEPS });
   orderModel.createOrder.mockResolvedValue({ id: 7, order_number: 'ORD-007', created_at: '2026-09-18' });
   sendOrderConfirmationEmail.mockResolvedValue({ success: true });
+  sendNewOrderNotificationEmail.mockResolvedValue({ success: true });
 });
 
 describe('createOrder', () => {
@@ -98,6 +102,8 @@ describe('createOrder', () => {
     expect(getResult().return_code).toBe('SUCCESS');
     expect(getResult().data.orderNumber).toBe('ORD-007');
     expect(orderModel.createOrder).toHaveBeenCalledWith(expect.objectContaining({ fulfillmentDate: '2026-09-21' }));
+    expect(sendNewOrderNotificationEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'customer@example.com', phone: '01234 567890' }), 'ORD-007');
   });
 
   test('rejects delivery orders', async () => {
@@ -246,6 +252,7 @@ describe('createOrder with sandwiches', () => {
     await orderController.createOrder(req, res);
     expect(getResult().return_code).toBe('SLOT_FULL');
     expect(sendOrderConfirmationEmail).not.toHaveBeenCalled();
+    expect(sendNewOrderNotificationEmail).not.toHaveBeenCalled();
   });
 
   test('rejects an empty order', async () => {

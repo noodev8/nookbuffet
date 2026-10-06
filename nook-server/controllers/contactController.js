@@ -9,12 +9,8 @@ The email is sent using Resend
 =======================================================================================================================================
 */
 
-// Import the Resend email service
-const { Resend } = require('resend');
-
-// ===== SET UP EMAIL SERVICE =====
-// Create a Resend instance 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Import the shared email helper and the shop's inbox
+const { sendEmail, SHOP_EMAIL } = require('../utils/emailService');
 
 // ===== SEND CONTACT EMAIL =====
 /**
@@ -196,9 +192,10 @@ const sendContactEmail = async (req, res) => {
 
     // ===== SEND THE EMAIL =====
     // Use the Resend service to actually send the email
-    const emailResult = await resend.emails.send({
+    // sendEmail throws if Resend reports an error, so the catch below handles failures
+    const emailResult = await sendEmail({
       from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,  // Who the email is from 
-      to: process.env.TO_EMAIL,            // Who receives the email 
+      to: SHOP_EMAIL,                      // Who receives the email 
       subject: emailSubject,               // The subject line of the email
       html: emailContent,                  // The HTML content of the email
       reply_to: email                      // When you reply, it goes to the customer's email

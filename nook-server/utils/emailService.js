@@ -15,6 +15,125 @@ const menuModel = require('../models/menuModel');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 /**
+ * Send an email through Resend
+ * Resend returns { data, error } rather than throwing, so turn an error into a throw.
+ * Network failures (no status code) are retried once after a short wait.
+ *
+ * @param {object} message - The Resend email payload
+ * @returns {Promise<object>} - The sent email's data from Resend
+ */
+const sendEmail = async (message) => {
+  let { data, error } = await resend.emails.send(message);
+
+  if (error && error.statusCode == null) {
+    console.warn('Email send failed, retrying:', error.message);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    ({ data, error } = await resend.emails.send(message));
+  }
+
+  if (error) {
+    throw new Error(`${error.name}: ${error.message}`);
+  }
+  // Resend id can be looked up in the Resend dashboard to see if it was delivered
+  console.log(`Email "${message.subject}" accepted by Resend for ${message.to} (id ${data.id})`);
+  return data;
+};
+
+// The shop's inbox for new order alerts and contact form messages
+const SHOP_EMAIL = process.env.SHOP_EMAIL || 'nookbuffet26@gmail.com';
+
+/**
+ * Build the HTML for the buffets and sandwiches in an order
+ * Shared by the customer confirmation and the shop notification
+ *
+ * @param {object} orderData - The complete order data
+ * @returns {Promise<string>} - HTML for the order items
+ */
+const buildOrderItemsHtml = async (orderData) => {
+  // Build the buffets HTML section
+  let buffetsHtml = '';
+  let buffetNumber = 1;
+
+  for (const buffet of orderData.buffets || []) {
+    // Fetch item details from database 
+    let itemDetails = buffet.itemDetails || [];
+    if (buffet.items && buffet.items.length > 0 && itemDetails.length === 0) {
+      itemDetails = await menuModel.getMenuItemsByIds(buffet.items);
+    }
+
+    // Group items by category
+    const itemsByCategory = {};
+    if (itemDetails && itemDetails.length > 0) {
+      itemDetails.forEach(item => {
+        if (!itemsByCategory[item.category_name]) {
+          itemsByCategory[item.category_name] = [];
+        }
+        itemsByCategory[item.category_name].push(item.name);
+      });
+    }
+
+    let itemsHtml = '';
+    for (const [category, items] of Object.entries(itemsByCategory)) {
+      itemsHtml += `
+        <div style="margin-bottom: 10px;">
+          <strong style="color: #555;">${category}:</strong>
+          <span style="color: #333;">${items.join(', ')}</span>
+        </div>
+      `;
+    }
+
+    // Build upgrades section if any
+    let upgradesHtml = '';
+    if (buffet.upgrades && buffet.upgrades.length > 0) {
+      const upgradeNames = buffet.upgrades.map(u => u.name || 'Upgrade').join(', ');
+      upgradesHtml = `
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
+          <strong style="color: #555;">Upgrades:</strong>
+          <span style="color: #333;">${upgradeNames}</span>
+        </div>
+      `;
+    }
+
+    buffetsHtml += `
+      <div style="background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+        <h3 style="margin: 0 0 10px 0; color: #1a1a1a; font-size: 16px;">
+          ${buffet.buffetName || 'Buffet ' + buffetNumber} - ${buffet.numPeople} ${buffet.numPeople === 1 ? 'person' : 'people'}
+        </h3>
+        ${itemsHtml}
+        ${upgradesHtml}
+        ${buffet.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${buffet.notes}</div>` : ''}
+        ${buffet.dietaryInfo ? `<div style="color: #666;">Dietary: ${buffet.dietaryInfo}</div>` : ''}
+        ${buffet.allergens ? `<div style="color: #c00;">Allergens: ${buffet.allergens}</div>` : ''}
+        <div style="margin-top: 10px; font-weight: bold; color: #1a1a1a;">
+          Subtotal: £${parseFloat(buffet.totalPrice || 0).toFixed(2)}
+        </div>
+      </div>
+    `;
+    buffetNumber++;
+  }
+
+  // Build the sandwiches HTML section (already checked and priced by the controller)
+  let sandwichesHtml = '';
+  for (const sandwich of orderData.sandwiches || []) {
+    const picks = sandwich.options.map(o => `${o.stepName}: ${o.optionName}`).join('<br>');
+    sandwichesHtml += `
+      <div style="background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+        <h3 style="margin: 0 0 10px 0; color: #1a1a1a; font-size: 16px;">
+          ${sandwich.quantity} × Sandwich
+        </h3>
+        <div style="color: #333;">${picks}</div>
+        ${sandwich.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${sandwich.notes}</div>` : ''}
+        <div style="margin-top: 10px; font-weight: bold; color: #1a1a1a;">
+          Subtotal: £${sandwich.subtotal.toFixed(2)}
+        </div>
+      </div>
+    `;
+  }
+
+  return buffetsHtml + sandwichesHtml;
+};
+
+/**
  * Send order confirmation email to customer
  *
  * @param {object} orderData - The complete order data
@@ -23,85 +142,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  */
 const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
   try {
-    // Build the buffets HTML section
-    let buffetsHtml = '';
-    let buffetNumber = 1;
-
-    for (const buffet of orderData.buffets || []) {
-      // Fetch item details from database 
-      let itemDetails = buffet.itemDetails || [];
-      if (buffet.items && buffet.items.length > 0 && itemDetails.length === 0) {
-        itemDetails = await menuModel.getMenuItemsByIds(buffet.items);
-      }
-
-      // Group items by category
-      const itemsByCategory = {};
-      if (itemDetails && itemDetails.length > 0) {
-        itemDetails.forEach(item => {
-          if (!itemsByCategory[item.category_name]) {
-            itemsByCategory[item.category_name] = [];
-          }
-          itemsByCategory[item.category_name].push(item.name);
-        });
-      }
-
-      let itemsHtml = '';
-      for (const [category, items] of Object.entries(itemsByCategory)) {
-        itemsHtml += `
-          <div style="margin-bottom: 10px;">
-            <strong style="color: #555;">${category}:</strong>
-            <span style="color: #333;">${items.join(', ')}</span>
-          </div>
-        `;
-      }
-
-      // Build upgrades section if any
-      let upgradesHtml = '';
-      if (buffet.upgrades && buffet.upgrades.length > 0) {
-        const upgradeNames = buffet.upgrades.map(u => u.name || 'Upgrade').join(', ');
-        upgradesHtml = `
-          <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
-            <strong style="color: #555;">Upgrades:</strong>
-            <span style="color: #333;">${upgradeNames}</span>
-          </div>
-        `;
-      }
-
-      buffetsHtml += `
-        <div style="background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-          <h3 style="margin: 0 0 10px 0; color: #1a1a1a; font-size: 16px;">
-            ${buffet.buffetName || 'Buffet ' + buffetNumber} - ${buffet.numPeople} ${buffet.numPeople === 1 ? 'person' : 'people'}
-          </h3>
-          ${itemsHtml}
-          ${upgradesHtml}
-          ${buffet.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${buffet.notes}</div>` : ''}
-          ${buffet.dietaryInfo ? `<div style="color: #666;">Dietary: ${buffet.dietaryInfo}</div>` : ''}
-          ${buffet.allergens ? `<div style="color: #c00;">Allergens: ${buffet.allergens}</div>` : ''}
-          <div style="margin-top: 10px; font-weight: bold; color: #1a1a1a;">
-            Subtotal: £${parseFloat(buffet.totalPrice || 0).toFixed(2)}
-          </div>
-        </div>
-      `;
-      buffetNumber++;
-    }
-
-    // Build the sandwiches HTML section (already checked and priced by the controller)
-    let sandwichesHtml = '';
-    for (const sandwich of orderData.sandwiches || []) {
-      const picks = sandwich.options.map(o => `${o.stepName}: ${o.optionName}`).join('<br>');
-      sandwichesHtml += `
-        <div style="background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-          <h3 style="margin: 0 0 10px 0; color: #1a1a1a; font-size: 16px;">
-            ${sandwich.quantity} × Sandwich
-          </h3>
-          <div style="color: #333;">${picks}</div>
-          ${sandwich.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${sandwich.notes}</div>` : ''}
-          <div style="margin-top: 10px; font-weight: bold; color: #1a1a1a;">
-            Subtotal: £${sandwich.subtotal.toFixed(2)}
-          </div>
-        </div>
-      `;
-    }
+    const itemsHtml = await buildOrderItemsHtml(orderData);
 
     // Format collection info
     const fulfillmentText = 'Collection';
@@ -158,8 +199,7 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
               <h2 style="color: #1a1a1a; font-size: 18px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px;">
                 Your Order
               </h2>
-              ${buffetsHtml}
-              ${sandwichesHtml}
+              ${itemsHtml}
 
               <!-- Total -->
               <div style="background: #1a1a1a; color: white; padding: 20px; border-radius: 8px; text-align: right; margin-top: 20px;">
@@ -179,7 +219,7 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
     `;
 
     // Send the email
-    const result = await resend.emails.send({
+    const result = await sendEmail({
       from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,
       to: orderData.customerEmail,
       subject: `Order Confirmation ${orderNumber} - The Little Nook Buffet`,
@@ -192,6 +232,97 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
   } catch (error) {
     console.error('Failed to send order confirmation email:', error);
   
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Send new order alert to the shop
+ * Replying to it goes straight to the customer
+ *
+ * @param {object} orderData - The complete order data
+ * @param {string} orderNumber - The order number (e.g., "ORD-014")
+ * @returns {Promise<object>} - Result from Resend
+ */
+const sendNewOrderNotificationEmail = async (orderData, orderNumber) => {
+  try {
+    const itemsHtml = await buildOrderItemsHtml(orderData);
+
+    const dateText = orderData.fulfillmentDate || 'TBC';
+    const timeText = orderData.fulfillmentTime || '';
+
+    const detailRow = (label, value) => `
+      <tr>
+        <td style="padding: 8px 0; color: #666; width: 110px;">${label}:</td>
+        <td style="padding: 8px 0; font-weight: bold;">${value}</td>
+      </tr>
+    `;
+
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f5f5f5; margin: 0; padding: 20px;">
+          <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+
+            <!-- Header -->
+            <div style="background: #1a1a1a; color: white; padding: 30px; text-align: center;">
+              <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">THE LITTLE NOOK BUFFET</h1>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">New Order ${orderNumber}</p>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 30px;">
+              <h2 style="color: #1a1a1a; font-size: 18px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px;">
+                Customer
+              </h2>
+              <table style="width: 100%; margin-bottom: 25px;">
+                ${orderData.businessName ? detailRow('Name', orderData.businessName) : ''}
+                ${detailRow('Email', `<a href="mailto:${orderData.email}">${orderData.email}</a>`)}
+                ${detailRow('Phone', `<a href="tel:${orderData.phone}">${orderData.phone}</a>`)}
+                ${orderData.address ? detailRow('Address', orderData.address) : ''}
+              </table>
+
+              <h2 style="color: #1a1a1a; font-size: 18px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px;">
+                Collection
+              </h2>
+              <table style="width: 100%; margin-bottom: 25px;">
+                ${detailRow('Date', dateText)}
+                ${timeText ? detailRow('Time', timeText) : ''}
+              </table>
+
+              <h2 style="color: #1a1a1a; font-size: 18px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px;">
+                Order
+              </h2>
+              ${itemsHtml}
+
+              <!-- Total -->
+              <div style="background: #1a1a1a; color: white; padding: 20px; border-radius: 8px; text-align: right; margin-top: 20px;">
+                <span style="font-size: 18px;">Total: </span>
+                <span style="font-size: 24px; font-weight: bold;">£${parseFloat(orderData.totalPrice).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const result = await sendEmail({
+      from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,
+      to: SHOP_EMAIL,
+      subject: `New Order ${orderNumber} - ${orderData.businessName || orderData.email} - collect ${dateText}${timeText ? ' ' + timeText : ''}`,
+      html: emailHtml,
+      reply_to: orderData.email
+    });
+
+    console.log('New order notification email sent:', result);
+    return { success: true, result };
+
+  } catch (error) {
+    console.error('Failed to send new order notification email:', error);
     return { success: false, error: error.message };
   }
 };
@@ -267,7 +398,7 @@ const sendOrderReadyEmail = async (orderData) => {
     `;
 
     // Send the email
-    const result = await resend.emails.send({
+    const result = await sendEmail({
       from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,
       to: orderData.customer_email,
       subject: `Your Order ${orderData.order_number} is Ready! - The Little Nook Buffet`,
@@ -284,7 +415,10 @@ const sendOrderReadyEmail = async (orderData) => {
 };
 
 module.exports = {
+  SHOP_EMAIL,
+  sendEmail,
   sendOrderConfirmationEmail,
+  sendNewOrderNotificationEmail,
   sendOrderReadyEmail
 };
 

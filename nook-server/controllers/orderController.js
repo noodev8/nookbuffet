@@ -11,7 +11,7 @@ const sandwichModel = require('../models/sandwichModel');
 const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
 const { checkSandwiches } = require('../utils/sandwichOrder');
 const { slotTimes } = require('../utils/sandwichSlots');
-const { sendOrderConfirmationEmail } = require('../utils/emailService');
+const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail } = require('../utils/emailService');
 
 // ===== CREATE A NEW ORDER =====
 /**
@@ -225,6 +225,17 @@ const createOrder = async (req, res) => {
       })
       .catch(err => {
         console.error(`Email error for ${createdOrder.order_number}:`, err);
+      });
+
+    // Let the shop know about the new order, also in the background
+    sendNewOrderNotificationEmail(orderData, createdOrder.order_number)
+      .then(result => {
+        if (!result.success) {
+          console.error(`Failed to send new order notification for ${createdOrder.order_number}:`, result.error);
+        }
+      })
+      .catch(err => {
+        console.error(`Notification email error for ${createdOrder.order_number}:`, err);
       });
 
     // Send success response back to the website
