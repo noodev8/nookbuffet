@@ -43,7 +43,7 @@ export default function OrdersBoard({ kind }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Open orders only - completed and cancelled ones drop off this list
+  // Open orders only (not ready and ready) - collected and cancelled ones are in the archive
   useEffect(() => {
     api('/api/orders')
       .then(data => {
@@ -89,11 +89,10 @@ export default function OrdersBoard({ kind }) {
             {unpaid.length > 0 && <span><strong>{money(unpaidTotal)}</strong> still to be paid</span>}
           </div>
         </div>
-        {orders.length > 0 && (
-          <div className="page-actions no-print">
-            <button className="btn" onClick={() => window.print()}>Print all</button>
-          </div>
-        )}
+        <div className="page-actions no-print">
+          {orders.length > 0 && <button className="btn" onClick={() => window.print()}>Print all</button>}
+          <Link href="/archive" className="btn">Archive</Link>
+        </div>
       </div>
 
       {orders.length === 0 && <div className="notice">{config.empty}</div>}
@@ -111,6 +110,7 @@ export default function OrdersBoard({ kind }) {
                   <span className="order-row-number">
                     {kind === 'sandwich' && order.fulfillment_time && <span className="order-row-time">{order.fulfillment_time}</span>}
                     {order.order_number}
+                    {order.status === 'ready' && <span className="badge badge-status-ready">Ready</span>}
                   </span>
                   <span className="order-row-business">
                     {order.notes || order.customer_email}

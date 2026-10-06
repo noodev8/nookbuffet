@@ -1,4 +1,4 @@
-// Unit tests for order creation (createOrder)
+// Unit tests for the order controller: creating orders, status changes and payment
 // Tests the controller validation with the model, date calculator and email service stubbed out.
 
 jest.mock('../models/orderModel');
@@ -7,13 +7,14 @@ jest.mock('../utils/orderDateCalculator');
 // Factory mock - automocking would load the real module, which needs a Resend API key
 jest.mock('../utils/emailService', () => ({
   sendOrderConfirmationEmail: jest.fn(),
-  sendNewOrderNotificationEmail: jest.fn()
+  sendNewOrderNotificationEmail: jest.fn(),
+  sendOrderReadyEmail: jest.fn()
 }));
 
 const orderModel = require('../models/orderModel');
 const sandwichModel = require('../models/sandwichModel');
 const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
-const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail } = require('../utils/emailService');
+const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail, sendOrderReadyEmail } = require('../utils/emailService');
 const orderController = require('../controllers/orderController');
 
 // Helper: build fake req and res objects
@@ -296,5 +297,58 @@ describe('updatePaymentStatus', () => {
     const { req, res, getResult } = setup({ payment_status: 'paid' }, { id: '999' });
     await orderController.updatePaymentStatus(req, res);
     expect(getResult().return_code).toBe('NOT_FOUND');
+  });
+});
+
+describe('updateOrderStatus', () => {
+  const updated = (status, previous_status) =>
+    orderModel.updateOrderStatus.mockResolvedValue({ id: 7, order_number: 'ORD-007', customer_email: 'customer@example.com', status, previous_status });
+
+  beforeEach(() => sendOrderReadyEmail.mockResolvedValue({ success: true }));
+
+  test('rejects an unknown status', async () => {
+    const { req, res, getResult } = setup({ status: 'done' }, { id: '7' });
+    await orderController.updateOrderStatus(req, res);
+    expect(getResult().return_code).toBe('VALIDATION_ERROR');
+    expect(orderModel.updateOrderStatus).not.toHaveBeenCalled();
+  });
+
+  test('emails the customer when an order is first marked ready', async () => {
+    updated('ready', 'pending');
+    const { req, res, getResult } = setup({ status: 'ready' }, { id: '7' });
+    await orderController.updateOrderStatus(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(sendOrderReadyEmail).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not email again when a collected order is restored to ready', async () => {
+    updated('ready', 'collected');
+    const { req, res, getResult } = setup({ status: 'ready' }, { id: '7' });
+    await orderController.updateOrderStatus(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(sendOrderReadyEmail).not.toHaveBeenCalled();
+  });
+
+  test('marks an order collected without emailing', async () => {
+    updated('collected', 'ready');
+    const { req, res, getResult } = setup({ status: 'collected' }, { id: '7' });
+    await orderController.updateOrderStatus(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(orderModel.updateOrderStatus).toHaveBeenCalledWith('7', 'collected');
+    expect(sendOrderReadyEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe('getAllOrders', () => {
+  test('returns open orders by default and the archive when asked', async () => {
+    orderModel.getAllOrders.mockResolvedValue([]);
+    const open = setup();
+    await orderController.getAllOrders(open.req, open.res);
+    expect(orderModel.getAllOrders).toHaveBeenLastCalledWith({ archived: false });
+
+    const archive = setup();
+    archive.req.query = { archived: 'true' };
+    await orderController.getAllOrders(archive.req, archive.res);
+    expect(orderModel.getAllOrders).toHaveBeenLastCalledWith({ archived: true });
   });
 });

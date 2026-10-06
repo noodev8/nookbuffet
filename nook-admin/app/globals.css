@@ -268,6 +268,10 @@ h1, h2, h3 { font-family: 'Oswald', sans-serif; font-weight: 600; }
 .badge-paid { background: var(--green-bg); color: var(--green-text); }
 .badge-unpaid { background: var(--red-bg); color: var(--red-text); }
 .badge-warn { background: var(--amber-bg); color: var(--amber-text); }
+.badge-status-ready { background: #bee3f8; color: #2a4365; }
+.badge-status-collected,
+.badge-status-completed { background: #e2e8f0; color: var(--text); }
+.badge-status-cancelled { background: var(--red-bg); color: var(--red-text); }
 
 /* ========================================
    FORMS
@@ -412,6 +416,7 @@ h1, h2, h3 { font-family: 'Oswald', sans-serif; font-weight: 600; }
 
 .order-row-main { display: flex; flex-direction: column; min-width: 0; }
 .order-row-number { font-family: 'Oswald', sans-serif; font-size: 1.1rem; font-weight: 600; }
+.order-row-number .badge { margin-left: 0.5rem; font-family: 'Source Sans Pro', sans-serif; vertical-align: 2px; }
 .order-row-business { color: var(--muted); font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .order-row-people { color: var(--muted); font-size: 0.9rem; white-space: nowrap; }
 .order-row-total { font-weight: 700; white-space: nowrap; }

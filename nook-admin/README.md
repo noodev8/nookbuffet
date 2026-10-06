@@ -53,10 +53,15 @@ Orders and Menu pages (plus Prep for buffets).
   /buffet-prep    - Buffet Prep - everything to make for buffets, added up per collection day
   /buffet-menu    - Buffet Menu - pick a buffet to change its price, categories, items and stock; Upgrades tab (admins only)
 
-  /orders/[id]    - One order - mark paid, mark ready (emails the customer), print, cancel, note to customer
+  /orders/[id]    - One order - mark paid, mark ready (emails the customer), mark collected, print, cancel, note to customer
+  /archive        - Collected and cancelled orders, newest first, with search; open one to restore it
   /staff          - Staff accounts (admins only)
 
 The two Orders tabs show a red count of open orders, checked every minute.
+
+Order flow: new order (pending) -> "Order ready" emails the customer and the order stays on the list
+marked Ready -> "Collected" archives it. Cancelling also archives it. Archived orders are kept, not
+deleted, and can be restored from their page.
 
 Old addresses redirect: /summary to /buffet-prep, /menu (and /prices, /menu-builder) to /buffet-menu,
 /sandwiches to /sandwich-menu.

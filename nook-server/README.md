@@ -41,7 +41,8 @@ API ROUTES
 
   /api/auth             - Staff login (username/email + password), staff management
   /api/customers        - Customer register, login, profile update, order history
-  /api/orders           - Create orders, get orders, update status, staff notes, mark paid/unpaid
+  /api/orders           - Create orders, get open orders (?archived=true for collected/cancelled), update status
+                          (pending, ready - emails customer, collected, cancelled), staff notes, mark paid/unpaid
   /api/menu             - Menu categories and items
   /api/buffet-versions  - Buffet types and pricing (Standard, Kids, etc.)
   /api/upgrades         - Buffet upgrade options

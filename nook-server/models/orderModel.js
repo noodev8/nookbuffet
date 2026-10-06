@@ -284,18 +284,27 @@ const createOrder = async (orderData) => {
   }
 };
 
+// Orders that are finished with: collected, cancelled, or 'completed' from before
+// collection was tracked. They drop off the admin orders lists and show in the archive.
+const ARCHIVED_STATUSES = `('collected', 'completed', 'cancelled')`;
+
+// How many archived orders the archive page shows, newest first
+const ARCHIVE_LIMIT = 200;
+
 // ===== GET ALL ORDERS =====
 /**
- * Gets all orders with all their buffets and items
- * This is for the admin portal to see all orders
+ * Gets orders with all their buffets and items for the admin portal.
+ * Open orders by default (pending and ready), or the archive with archived: true.
  *
  * Uses a single query with JSON_AGG to avoid N+1 query problems.
  * The nested structure (orders → buffets → items/upgrades → upgrade_items)
  * is built using correlated subqueries with JSON aggregation.
  *
- * @returns {array} All orders with complete details
+ * @param {object} [options]
+ * @param {boolean} [options.archived] - Collected and cancelled orders instead of open ones
+ * @returns {array} Orders with complete details
  */
-const getAllOrders = async () => {
+const getAllOrders = async ({ archived = false } = {}) => {
   // Single query that builds the entire nested structure using JSON_AGG
   const ordersSQL = `
     SELECT
@@ -382,8 +391,8 @@ const getAllOrders = async () => {
 ${SANDWICHES_JSON}
 
     FROM orders o
-    WHERE o.status NOT IN ('completed', 'cancelled')
-    ORDER BY o.fulfillment_date ASC, o.created_at DESC
+    WHERE o.status ${archived ? 'IN' : 'NOT IN'} ${ARCHIVED_STATUSES}
+    ORDER BY ${archived ? `o.updated_at DESC LIMIT ${ARCHIVE_LIMIT}` : 'o.fulfillment_date ASC, o.created_at DESC'}
   `;
 
   const ordersResult = await query(ordersSQL);
@@ -392,21 +401,22 @@ ${SANDWICHES_JSON}
 
 // ===== UPDATE ORDER STATUS =====
 /**
- * Updates the status of an order to 'completed'
- * This marks the order as done so it won't show in the admin portal
+ * Updates the status of an order (pending, ready, collected or cancelled)
+ * Collected and cancelled orders leave the admin orders lists and go to the archive.
  *
  * @param {number} orderId - The ID of the order to update
  * @param {string} status - The new status value
- * @returns {object} The updated order
+ * @returns {object} The updated order, with previous_status (what it was before)
  */
 const updateOrderStatus = async (orderId, status) => {
   const updateSQL = `
-    UPDATE orders
+    UPDATE orders o
     SET status = $1, updated_at = NOW()
-    WHERE id = $2
-    RETURNING id, order_number, customer_email, customer_phone,
-              fulfillment_type, fulfillment_address, fulfillment_date, fulfillment_time,
-              total_price, status, updated_at
+    FROM (SELECT id, status AS previous_status FROM orders WHERE id = $2 FOR UPDATE) before
+    WHERE o.id = before.id
+    RETURNING o.id, o.order_number, o.customer_email, o.customer_phone,
+              o.fulfillment_type, o.fulfillment_address, o.fulfillment_date, o.fulfillment_time,
+              o.total_price, o.status, o.updated_at, before.previous_status
   `;
 
   const result = await query(updateSQL, [status, orderId]);

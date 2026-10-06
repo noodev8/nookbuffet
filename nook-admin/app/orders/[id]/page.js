@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import AdminShell, { useAdmin } from '../../components/AdminShell';
 import {
-  formatDate, formatDateTime, money, orderSize, isPaid, paymentLabel, groupByCategory
+  formatDate, formatDateTime, money, orderSize, isPaid, paymentLabel, groupByCategory, isArchived, statusLabel
 } from '../../lib/format';
 
 export default function OrderPage() {
@@ -45,10 +45,11 @@ function OrderDetails() {
   if (loading) return <div className="notice">Loading order...</div>;
   if (error) return <div className="notice notice-error">{error}</div>;
 
-  const isOpen = order.status !== 'completed' && order.status !== 'cancelled';
+  const archived = isArchived(order);
   // Back to the list this order is on - orders with any buffet are on the buffet list
   const listHref = (order.buffets || []).length > 0 ? '/buffet-orders' : '/';
   const listName = listHref === '/' ? 'sandwich orders' : 'buffet orders';
+  const backHref = archived ? '/archive' : listHref;
 
   const togglePaid = async () => {
     const newStatus = order.payment_status === 'paid' ? 'unpaid' : 'paid';
@@ -65,14 +66,16 @@ function OrderDetails() {
     }
   };
 
-  // 'completed' emails the customer that their order is ready to collect
-  const setStatus = async (status, question) => {
+  // 'ready' emails the customer that their order is ready to collect; 'collected' and
+  // 'cancelled' archive it. Restoring from the archive stays on this page.
+  const setStatus = async (status, question, { stay = false } = {}) => {
     if (!confirm(question)) return;
     setBusy(true);
     try {
       const data = await api(`/api/orders/${orderId}/status`, { method: 'PATCH', body: { status } });
-      if (data.return_code === 'SUCCESS') router.push(listHref);
-      else alert(data.message || 'Could not update the order');
+      if (data.return_code !== 'SUCCESS') alert(data.message || 'Could not update the order');
+      else if (stay) setOrder(prev => ({ ...prev, status: data.data.status }));
+      else router.push(listHref);
     } catch {
       alert('Could not reach the server. Please try again.');
     } finally {
@@ -100,14 +103,14 @@ function OrderDetails() {
 
   return (
     <>
-      <Link href={listHref} className="back-link no-print">← All {listName}</Link>
+      <Link href={backHref} className="back-link no-print">← {archived ? 'Archive' : `All ${listName}`}</Link>
 
       <div className="page-head">
         <div>
           <h1 className="page-title">
             {order.order_number}{' '}
             <span className={`badge ${isPaid(order) ? 'badge-paid' : 'badge-unpaid'}`}>{paymentLabel(order)}</span>{' '}
-            {!isOpen && <span className="badge">{order.status === 'completed' ? 'Completed' : 'Cancelled'}</span>}
+            {order.status !== 'pending' && <span className={`badge badge-status-${order.status}`}>{statusLabel(order)}</span>}
           </h1>
           <p className="page-sub">
             Collect <strong>{formatDate(order.fulfillment_date)}{order.fulfillment_time ? ` at ${order.fulfillment_time}` : ''}</strong>
@@ -120,24 +123,44 @@ function OrderDetails() {
         <button className={order.payment_status === 'paid' ? 'btn' : 'btn btn-success'} onClick={togglePaid} disabled={busy}>
           {order.payment_status === 'paid' ? 'Mark as unpaid' : 'Mark as paid'}
         </button>
-        {isOpen && (
+        {order.status === 'pending' && (
           <button
             className="btn btn-primary"
             disabled={busy}
-            onClick={() => setStatus('completed', 'Mark this order as ready?\n\nThe customer will be emailed that it is ready to collect, and it will leave the orders list.')}
+            onClick={() => setStatus('ready', 'Mark this order as ready?\n\nThe customer will be emailed that it is ready to collect. It stays on the orders list until it is collected.')}
           >
             Order ready — email customer
           </button>
         )}
+        {/* Can be collected straight away, e.g. a customer waiting at the counter */}
+        {!archived && (
+          <button
+            className={order.status === 'ready' ? 'btn btn-primary' : 'btn'}
+            disabled={busy}
+            onClick={() => setStatus('collected', `Mark this order as collected?${isPaid(order) ? '' : '\n\nIt is still marked as UNPAID.'}\n\nIt will leave the orders list and move to the archive.`)}
+          >
+            Collected — archive order
+          </button>
+        )}
         <button className="btn" onClick={() => window.print()}>Print</button>
         <span className="spacer" />
-        {isOpen && (
+        {!archived && (
           <button
             className="btn btn-danger"
             disabled={busy}
-            onClick={() => setStatus('cancelled', 'Cancel this order? It will leave the orders list. The customer is not emailed.')}
+            onClick={() => setStatus('cancelled', 'Cancel this order? It will move to the archive. The customer is not emailed.')}
           >
             Cancel order
+          </button>
+        )}
+        {archived && (
+          <button
+            className="btn"
+            disabled={busy}
+            // A collected order goes back as ready (no second email); a cancelled one as not ready
+            onClick={() => setStatus(order.status === 'cancelled' ? 'pending' : 'ready', 'Move this order back to the orders list?', { stay: true })}
+          >
+            Restore to orders list
           </button>
         )}
       </div>

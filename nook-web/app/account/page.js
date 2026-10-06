@@ -17,6 +17,8 @@ const EMPTY_CUSTOMER = {
 const STATUS_LABELS = {
   pending: { label: 'Pending', className: 'status-pending' },
   confirmed: { label: 'Confirmed', className: 'status-confirmed' },
+  ready: { label: 'Ready to collect', className: 'status-confirmed' },
+  collected: { label: 'Collected', className: 'status-completed' },
   completed: { label: 'Completed', className: 'status-completed' },
   cancelled: { label: 'Cancelled', className: 'status-cancelled' },
 };

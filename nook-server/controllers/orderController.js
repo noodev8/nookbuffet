@@ -273,7 +273,8 @@ const createOrder = async (req, res) => {
 const getAllOrders = async (req, res) => {
   try {
     // Ask the model to get all orders
-    const orders = await orderModel.getAllOrders();
+    // ?archived=true for collected and cancelled orders, otherwise the open ones
+    const orders = await orderModel.getAllOrders({ archived: req.query.archived === 'true' });
 
     // Send all orders back
     res.json({
@@ -298,8 +299,11 @@ const getAllOrders = async (req, res) => {
 
 // ===== UPDATE ORDER STATUS =====
 /**
- * Updates the status of an order
- * This is for marking orders as completed in the admin portal
+ * Updates the status of an order from the admin portal:
+ *   pending   - placed, being made
+ *   ready     - made; the customer is emailed that it is ready to collect
+ *   collected - picked up; the order is archived
+ *   cancelled - archived without emailing the customer
  *
  * @param {object} req - The request object 
  * @param {object} res - The response object
@@ -310,18 +314,19 @@ const updateOrderStatus = async (req, res) => {
     const { status } = req.body;
 
     // Validate status
-    if (!status || !['pending', 'completed', 'cancelled'].includes(status)) {
+    if (!status || !['pending', 'ready', 'collected', 'cancelled'].includes(status)) {
       return res.json({
         return_code: 'VALIDATION_ERROR',
-        message: 'Valid status is required (pending, completed, or cancelled)'
+        message: 'Valid status is required (pending, ready, collected, or cancelled)'
       });
     }
 
     // Ask the model to update the order status
     const updatedOrder = await orderModel.updateOrderStatus(orderId, status);
 
-    // If status is completed, send email to customer
-    if (status === 'completed' && updatedOrder.customer_email) {
+    // Email the customer when their order is first marked ready - not when a collected
+    // order is restored back to ready from the archive
+    if (status === 'ready' && updatedOrder.previous_status === 'pending' && updatedOrder.customer_email) {
       const { sendOrderReadyEmail } = require('../utils/emailService');
       const emailResult = await sendOrderReadyEmail(updatedOrder);
       if (emailResult.success) {
