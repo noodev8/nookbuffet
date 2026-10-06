@@ -95,23 +95,24 @@ const getUpgradeWithItems = async (upgradeId) => {
 };
 
 // ===== GET ALL UPGRADES FOR MANAGEMENT (with categories and items) =====
+// Deleting is a soft delete (is_active = false), so deleted ones are left out here
 const getAllUpgradesForManagement = async () => {
   try {
     const upgradesResult = await query(
-      `SELECT id, name, description, price_per_person, is_active FROM upgrades ORDER BY name`
+      `SELECT id, name, description, price_per_person, is_active FROM upgrades WHERE is_active = true ORDER BY name`
     );
     const upgrades = upgradesResult.rows;
 
     for (const upgrade of upgrades) {
       const catsResult = await query(
         `SELECT id, name, description, num_choices, is_required, position
-         FROM upgrade_categories WHERE upgrade_id = $1 ORDER BY position, name`,
+         FROM upgrade_categories WHERE upgrade_id = $1 AND is_active = true ORDER BY position, name`,
         [upgrade.id]
       );
       upgrade.categories = catsResult.rows;
       for (const cat of upgrade.categories) {
         const itemsResult = await query(
-          `SELECT id, name, description FROM upgrade_items WHERE upgrade_category_id = $1 ORDER BY name`,
+          `SELECT id, name, description FROM upgrade_items WHERE upgrade_category_id = $1 AND is_active = true ORDER BY name`,
           [cat.id]
         );
         cat.items = itemsResult.rows;

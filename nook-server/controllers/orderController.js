@@ -8,10 +8,12 @@ This file handles requests for creating new orders.
 
 const orderModel = require('../models/orderModel');
 const sandwichModel = require('../models/sandwichModel');
+const buffetVersionModel = require('../models/buffetVersionModel');
+const { checkBuffets } = require('../utils/buffetOrder');
 const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
 const { checkSandwiches } = require('../utils/sandwichOrder');
 const { slotTimes } = require('../utils/sandwichSlots');
-const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail } = require('../utils/emailService');
+const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail, sendOrderReadyEmail } = require('../utils/emailService');
 
 // ===== CREATE A NEW ORDER =====
 /**
@@ -81,29 +83,17 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Validate each buffet
-    for (const buffet of buffets) {
-      if (!buffet.buffetVersionId || !buffet.numPeople || !buffet.pricePerPerson || !buffet.totalPrice) {
-        return res.json({
-          return_code: 'VALIDATION_ERROR',
-          message: 'Each buffet must have version ID, number of people, price per person, and total price'
-        });
+    // Buffets are checked and priced from the current buffet and upgrade prices, not from what the browser sent
+    let pricedBuffets = [];
+    let buffetTotal = 0;
+    if (buffets.length > 0) {
+      const prices = await buffetVersionModel.getPricesForOrder(buffets.map(b => b?.buffetVersionId));
+      const checked = checkBuffets(buffets, prices.versions, prices.upgrades);
+      if (checked.error) {
+        return res.json({ return_code: 'VALIDATION_ERROR', message: checked.error });
       }
-
-      if (!buffet.items || !Array.isArray(buffet.items) || buffet.items.length === 0) {
-        return res.json({
-          return_code: 'VALIDATION_ERROR',
-          message: 'Each buffet must have at least one menu item selected'
-        });
-      }
-
-      // Validate upgrades if provided (upgrades are optional)
-      if (buffet.upgrades && !Array.isArray(buffet.upgrades)) {
-        return res.json({
-          return_code: 'VALIDATION_ERROR',
-          message: 'Upgrades must be an array of upgrade IDs'
-        });
-      }
+      pricedBuffets = checked.buffets;
+      buffetTotal = checked.total;
     }
 
     // Sandwiches are checked and priced from the current menu, not from what the browser sent
@@ -144,7 +134,6 @@ const createOrder = async (req, res) => {
       sandwichTotal = checked.total;
     }
 
-    const buffetTotal = buffets.reduce((sum, buffet) => sum + Number(buffet.totalPrice), 0);
     const totalPrice = Math.round((buffetTotal + sandwichTotal) * 100) / 100;
     if (!(totalPrice > 0)) {
       return res.json({
@@ -188,9 +177,11 @@ const createOrder = async (req, res) => {
       });
     }
 
-    orderData.buffets = buffets;
+    orderData.buffets = pricedBuffets;
     orderData.sandwiches = sandwiches;
     orderData.totalPrice = totalPrice;
+    // Only a logged-in customer's own token links the order to their account
+    orderData.customerId = req.user?.type === 'customer' ? req.user.id : null;
     if (sandwiches.length === 0) orderData.fulfillmentTime = null;
 
     // Ask the model to create the order in the database
@@ -313,6 +304,10 @@ const updateOrderStatus = async (req, res) => {
     const orderId = req.params.id;
     const { status } = req.body;
 
+    if (!orderId || isNaN(orderId)) {
+      return res.json({ return_code: 'INVALID_ID', message: 'Invalid order ID' });
+    }
+
     // Validate status
     if (!status || !['pending', 'ready', 'collected', 'cancelled'].includes(status)) {
       return res.json({
@@ -323,11 +318,13 @@ const updateOrderStatus = async (req, res) => {
 
     // Ask the model to update the order status
     const updatedOrder = await orderModel.updateOrderStatus(orderId, status);
+    if (!updatedOrder) {
+      return res.json({ return_code: 'NOT_FOUND', message: 'Order not found' });
+    }
 
     // Email the customer when their order is first marked ready - not when a collected
     // order is restored back to ready from the archive
     if (status === 'ready' && updatedOrder.previous_status === 'pending' && updatedOrder.customer_email) {
-      const { sendOrderReadyEmail } = require('../utils/emailService');
       const emailResult = await sendOrderReadyEmail(updatedOrder);
       if (emailResult.success) {
         console.log('Order ready email sent to:', updatedOrder.customer_email);

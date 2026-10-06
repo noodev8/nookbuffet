@@ -65,10 +65,12 @@ const createOrder = async (orderData) => {
     // Start a transaction - this means all queries must succeed or none will
     await client.query('BEGIN');
 
-    // Sandwich collection slots only take so many orders. Lock so two orders for the same slot
-    // can't both see a free place, then check it isn't full. The lock is released at COMMIT/ROLLBACK.
+    // One new order at a time, so two orders can't both take the next order number or the
+    // last place in a sandwich collection slot. The lock is released at COMMIT/ROLLBACK.
+    await client.query(`SELECT pg_advisory_xact_lock(hashtext('new-order'))`);
+
+    // Sandwich collection slots only take so many orders - check this one isn't full
     if ((orderData.sandwiches || []).length > 0 && orderData.slotCapacity) {
-      await client.query(`SELECT pg_advisory_xact_lock(hashtext('sandwich-slots'))`);
       const booked = await client.query(
         `SELECT COUNT(*)::int AS orders FROM orders o
          WHERE o.fulfillment_date = $1 AND o.fulfillment_time = $2 AND o.status <> 'cancelled'
@@ -145,16 +147,15 @@ const createOrder = async (orderData) => {
       const buffetResult = await client.query(buffetQuery, buffetValues);
       const buffetId = buffetResult.rows[0].id;
       
-      // Now insert each menu item for this buffet
+      // Now insert each menu item for this buffet - only items on this buffet's menu
       for (const itemId of buffet.items) {
-        // Get item details from menu_items table
         const itemDetailsQuery = `
           SELECT mi.name, c.name as category_name
           FROM menu_items mi
           JOIN categories c ON mi.category_id = c.id
-          WHERE mi.id = $1
+          WHERE mi.id = $1 AND c.buffet_version_id = $2
         `;
-        const itemDetails = await client.query(itemDetailsQuery, [itemId]);
+        const itemDetails = await client.query(itemDetailsQuery, [itemId, buffet.buffetVersionId]);
 
         if (itemDetails.rows.length > 0) {
           const itemQuery = `
@@ -176,74 +177,36 @@ const createOrder = async (orderData) => {
         }
       }
 
-      // Insert upgrades for this buffet (if any)
-      // Each upgrade has: { upgradeId, selectedItems: [itemId1, itemId2, ...] }
-      if (buffet.upgrades && buffet.upgrades.length > 0) {
-        for (const upgradeData of buffet.upgrades) {
-          const upgradeId = upgradeData.upgradeId;
-          const selectedItems = upgradeData.selectedItems || [];
+      // Insert upgrades for this buffet (if any). These have already been checked and priced
+      // by the controller (utils/buffetOrder.js): { upgradeId, name, pricePerPerson, subtotal, selectedItems }
+      for (const upgrade of buffet.upgrades || []) {
+        const upgradeResult = await client.query(
+          `INSERT INTO order_buffet_upgrades (
+             order_buffet_id, upgrade_id, upgrade_name,
+             price_per_person, num_people, subtotal, order_id
+           ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+           RETURNING id`,
+          [buffetId, upgrade.upgradeId, upgrade.name, upgrade.pricePerPerson, buffet.numPeople, upgrade.subtotal, orderId]
+        );
+        const orderBuffetUpgradeId = upgradeResult.rows[0].id;
 
-          // Get upgrade details
-          const upgradeDetailsQuery = `
-            SELECT id, name, price_per_person
-            FROM upgrades
-            WHERE id = $1 AND is_active = true
-          `;
-          const upgradeDetails = await client.query(upgradeDetailsQuery, [upgradeId]);
+        // Insert the items picked for this upgrade - only items that belong to it
+        for (const itemId of upgrade.selectedItems) {
+          const itemDetails = await client.query(
+            `SELECT ui.name, uc.name as category_name
+             FROM upgrade_items ui
+             JOIN upgrade_categories uc ON ui.upgrade_category_id = uc.id
+             WHERE ui.id = $1 AND uc.upgrade_id = $2`,
+            [itemId, upgrade.upgradeId]
+          );
 
-          if (upgradeDetails.rows.length > 0) {
-            const upgrade = upgradeDetails.rows[0];
-            const upgradeSubtotal = parseFloat(upgrade.price_per_person) * buffet.numPeople;
-
-            const upgradeQuery = `
-              INSERT INTO order_buffet_upgrades (
-                order_buffet_id, upgrade_id, upgrade_name,
-                price_per_person, num_people, subtotal, order_id
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-              RETURNING id
-            `;
-
-            const upgradeValues = [
-              buffetId,
-              upgrade.id,
-              upgrade.name,
-              upgrade.price_per_person,
-              buffet.numPeople,
-              upgradeSubtotal,
-              orderId
-            ];
-
-            const upgradeResult = await client.query(upgradeQuery, upgradeValues);
-            const orderBuffetUpgradeId = upgradeResult.rows[0].id;
-
-            // Insert selected items for this upgrade
-            for (const itemId of selectedItems) {
-              const itemDetailsQuery = `
-                SELECT ui.id, ui.name, uc.name as category_name
-                FROM upgrade_items ui
-                JOIN upgrade_categories uc ON ui.upgrade_category_id = uc.id
-                WHERE ui.id = $1
-              `;
-              const itemDetails = await client.query(itemDetailsQuery, [itemId]);
-
-              if (itemDetails.rows.length > 0) {
-                const itemQuery = `
-                  INSERT INTO order_buffet_upgrade_items (
-                    order_buffet_upgrade_id, upgrade_item_id, item_name, category_name, order_id
-                  ) VALUES ($1, $2, $3, $4, $5)
-                `;
-
-                const itemValues = [
-                  orderBuffetUpgradeId,
-                  itemId,
-                  itemDetails.rows[0].name,
-                  itemDetails.rows[0].category_name,
-                  orderId
-                ];
-
-                await client.query(itemQuery, itemValues);
-              }
-            }
+          if (itemDetails.rows.length > 0) {
+            await client.query(
+              `INSERT INTO order_buffet_upgrade_items (
+                 order_buffet_upgrade_id, upgrade_item_id, item_name, category_name, order_id
+               ) VALUES ($1, $2, $3, $4, $5)`,
+              [orderBuffetUpgradeId, itemId, itemDetails.rows[0].name, itemDetails.rows[0].category_name, orderId]
+            );
           }
         }
       }
@@ -406,7 +369,7 @@ ${SANDWICHES_JSON}
  *
  * @param {number} orderId - The ID of the order to update
  * @param {string} status - The new status value
- * @returns {object} The updated order, with previous_status (what it was before)
+ * @returns {object|null} The updated order, with previous_status (what it was before), or null if not found
  */
 const updateOrderStatus = async (orderId, status) => {
   const updateSQL = `
@@ -420,12 +383,7 @@ const updateOrderStatus = async (orderId, status) => {
   `;
 
   const result = await query(updateSQL, [status, orderId]);
-
-  if (result.rows.length === 0) {
-    throw new Error('Order not found');
-  }
-
-  return result.rows[0];
+  return result.rows[0] || null;
 };
 
 // ===== GET SINGLE ORDER BY ID =====

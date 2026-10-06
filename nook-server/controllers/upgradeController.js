@@ -20,6 +20,7 @@ const getAllUpgrades = async (req, res) => {
       count: upgrades.length
     });
   } catch (error) {
+    console.error('Could not get upgrades:', error);
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Could not get upgrades'
@@ -48,6 +49,7 @@ const getUpgradesForBuffet = async (req, res) => {
       count: upgrades.length
     });
   } catch (error) {
+    console.error('Could not get upgrades for buffet:', error);
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Could not get upgrades for buffet'
@@ -83,6 +85,7 @@ const getUpgradeWithItems = async (req, res) => {
       data: upgrade
     });
   } catch (error) {
+    console.error('Could not get upgrade:', error);
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Could not get upgrade'
@@ -95,7 +98,8 @@ const getAllUpgradesForManagement = async (req, res) => {
   try {
     const upgrades = await upgradeModel.getAllUpgradesForManagement();
     res.json({ return_code: 'SUCCESS', message: 'Got upgrades for management', data: upgrades });
-  } catch {
+  } catch (error) {
+    console.error('Could not get upgrades:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not get upgrades' });
   }
 };
@@ -110,7 +114,8 @@ const createUpgrade = async (req, res) => {
     }
     const upgrade = await upgradeModel.createUpgrade(name.trim(), description?.trim() || null, parseFloat(price_per_person));
     res.json({ return_code: 'SUCCESS', message: 'Upgrade created', data: upgrade });
-  } catch {
+  } catch (error) {
+    console.error('Could not create upgrade:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not create upgrade' });
   }
 };
@@ -128,7 +133,8 @@ const updateUpgrade = async (req, res) => {
     const upgrade = await upgradeModel.updateUpgrade(id, name.trim(), description?.trim() || null, parseFloat(price_per_person));
     if (!upgrade) return res.json({ return_code: 'NOT_FOUND', message: 'Upgrade not found' });
     res.json({ return_code: 'SUCCESS', message: 'Upgrade updated', data: upgrade });
-  } catch {
+  } catch (error) {
+    console.error('Could not update upgrade:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not update upgrade' });
   }
 };
@@ -140,7 +146,8 @@ const getBuffetVersionLinksForUpgrade = async (req, res) => {
     if (!upgradeId || isNaN(upgradeId)) return res.json({ return_code: 'INVALID_ID', message: 'Invalid upgrade ID' });
     const links = await upgradeModel.getBuffetVersionLinksForUpgrade(upgradeId);
     res.json({ return_code: 'SUCCESS', message: 'Got buffet links', data: links });
-  } catch {
+  } catch (error) {
+    console.error('Could not get buffet links:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not get buffet links' });
   }
 };
@@ -159,7 +166,8 @@ const createUpgradeCategory = async (req, res) => {
       position !== undefined ? parseInt(position) : 0
     );
     res.json({ return_code: 'SUCCESS', message: 'Category created', data: cat });
-  } catch {
+  } catch (error) {
+    console.error('Could not create category:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not create category' });
   }
 };
@@ -178,7 +186,8 @@ const updateUpgradeCategory = async (req, res) => {
     );
     if (!cat) return res.json({ return_code: 'NOT_FOUND', message: 'Category not found' });
     res.json({ return_code: 'SUCCESS', message: 'Category updated', data: cat });
-  } catch {
+  } catch (error) {
+    console.error('Could not update category:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not update category' });
   }
 };
@@ -192,7 +201,8 @@ const createUpgradeItem = async (req, res) => {
     if (!name?.trim()) return res.json({ return_code: 'INVALID_DATA', message: 'name is required' });
     const item = await upgradeModel.createUpgradeItem(categoryId, name.trim(), description?.trim() || null);
     res.json({ return_code: 'SUCCESS', message: 'Item created', data: item });
-  } catch {
+  } catch (error) {
+    console.error('Could not create item:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not create item' });
   }
 };
@@ -207,7 +217,8 @@ const updateUpgradeItem = async (req, res) => {
     const item = await upgradeModel.updateUpgradeItem(id, name.trim(), description?.trim() || null);
     if (!item) return res.json({ return_code: 'NOT_FOUND', message: 'Item not found' });
     res.json({ return_code: 'SUCCESS', message: 'Item updated', data: item });
-  } catch {
+  } catch (error) {
+    console.error('Could not update item:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not update item' });
   }
 };
@@ -221,7 +232,8 @@ const getBuffetUpgradeLinks = async (req, res) => {
     }
     const upgrades = await upgradeModel.getBuffetUpgradeLinks(buffetVersionId);
     res.json({ return_code: 'SUCCESS', message: 'Got upgrade links', data: upgrades });
-  } catch {
+  } catch (error) {
+    console.error('Could not get upgrade links:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not get upgrade links' });
   }
 };
@@ -236,7 +248,8 @@ const linkUpgradeToBuffet = async (req, res) => {
     }
     await upgradeModel.linkUpgradeToBuffet(buffetVersionId, upgradeId);
     res.json({ return_code: 'SUCCESS', message: 'Upgrade linked to buffet' });
-  } catch {
+  } catch (error) {
+    console.error('Could not link upgrade:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not link upgrade' });
   }
 };
@@ -251,7 +264,8 @@ const unlinkUpgradeFromBuffet = async (req, res) => {
     }
     await upgradeModel.unlinkUpgradeFromBuffet(buffetVersionId, upgradeId);
     res.json({ return_code: 'SUCCESS', message: 'Upgrade removed from buffet' });
-  } catch {
+  } catch (error) {
+    console.error('Could not unlink upgrade:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not unlink upgrade' });
   }
 };
@@ -265,6 +279,7 @@ const deleteUpgrade = async (req, res) => {
     res.json({ return_code: 'SUCCESS', message: 'Upgrade removed successfully', data: deactivated });
   } catch (error) {
     if (error.message === 'Upgrade not found') return res.json({ return_code: 'NOT_FOUND', message: 'Upgrade not found' });
+    console.error('Could not remove upgrade:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove upgrade' });
   }
 };
@@ -278,6 +293,7 @@ const deleteUpgradeCategory = async (req, res) => {
     res.json({ return_code: 'SUCCESS', message: 'Upgrade category removed successfully', data: deactivated });
   } catch (error) {
     if (error.message === 'Upgrade category not found') return res.json({ return_code: 'NOT_FOUND', message: 'Upgrade category not found' });
+    console.error('Could not remove upgrade category:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove upgrade category' });
   }
 };
@@ -291,6 +307,7 @@ const deleteUpgradeItem = async (req, res) => {
     res.json({ return_code: 'SUCCESS', message: 'Upgrade item removed successfully', data: deactivated });
   } catch (error) {
     if (error.message === 'Upgrade item not found') return res.json({ return_code: 'NOT_FOUND', message: 'Upgrade item not found' });
+    console.error('Could not remove upgrade item:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove upgrade item' });
   }
 };

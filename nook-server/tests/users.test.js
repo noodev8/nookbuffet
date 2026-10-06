@@ -10,8 +10,8 @@ jest.mock('../utils/emailService', () => ({
 const authModel = require('../models/authModel');
 const authController = require('../controllers/authController');
 
-// Helper: build fake req and res objects
-function setup(body = {}, params = {}, user = { id: 999 }) {
+// Helper: build fake req and res objects. user is the admin portal token (it carries the id as userId)
+function setup(body = {}, params = {}, user = { userId: 999, role: 'admin' }) {
   let result;
   const res = { json: (data) => { result = data; } };
   const req = { body, params, user };
@@ -117,7 +117,7 @@ describe('deleteUser', () => {
 
   test('returns CANNOT_DELETE_SELF when user tries to delete their own account', async () => {
     authModel.getUserById.mockResolvedValue({ id: 999 });
-    const { req, res, getResult } = setup({}, { id: '999' }, { id: 999 });
+    const { req, res, getResult } = setup({}, { id: '999' });
     await authController.deleteUser(req, res);
     expect(getResult().return_code).toBe('CANNOT_DELETE_SELF');
   });
@@ -125,7 +125,7 @@ describe('deleteUser', () => {
   test('returns SUCCESS when a different user is deleted', async () => {
     authModel.getUserById.mockResolvedValue({ id: 5 });
     authModel.deleteUser.mockResolvedValue({ id: 5 });
-    const { req, res, getResult } = setup({}, { id: '5' }, { id: 999 });
+    const { req, res, getResult } = setup({}, { id: '5' });
     await authController.deleteUser(req, res);
     expect(getResult().return_code).toBe('SUCCESS');
   });

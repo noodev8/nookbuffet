@@ -23,23 +23,32 @@ const UPLOAD_DIR = path.join(__dirname, '..', '..', 'nook-web', 'public', 'asset
 // Create the directory if it doesn't exist yet
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
+// The image types allowed, and the extension each is saved with. The extension comes from
+// here rather than the uploaded file's name, so a file can't be saved as e.g. .html
+const EXTENSIONS = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/webp': '.webp',
+  'image/gif': '.gif'
+};
+
 // Multer storage config
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const safeName = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+    const safeName = `${Date.now()}-${Math.random().toString(36).slice(2)}${EXTENSIONS[file.mimetype]}`;
     cb(null, safeName);
   }
 });
 
 // File filter — images only
 const fileFilter = (_req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  if (allowed.includes(file.mimetype)) {
+  if (EXTENSIONS[file.mimetype]) {
     cb(null, true);
   } else {
-    cb(new Error('Only image files are allowed (jpeg, png, webp, gif)'), false);
+    const error = new Error('Only image files are allowed (jpeg, png, webp, gif)');
+    error.code = 'INVALID_FILE_TYPE';
+    cb(error, false);
   }
 };
 
@@ -55,7 +64,20 @@ router.post(
   '/image',
   verifyToken,
   checkRole(['admin']),
-  upload.single('image'),
+  (req, res, next) => {
+    // Turn multer's errors (too big, wrong type) into a normal API response
+    upload.single('image')(req, res, (err) => {
+      if (!err) return next();
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.json({ return_code: 'FILE_TOO_LARGE', message: 'Images must be 5 MB or smaller' });
+      }
+      if (err.code === 'INVALID_FILE_TYPE') {
+        return res.json({ return_code: 'INVALID_FILE_TYPE', message: err.message });
+      }
+      console.error('Image upload error:', err);
+      res.json({ return_code: 'SERVER_ERROR', message: 'Could not upload the image' });
+    });
+  },
   (req, res) => {
     if (!req.file) {
       return res.json({ return_code: 'NO_FILE', message: 'No image file was uploaded' });
@@ -83,7 +105,7 @@ router.delete(
     }
 
     fs.unlink(filePath, (err) => {
-      if (err) return res.json({ return_code: 'ERROR', message: 'Could not delete file' });
+      if (err) return res.json({ return_code: 'SERVER_ERROR', message: 'Could not delete file' });
       res.json({ return_code: 'SUCCESS', message: 'Image deleted' });
     });
   }

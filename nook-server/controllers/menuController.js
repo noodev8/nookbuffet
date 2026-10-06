@@ -296,6 +296,7 @@ const updateCategory = async (req, res) => {
     res.json({ return_code: 'SUCCESS', message: 'Category updated successfully', data: updated });
   } catch (error) {
     if (error.message === 'Category not found') return res.json({ return_code: 'NOT_FOUND', message: 'Category not found' });
+    console.error('Could not update category:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not update category' });
   }
 };
@@ -327,6 +328,7 @@ const updateMenuItem = async (req, res) => {
     res.json({ return_code: 'SUCCESS', message: 'Menu item updated successfully', data: updated });
   } catch (error) {
     if (error.message === 'Menu item not found') return res.json({ return_code: 'NOT_FOUND', message: 'Menu item not found' });
+    console.error('Could not update menu item:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not update menu item' });
   }
 };
@@ -368,6 +370,7 @@ const deleteCategory = async (req, res) => {
     if (error.message === 'Category not found') {
       return res.json({ return_code: 'NOT_FOUND', message: 'Category not found' });
     }
+    console.error('Could not remove category:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove category' });
   }
 };
@@ -389,6 +392,7 @@ const deleteMenuItem = async (req, res) => {
     if (error.message === 'Menu item not found') {
       return res.json({ return_code: 'NOT_FOUND', message: 'Menu item not found' });
     }
+    console.error('Could not remove menu item:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove menu item' });
   }
 };

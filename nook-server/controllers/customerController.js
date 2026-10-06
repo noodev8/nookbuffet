@@ -11,6 +11,7 @@ const jwt = require('jsonwebtoken');
 const customerModel = require('../models/customerModel');
 const orderModel = require('../models/orderModel');
 const authModel = require('../models/authModel');
+const { JWT_SECRET } = require('../middleware/authMiddleware');
 
 const SALT_ROUNDS = 12;
 
@@ -136,10 +137,9 @@ const login = async (req, res) => {
     await customerModel.updateLastLogin(customer.id);
 
     // Sign a JWT token - expires in 7 days
-    const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
     const token = jwt.sign(
       { id: customer.id, email: customer.email, type: 'customer' },
-      jwtSecret,
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -187,8 +187,8 @@ const updateProfile = async (req, res) => {
       });
     }
 
-    // ===== ADMIN ACCOUNT =====
-    if (req.user.type !== 'customer') {
+    // ===== STAFF ACCOUNT (logged into the website) =====
+    if (req.user.type === 'staff') {
       const fullName = [first_name?.trim(), last_name?.trim()].filter(Boolean).join(' ');
       const adminUser = await authModel.updateAdminProfile(req.user.id, {
         full_name:       fullName || null,
@@ -211,6 +211,9 @@ const updateProfile = async (req, res) => {
     }
 
     // ===== CUSTOMER ACCOUNT =====
+    if (req.user.type !== 'customer') {
+      return res.json({ return_code: 'UNAUTHORIZED', message: 'Please log in to your account' });
+    }
     const customerId = req.user.id;
 
     // If they changed their email, make sure it isn't taken by someone else
@@ -259,7 +262,9 @@ const updateProfile = async (req, res) => {
  */
 const getMyOrders = async (req, res) => {
   try {
-    const customerId = req.user.id;
+    // Staff logged into the website have an admin_users id, which isn't a customer id -
+    // they only see orders placed with their email
+    const customerId = req.user.type === 'customer' ? req.user.id : null;
     const customerEmail = req.user.email;
 
     // Fetch all orders for this customer from the database

@@ -44,14 +44,12 @@ ENDPOINTS:
      "fulfillmentType": "collection",
      "fulfillmentDate": "2024-01-15",
      "fulfillmentTime": "12:00",
-     "totalPrice": 109.00,
      "buffets": [
        {
          "buffetVersionId": 1,
          "numPeople": 10,
-         "pricePerPerson": 10.90,
-         "totalPrice": 109.00,
          "items": [1, 2, 3, 4, 5],
+         "upgrades": [{ "upgradeId": 2, "selectedItems": [4, 7] }],
          "notes": "No nuts please",
          "dietaryInfo": "Vegetarian",
          "allergens": "Dairy"
@@ -65,8 +63,10 @@ ENDPOINTS:
    - address is only required when there are buffets
    - with sandwiches, fulfillmentTime ("HH:MM") is required and must be one of the 5-minute slots
      within sandwich collection hours that still has room (see GET /api/sandwiches/slots)
-   - sandwiches are priced on the server from the current menu, and totalPrice is worked out
-     on the server too (buffet totals + sandwich totals) - the totalPrice sent is ignored
+   - everything is priced on the server: buffets (and their upgrades) from the current buffet and
+     upgrade prices, sandwiches from the current menu. Any prices or totals sent are ignored.
+   - upgrades must be ones offered with that buffet, and only menu items on that buffet's menu are saved
+   - send the customer's login token (Authorization: Bearer ...) to link the order to their account
    - sandwich-only orders can be collected the same day if placed before sandwich_cutoff_time;
      anything with a buffet follows the usual daily_cutoff_time rule
    Success Response:
@@ -99,7 +99,7 @@ const router = express.Router();
 const orderController = require('../controllers/orderController');
 
 // Import auth middleware for protected routes
-const { verifyToken, checkRole } = require('../middleware/authMiddleware');
+const { verifyToken, optionalToken, checkRole } = require('../middleware/authMiddleware');
 
 // ===== ROUTE: GET EARLIEST ORDER DATE =====
 // When someone GETs /api/orders/earliest-date, run the getEarliestOrderDate function
@@ -120,8 +120,8 @@ router.get('/:id', verifyToken, checkRole(['general', 'admin']), orderController
 
 // ===== ROUTE: CREATE NEW ORDER =====
 // When someone POSTs to /api/orders, run the createOrder function
-// POST is used because we're creating new data
-router.post('/', orderController.createOrder);
+// POST is used because we're creating new data. A logged-in customer's token links the order to their account
+router.post('/', optionalToken, orderController.createOrder);
 
 // ===== ROUTE: UPDATE ORDER STATUS (PROTECTED) =====
 router.patch('/:id/status', verifyToken, checkRole(['general', 'admin']), orderController.updateOrderStatus);

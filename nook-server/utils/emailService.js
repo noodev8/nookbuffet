@@ -42,6 +42,15 @@ const sendEmail = async (message) => {
 // The shop's inbox for new order alerts and contact form messages
 const SHOP_EMAIL = process.env.SHOP_EMAIL || 'nookbuffet26@gmail.com';
 
+// Makes text typed by a customer safe to put in an email's HTML, so it shows as typed
+// instead of being able to add its own links, images or layout
+const escapeHtml = (value) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
 /**
  * Build the HTML for the buffets and sandwiches in an order
  * Shared by the customer confirmation and the shop notification
@@ -76,8 +85,8 @@ const buildOrderItemsHtml = async (orderData) => {
     for (const [category, items] of Object.entries(itemsByCategory)) {
       itemsHtml += `
         <div style="margin-bottom: 10px;">
-          <strong style="color: #555;">${category}:</strong>
-          <span style="color: #333;">${items.join(', ')}</span>
+          <strong style="color: #555;">${escapeHtml(category)}:</strong>
+          <span style="color: #333;">${items.map(escapeHtml).join(', ')}</span>
         </div>
       `;
     }
@@ -85,7 +94,7 @@ const buildOrderItemsHtml = async (orderData) => {
     // Build upgrades section if any
     let upgradesHtml = '';
     if (buffet.upgrades && buffet.upgrades.length > 0) {
-      const upgradeNames = buffet.upgrades.map(u => u.name || 'Upgrade').join(', ');
+      const upgradeNames = buffet.upgrades.map(u => escapeHtml(u.name || 'Upgrade')).join(', ');
       upgradesHtml = `
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
           <strong style="color: #555;">Upgrades:</strong>
@@ -97,13 +106,13 @@ const buildOrderItemsHtml = async (orderData) => {
     buffetsHtml += `
       <div style="background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
         <h3 style="margin: 0 0 10px 0; color: #1a1a1a; font-size: 16px;">
-          ${buffet.buffetName || 'Buffet ' + buffetNumber} - ${buffet.numPeople} ${buffet.numPeople === 1 ? 'person' : 'people'}
+          ${escapeHtml(buffet.buffetName || 'Buffet ' + buffetNumber)} - ${buffet.numPeople} ${buffet.numPeople === 1 ? 'person' : 'people'}
         </h3>
         ${itemsHtml}
         ${upgradesHtml}
-        ${buffet.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${buffet.notes}</div>` : ''}
-        ${buffet.dietaryInfo ? `<div style="color: #666;">Dietary: ${buffet.dietaryInfo}</div>` : ''}
-        ${buffet.allergens ? `<div style="color: #c00;">Allergens: ${buffet.allergens}</div>` : ''}
+        ${buffet.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${escapeHtml(buffet.notes)}</div>` : ''}
+        ${buffet.dietaryInfo ? `<div style="color: #666;">Dietary: ${escapeHtml(buffet.dietaryInfo)}</div>` : ''}
+        ${buffet.allergens ? `<div style="color: #c00;">Allergens: ${escapeHtml(buffet.allergens)}</div>` : ''}
         <div style="margin-top: 10px; font-weight: bold; color: #1a1a1a;">
           Subtotal: £${parseFloat(buffet.totalPrice || 0).toFixed(2)}
         </div>
@@ -115,14 +124,14 @@ const buildOrderItemsHtml = async (orderData) => {
   // Build the sandwiches HTML section (already checked and priced by the controller)
   let sandwichesHtml = '';
   for (const sandwich of orderData.sandwiches || []) {
-    const picks = sandwich.options.map(o => `${o.stepName}: ${o.optionName}`).join('<br>');
+    const picks = sandwich.options.map(o => `${escapeHtml(o.stepName)}: ${escapeHtml(o.optionName)}`).join('<br>');
     sandwichesHtml += `
       <div style="background: #f9f9f9; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
         <h3 style="margin: 0 0 10px 0; color: #1a1a1a; font-size: 16px;">
           ${sandwich.quantity} × Sandwich
         </h3>
         <div style="color: #333;">${picks}</div>
-        ${sandwich.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${sandwich.notes}</div>` : ''}
+        ${sandwich.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${escapeHtml(sandwich.notes)}</div>` : ''}
         <div style="margin-top: 10px; font-weight: bold; color: #1a1a1a;">
           Subtotal: £${sandwich.subtotal.toFixed(2)}
         </div>
@@ -167,7 +176,7 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
 
             <!-- Content -->
             <div style="padding: 30px;">
-              <p style="font-size: 18px; margin-bottom: 20px;">Thank you for your order, <strong>${orderData.customerName}</strong>!</p>
+              <p style="font-size: 18px; margin-bottom: 20px;">Thank you for your order, <strong>${escapeHtml(orderData.customerName)}</strong>!</p>
               
               <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin-bottom: 25px;">
                 <strong>Order ${orderNumber}</strong> has been received and is being processed.
@@ -181,16 +190,16 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
               <table style="width: 100%; margin-bottom: 25px;">
                 <tr>
                   <td style="padding: 8px 0; color: #666;">Date:</td>
-                  <td style="padding: 8px 0; font-weight: bold;">${dateText}</td>
+                  <td style="padding: 8px 0; font-weight: bold;">${escapeHtml(dateText)}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #666;">Time:</td>
-                  <td style="padding: 8px 0; font-weight: bold;">${timeText}</td>
+                  <td style="padding: 8px 0; font-weight: bold;">${escapeHtml(timeText)}</td>
                 </tr>
                 ${orderData.businessName ? `
                 <tr>
                   <td style="padding: 8px 0; color: #666;">${orderData.buffets.length > 0 ? 'Business' : 'Name'}:</td>
-                  <td style="padding: 8px 0; font-weight: bold;">${orderData.businessName}</td>
+                  <td style="padding: 8px 0; font-weight: bold;">${escapeHtml(orderData.businessName)}</td>
                 </tr>
                 ` : ''}
               </table>
@@ -280,18 +289,18 @@ const sendNewOrderNotificationEmail = async (orderData, orderNumber) => {
                 Customer
               </h2>
               <table style="width: 100%; margin-bottom: 25px;">
-                ${orderData.businessName ? detailRow('Name', orderData.businessName) : ''}
-                ${detailRow('Email', `<a href="mailto:${orderData.email}">${orderData.email}</a>`)}
-                ${detailRow('Phone', `<a href="tel:${orderData.phone}">${orderData.phone}</a>`)}
-                ${orderData.address ? detailRow('Address', orderData.address) : ''}
+                ${orderData.businessName ? detailRow('Name', escapeHtml(orderData.businessName)) : ''}
+                ${detailRow('Email', `<a href="mailto:${escapeHtml(orderData.email)}">${escapeHtml(orderData.email)}</a>`)}
+                ${detailRow('Phone', `<a href="tel:${escapeHtml(orderData.phone)}">${escapeHtml(orderData.phone)}</a>`)}
+                ${orderData.address ? detailRow('Address', escapeHtml(orderData.address)) : ''}
               </table>
 
               <h2 style="color: #1a1a1a; font-size: 18px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px;">
                 Collection
               </h2>
               <table style="width: 100%; margin-bottom: 25px;">
-                ${detailRow('Date', dateText)}
-                ${timeText ? detailRow('Time', timeText) : ''}
+                ${detailRow('Date', escapeHtml(dateText))}
+                ${timeText ? detailRow('Time', escapeHtml(timeText)) : ''}
               </table>
 
               <h2 style="color: #1a1a1a; font-size: 18px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px;">
@@ -415,6 +424,7 @@ const sendOrderReadyEmail = async (orderData) => {
 };
 
 module.exports = {
+  escapeHtml,
   SHOP_EMAIL,
   sendEmail,
   sendOrderConfirmationEmail,

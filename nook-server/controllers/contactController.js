@@ -10,7 +10,7 @@ The email is sent using Resend
 */
 
 // Import the shared email helper and the shop's inbox
-const { sendEmail, SHOP_EMAIL } = require('../utils/emailService');
+const { sendEmail, escapeHtml, SHOP_EMAIL } = require('../utils/emailService');
 
 // ===== SEND CONTACT EMAIL =====
 /**
@@ -145,20 +145,20 @@ const sendContactEmail = async (req, res) => {
 
                 <div class="field">
                   <div class="field-label">Name</div>
-                  <div class="field-value">${name}</div>
+                  <div class="field-value">${escapeHtml(name)}</div>
                 </div>
 
                 <div class="field">
                   <div class="field-label">Email</div>
                   <!-- Make the email clickable so you can reply directly -->
-                  <div class="field-value"><a href="mailto:${email}" class="reply-link">${email}</a></div>
+                  <div class="field-value"><a href="mailto:${escapeHtml(email)}" class="reply-link">${escapeHtml(email)}</a></div>
                 </div>
 
                 <!-- Only show phone if they provided it -->
                 ${phone ? `
                 <div class="field">
                   <div class="field-label">Phone</div>
-                  <div class="field-value">${phone}</div>
+                  <div class="field-value">${escapeHtml(phone)}</div>
                 </div>
                 ` : ''}
 
@@ -166,7 +166,7 @@ const sendContactEmail = async (req, res) => {
                 ${subject ? `
                 <div class="field">
                   <div class="field-label">Subject</div>
-                  <div class="field-value">${subject}</div>
+                  <div class="field-value">${escapeHtml(subject)}</div>
                 </div>
                 ` : ''}
               </div>
@@ -176,14 +176,14 @@ const sendContactEmail = async (req, res) => {
                 <div class="section-title">Message</div>
                 <div class="message-box">
                   <!-- Convert line breaks to HTML line breaks so the message displays correctly -->
-                  <div class="field-value">${message.replace(/\n/g, '<br>')}</div>
+                  <div class="field-value">${escapeHtml(message).replace(/\n/g, '<br>')}</div>
                 </div>
               </div>
             </div>
 
             <div class="footer">
               <p>This email was sent from your website contact form.</p>
-              <p>You can reply directly to this email to contact ${name}.</p>
+              <p>You can reply directly to this email to contact ${escapeHtml(name)}.</p>
             </div>
           </div>
         </body>
@@ -219,7 +219,7 @@ const sendContactEmail = async (req, res) => {
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Sorry, there was a problem sending your message. Please try again.',
-      error: error.message // Include error details for debugging
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };

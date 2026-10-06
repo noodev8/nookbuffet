@@ -37,11 +37,6 @@ function CheckoutContent() {
     setOrderError('');
 
     try {
-      // Staff IDs live in admin_users, not customers
-      const storedCustomer = localStorage.getItem('customer');
-      const parsedCustomer = storedCustomer ? JSON.parse(storedCustomer) : null;
-      const customerId = parsedCustomer && parsedCustomer.accountType !== 'staff' ? parsedCustomer.id : null;
-
       const orderData = {
         email: orders[0]?.email || '',
         phone: orders[0]?.phone || '',
@@ -50,18 +45,15 @@ function CheckoutContent() {
         fulfillmentType: 'collection',
         fulfillmentDate: orders[0]?.fulfillmentDate || '',
         fulfillmentTime: orders[0]?.fulfillmentTime || '',
-        totalPrice: grandTotal, // the server works the total out again
-        customerId,
         sandwiches: sandwiches.map(sandwich => ({
           quantity: sandwich.quantity,
           optionIds: sandwich.optionIds,
           notes: sandwich.notes || ''
         })),
+        // Only what was picked is sent - the server works out every price from today's menu
         buffets: buffets.map(order => ({
           buffetVersionId: order.buffetVersionId,
           numPeople: order.numPeople,
-          pricePerPerson: order.pricePerPerson,
-          totalPrice: order.totalPrice,
           items: order.items,
           notes: order.notes || '',
           dietaryInfo: order.dietaryInfo || '',
@@ -74,9 +66,14 @@ function CheckoutContent() {
       };
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+      // A logged-in customer's token links the order to their account
+      const headers = { 'Content-Type': 'application/json' };
+      const token = localStorage.getItem('customer_token');
+      if (token) headers.Authorization = `Bearer ${token}`;
+
       const response = await fetch(`${apiUrl}/api/orders`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(orderData)
       });
 

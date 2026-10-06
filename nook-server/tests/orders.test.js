@@ -3,6 +3,7 @@
 
 jest.mock('../models/orderModel');
 jest.mock('../models/sandwichModel');
+jest.mock('../models/buffetVersionModel');
 jest.mock('../utils/orderDateCalculator');
 // Factory mock - automocking would load the real module, which needs a Resend API key
 jest.mock('../utils/emailService', () => ({
@@ -13,17 +14,24 @@ jest.mock('../utils/emailService', () => ({
 
 const orderModel = require('../models/orderModel');
 const sandwichModel = require('../models/sandwichModel');
+const buffetVersionModel = require('../models/buffetVersionModel');
 const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
 const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail, sendOrderReadyEmail } = require('../utils/emailService');
 const orderController = require('../controllers/orderController');
 
-// Helper: build fake req and res objects
-function setup(body = {}, params = {}) {
+// Helper: build fake req and res objects. user is the logged-in token, if any.
+function setup(body = {}, params = {}, user = null) {
   let result;
   const res = { json: (data) => { result = data; } };
-  const req = { body, params, query: {} };
+  const req = { body, params, query: {}, user };
   return { req, res, getResult: () => result };
 }
+
+// Buffet version 1 is £12.00 a head and offers the £3.50 Continental upgrade
+const BUFFET_PRICES = {
+  versions: [{ id: 1, title: 'Standard Buffet', price_per_person: '12.00' }],
+  upgrades: [{ buffet_version_id: 1, id: 2, name: 'Continental', price_per_person: '3.50' }]
+};
 
 // A complete, valid collection order - tests override one field at a time
 function validOrder(overrides = {}) {
@@ -89,6 +97,7 @@ beforeEach(() => {
     cutoffTime: '11:00',
     isAfterCutoff: false
   });
+  buffetVersionModel.getPricesForOrder.mockResolvedValue(BUFFET_PRICES);
   sandwichModel.getSettings.mockResolvedValue(SANDWICH_SETTINGS);
   sandwichModel.getMenuForCustomers.mockResolvedValue({ sold_out: false, steps: SANDWICH_STEPS });
   orderModel.createOrder.mockResolvedValue({ id: 7, order_number: 'ORD-007', created_at: '2026-09-18' });
@@ -134,6 +143,73 @@ describe('createOrder', () => {
     await orderController.createOrder(req, res);
     expect(getResult().return_code).toBe('INVALID_DATE');
     expect(orderModel.createOrder).not.toHaveBeenCalled();
+  });
+
+  test('prices buffets on the server and ignores the prices sent', async () => {
+    const order = validOrder({ totalPrice: 0.01 });
+    order.buffets[0].pricePerPerson = 0.01;
+    order.buffets[0].totalPrice = 0.05;
+    const { req, res, getResult } = setup(order);
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    const saved = orderModel.createOrder.mock.calls[0][0];
+    expect(saved.totalPrice).toBe(60); // 5 x £12.00
+    expect(saved.buffets[0]).toMatchObject({ pricePerPerson: 12, totalPrice: 60, buffetName: 'Standard Buffet' });
+  });
+
+  test('adds upgrades to the buffet price', async () => {
+    const order = validOrder();
+    order.buffets[0].upgrades = [{ upgradeId: 2, selectedItems: [4, 5] }];
+    const { req, res, getResult } = setup(order);
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    const saved = orderModel.createOrder.mock.calls[0][0];
+    expect(saved.totalPrice).toBe(77.5); // 5 x (£12.00 + £3.50)
+    expect(saved.buffets[0].upgrades).toEqual([
+      { upgradeId: 2, name: 'Continental', pricePerPerson: 3.5, subtotal: 17.5, selectedItems: [4, 5] }
+    ]);
+  });
+
+  test('rejects an upgrade not offered with that buffet', async () => {
+    const order = validOrder();
+    order.buffets[0].upgrades = [{ upgradeId: 99 }];
+    const { req, res, getResult } = setup(order);
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('VALIDATION_ERROR');
+    expect(orderModel.createOrder).not.toHaveBeenCalled();
+  });
+
+  test('rejects a buffet that is no longer available', async () => {
+    const order = validOrder();
+    order.buffets[0].buffetVersionId = 3;
+    const { req, res, getResult } = setup(order);
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('VALIDATION_ERROR');
+    expect(orderModel.createOrder).not.toHaveBeenCalled();
+  });
+
+  test('rejects a buffet with no people', async () => {
+    const order = validOrder();
+    order.buffets[0].numPeople = 0;
+    const { req, res, getResult } = setup(order);
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('VALIDATION_ERROR');
+  });
+
+  test('links the order to a logged-in customer from their token, not the request', async () => {
+    const { req, res } = setup(validOrder({ customerId: 99 }), {}, { id: 5, type: 'customer' });
+    await orderController.createOrder(req, res);
+    expect(orderModel.createOrder.mock.calls[0][0].customerId).toBe(5);
+  });
+
+  test('does not link guest or staff orders to a customer account', async () => {
+    const guest = setup(validOrder({ customerId: 99 }));
+    await orderController.createOrder(guest.req, guest.res);
+    expect(orderModel.createOrder.mock.calls[0][0].customerId).toBeNull();
+
+    const staff = setup(validOrder(), {}, { id: 5, type: 'staff', role: 'admin' });
+    await orderController.createOrder(staff.req, staff.res);
+    expect(orderModel.createOrder.mock.calls[1][0].customerId).toBeNull();
   });
 });
 
@@ -326,6 +402,14 @@ describe('updateOrderStatus', () => {
     const { req, res, getResult } = setup({ status: 'ready' }, { id: '7' });
     await orderController.updateOrderStatus(req, res);
     expect(getResult().return_code).toBe('SUCCESS');
+    expect(sendOrderReadyEmail).not.toHaveBeenCalled();
+  });
+
+  test('returns NOT_FOUND when the order does not exist', async () => {
+    orderModel.updateOrderStatus.mockResolvedValue(null);
+    const { req, res, getResult } = setup({ status: 'ready' }, { id: '999' });
+    await orderController.updateOrderStatus(req, res);
+    expect(getResult().return_code).toBe('NOT_FOUND');
     expect(sendOrderReadyEmail).not.toHaveBeenCalled();
   });
 

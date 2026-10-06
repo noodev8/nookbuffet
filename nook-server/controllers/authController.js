@@ -17,6 +17,7 @@ The flow:
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authModel = require('../models/authModel');
+const { JWT_SECRET } = require('../middleware/authMiddleware');
 
 // ===== LOGIN FUNCTION =====
 // Authenticates an admin user and returns a JWT token
@@ -80,7 +81,7 @@ const login = async (req, res) => {
     // Issue the 24h session token - the frontend stores it and sends it with future requests
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
+      JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -315,8 +316,8 @@ const deleteUser = async (req, res) => {
     }
 
     // ===== PREVENT SELF-DELETION =====
-    // Don't let admins delete themselves
-    if (req.user.id === parseInt(userId)) {
+    // Don't let admins delete themselves (admin portal tokens carry the id as userId)
+    if (req.user.userId === parseInt(userId)) {
       return res.json({
         return_code: 'CANNOT_DELETE_SELF',
         message: 'You cannot delete your own account'
@@ -395,7 +396,7 @@ const staffWebLogin = async (req, res) => {
     // Sign a 7-day token - same duration as customer tokens
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, type: 'staff' },
-      process.env.JWT_SECRET || 'your-secret-key',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 

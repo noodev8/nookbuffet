@@ -174,8 +174,7 @@ const deactivateBuffetVersion = async (id) => {
       [id]
     );
     if (versionResult.rows.length === 0) {
-      await client.query('ROLLBACK');
-      throw new Error('Buffet version not found');
+      throw new Error('Buffet version not found'); // rolled back below
     }
 
     // 2. Collect all category IDs for this version
@@ -222,9 +221,38 @@ const deactivateBuffetVersion = async (id) => {
   }
 };
 
+// ===== PRICES FOR AN ORDER =====
+/**
+ * The current prices of some buffet versions and the upgrades offered with them,
+ * so an order can be priced on the server. Inactive versions and upgrades are left out.
+ *
+ * @param {number[]} versionIds - The buffet version IDs in the order
+ * @returns {Promise<object>} { versions: [{ id, title, price_per_person }],
+ *                              upgrades: [{ buffet_version_id, id, name, price_per_person }] }
+ */
+const getPricesForOrder = async (versionIds) => {
+  const ids = versionIds.map(Number).filter(Number.isInteger);
+  const [versions, upgrades] = await Promise.all([
+    query(
+      `SELECT id, title, price_per_person FROM buffet_versions
+       WHERE id = ANY($1::int[]) AND is_active = true`,
+      [ids]
+    ),
+    query(
+      `SELECT bu.buffet_version_id, u.id, u.name, u.price_per_person
+       FROM buffet_upgrades bu
+       JOIN upgrades u ON u.id = bu.upgrade_id AND u.is_active = true
+       WHERE bu.buffet_version_id = ANY($1::int[]) AND bu.is_active = true`,
+      [ids]
+    )
+  ]);
+  return { versions: versions.rows, upgrades: upgrades.rows };
+};
+
 // ===== EXPORTS =====
 // Make these functions available to the controller
 module.exports = {
+  getPricesForOrder,
   getBuffetVersionById,
   getAllBuffetVersions,
   getAllBuffetVersionsForManagement,

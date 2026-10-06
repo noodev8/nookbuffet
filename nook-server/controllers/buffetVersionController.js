@@ -55,6 +55,7 @@ const getBuffetVersionById = async (req, res) => {
     }
 
     // Some other error happened somehow
+    console.error('Could not get that buffet version:', error);
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Could not get that buffet version'
@@ -87,6 +88,7 @@ const getAllBuffetVersions = async (req, res) => {
 
   } catch (error) {
     // If something goes wrong
+    console.error('Could not get buffet versions:', error);
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Could not get buffet versions'
@@ -110,6 +112,7 @@ const getAllBuffetVersionsForManagement = async (req, res) => {
       count: versions.length
     });
   } catch (error) {
+    console.error('Could not get buffet versions:', error);
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Could not get buffet versions'
@@ -162,6 +165,7 @@ const updateBuffetVersion = async (req, res) => {
         message: 'Buffet version not found'
       });
     }
+    console.error('Could not update buffet version:', error);
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Could not update buffet version'
@@ -204,6 +208,7 @@ const createBuffetVersion = async (req, res) => {
       data: created
     });
   } catch (error) {
+    console.error('Could not create buffet version:', error);
     res.json({
       return_code: 'SERVER_ERROR',
       message: 'Could not create buffet version'
@@ -235,6 +240,7 @@ const deleteBuffetVersion = async (req, res) => {
     if (error.message === 'Buffet version not found') {
       return res.json({ return_code: 'NOT_FOUND', message: 'Buffet version not found' });
     }
+    console.error('Could not remove buffet version:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not remove buffet version' });
   }
 };
