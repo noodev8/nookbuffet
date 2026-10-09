@@ -80,13 +80,13 @@ export default function Home() {
     setHasBasket(hasBasketItems());
   }, []);
 
-  // Only offer sandwiches when staff have switched them on in the admin portal
+  // Offer sandwiches unless they have sold out
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
     fetch(`${apiUrl}/api/sandwiches`)
       .then(res => res.json())
       .then(data => {
-        if (data.return_code === 'SUCCESS' && data.data.enabled && !data.data.sold_out) setSandwichMenu(data.data);
+        if (data.return_code === 'SUCCESS' && !data.data.sold_out) setSandwichMenu(data.data);
       })
       .catch(() => {});
   }, []);

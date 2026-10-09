@@ -20,22 +20,16 @@ beforeEach(() => jest.clearAllMocks());
 
 describe('updateSettings', () => {
   test('rejects a negative base price', async () => {
-    const { req, res, getResult } = setup({ base_price: -1, enabled: true });
-    await sandwichController.updateSettings(req, res);
-    expect(getResult().return_code).toBe('INVALID_DATA');
-  });
-
-  test('rejects a missing enabled flag', async () => {
-    const { req, res, getResult } = setup({ base_price: 5 });
+    const { req, res, getResult } = setup({ base_price: -1 });
     await sandwichController.updateSettings(req, res);
     expect(getResult().return_code).toBe('INVALID_DATA');
   });
 
   test('rounds the price to pennies and saves', async () => {
-    sandwichModel.updateSettings.mockResolvedValue({ base_price: '5.50', enabled: true });
-    const { req, res, getResult } = setup({ base_price: '5.499', enabled: true });
+    sandwichModel.updateSettings.mockResolvedValue({ base_price: '5.50' });
+    const { req, res, getResult } = setup({ base_price: '5.499' });
     await sandwichController.updateSettings(req, res);
-    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ base_price: 5.5, enabled: true, cutoff_time: undefined })); // not sent - left as it is
+    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ base_price: 5.5, cutoff_time: undefined })); // not sent - left as it is
     expect(getResult().return_code).toBe('SUCCESS');
   });
 });
@@ -138,33 +132,25 @@ describe('setOptionStock', () => {
 // ─── CUSTOMER MENU ──────────────────────────────────────────────────────────
 
 describe('getMenuForCustomers', () => {
-  test('returns nothing but enabled: false when sandwiches are switched off', async () => {
-    sandwichModel.getSettings.mockResolvedValue({ base_price: '5.00', enabled: false, cutoff_time: '11:00' });
-    const { req, res, getResult } = setup();
-    await sandwichController.getMenuForCustomers(req, res);
-    expect(getResult().data).toEqual({ enabled: false, sold_out: false, steps: [] });
-    expect(sandwichModel.getMenuForCustomers).not.toHaveBeenCalled();
-  });
-
-  test('returns the settings and in-stock menu when switched on', async () => {
-    sandwichModel.getSettings.mockResolvedValue({ base_price: '5.00', enabled: true, cutoff_time: '11:00' });
+  test('returns the settings and in-stock menu', async () => {
+    sandwichModel.getSettings.mockResolvedValue({ base_price: '5.00', cutoff_time: '11:00' });
     sandwichModel.getMenuForCustomers.mockResolvedValue({ sold_out: false, steps: [{ id: 1 }] });
     const { req, res, getResult } = setup();
     await sandwichController.getMenuForCustomers(req, res);
-    expect(getResult().data).toMatchObject({ enabled: true, base_price: '5.00', steps: [{ id: 1 }] });
+    expect(getResult().data).toMatchObject({ base_price: '5.00', steps: [{ id: 1 }] });
   });
 });
 
 describe('updateSettings cutoff_time', () => {
   test('rejects a badly formatted cutoff time', async () => {
-    const { req, res, getResult } = setup({ base_price: 5, enabled: true, cutoff_time: '11am' });
+    const { req, res, getResult } = setup({ base_price: 5, cutoff_time: '11am' });
     await sandwichController.updateSettings(req, res);
     expect(getResult().return_code).toBe('INVALID_DATA');
   });
 
   test('saves a valid cutoff time', async () => {
-    sandwichModel.updateSettings.mockResolvedValue({ base_price: '5.00', enabled: true, cutoff_time: '11:30' });
-    const { req, res, getResult } = setup({ base_price: 5, enabled: true, cutoff_time: '11:30' });
+    sandwichModel.updateSettings.mockResolvedValue({ base_price: '5.00', cutoff_time: '11:30' });
+    const { req, res, getResult } = setup({ base_price: 5, cutoff_time: '11:30' });
     await sandwichController.updateSettings(req, res);
     expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ cutoff_time: '11:30' }));
     expect(getResult().return_code).toBe('SUCCESS');
@@ -172,7 +158,7 @@ describe('updateSettings cutoff_time', () => {
 });
 
 describe('updateSettings collection hours and slots', () => {
-  const base = { base_price: 5, enabled: true };
+  const base = { base_price: 5 };
 
   test('saves collection hours and slot capacity', async () => {
     sandwichModel.updateSettings.mockResolvedValue({});

@@ -49,7 +49,6 @@ const getMenuForCustomers = async () => {
 // Each setting's order_config key, description and default (used until staff save one)
 const SETTINGS = {
   base_price:    { key: 'sandwich_base_price',   default: '0.00',  description: 'Price of a sandwich before any extras' },
-  enabled:       { key: 'sandwiches_enabled',    default: 'false', description: 'Whether customers can order sandwiches on the website' },
   cutoff_time:   { key: 'sandwich_cutoff_time',  default: '11:00', description: 'Order sandwiches before this time to collect them the same day' },
   open_time:     { key: 'sandwich_open_time',    default: '11:00', description: 'First sandwich collection time of the day' },
   close_time:    { key: 'sandwich_close_time',   default: '14:00', description: 'Sandwich collections must be before this time' },
@@ -66,7 +65,6 @@ const getSettings = async () => {
   const value = (name) => config[SETTINGS[name].key] ?? SETTINGS[name].default;
   return {
     base_price: value('base_price'),
-    enabled: value('enabled') === 'true',
     cutoff_time: value('cutoff_time'),
     open_time: value('open_time'),
     close_time: value('close_time'),
@@ -88,7 +86,7 @@ const setConfig = async (key, value, description) => {
   }
 };
 
-// Saves whichever settings are given ({ base_price: 5, enabled: true, open_time: '11:00', ... }),
+// Saves whichever settings are given ({ base_price: 5, open_time: '11:00', ... }),
 // leaving the rest as they are. Values have already been checked by the controller.
 const updateSettings = async (changes) => {
   for (const [name, value] of Object.entries(changes)) {

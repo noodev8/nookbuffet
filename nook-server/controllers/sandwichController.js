@@ -53,14 +53,10 @@ const readOption = (body) => {
 };
 
 // ===== GET MENU (customers) =====
-// Public - what the website needs to build a sandwich. Nothing but enabled: false when switched off.
+// Public - what the website needs to build a sandwich.
 const getMenuForCustomers = async (req, res) => {
   try {
-    const settings = await sandwichModel.getSettings();
-    if (!settings.enabled) {
-      return res.json({ return_code: 'SUCCESS', message: 'Sandwiches are not available', data: { enabled: false, sold_out: false, steps: [] } });
-    }
-    const menu = await sandwichModel.getMenuForCustomers();
+    const [settings, menu] = await Promise.all([sandwichModel.getSettings(), sandwichModel.getMenuForCustomers()]);
     res.json({ return_code: 'SUCCESS', message: 'Got sandwich menu', data: { ...settings, ...menu } });
   } catch (error) {
     console.error('Get customer sandwich menu error:', error);
@@ -77,11 +73,9 @@ const getSlots = async (req, res) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || isNaN(new Date(date).getTime())) {
       return res.json({ return_code: 'INVALID_DATA', message: 'date must be YYYY-MM-DD' });
     }
-    const settings = await sandwichModel.getSettings();
-    if (!settings.enabled) {
-      return res.json({ return_code: 'SUCCESS', message: 'Sandwiches are not available', data: { slots: [] } });
-    }
-    const [counts, now] = await Promise.all([sandwichModel.getSlotCounts(date), calculateEarliestSandwichDate()]);
+    const [settings, counts, now] = await Promise.all([
+      sandwichModel.getSettings(), sandwichModel.getSlotCounts(date), calculateEarliestSandwichDate()
+    ]);
     if (!now.success) return res.json({ return_code: 'SERVER_ERROR', message: 'Could not get collection times' });
 
     const slots = date < now.today ? [] : buildSlots(settings, counts, date === now.today ? now.currentTime : null);
@@ -112,7 +106,6 @@ const updateSettings = async (req, res) => {
   try {
     const basePrice = parsePrice(req.body.base_price);
     if (basePrice === null) return res.json({ return_code: 'INVALID_DATA', message: 'base_price must be 0 or more' });
-    if (typeof req.body.enabled !== 'boolean') return res.json({ return_code: 'INVALID_DATA', message: 'enabled must be true or false' });
     // The rest are optional - anything not sent is left as it is
     const { cutoff_time, open_time, close_time } = req.body;
     for (const [name, value] of Object.entries({ cutoff_time, open_time, close_time })) {
@@ -138,7 +131,6 @@ const updateSettings = async (req, res) => {
 
     const settings = await sandwichModel.updateSettings({
       base_price: basePrice,
-      enabled: req.body.enabled,
       cutoff_time,
       open_time,
       close_time,

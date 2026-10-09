@@ -15,11 +15,11 @@ export default function SelectBuffetPage() {
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 
-    // Offer sandwiches too, if staff have switched them on
+    // Offer sandwiches too, unless they have sold out
     fetch(`${apiUrl}/api/sandwiches`)
       .then(res => res.json())
       .then(data => {
-        if (data.return_code === 'SUCCESS' && data.data.enabled && !data.data.sold_out) setSandwichMenu(data.data);
+        if (data.return_code === 'SUCCESS' && !data.data.sold_out) setSandwichMenu(data.data);
       })
       .catch(() => {});
 

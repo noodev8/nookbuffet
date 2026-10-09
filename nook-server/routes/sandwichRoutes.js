@@ -30,8 +30,7 @@ ENDPOINTS:
 
 0. GET /api/sandwiches
    Purpose: The sandwich menu for the website - in-stock options only (public)
-   Success Response: { return_code, data: { enabled: true, base_price: "5.00", cutoff_time: "11:00", sold_out: false, steps: [...] } }
-   When sandwiches are switched off: data is { enabled: false, sold_out: false, steps: [] }
+   Success Response: { return_code, data: { base_price: "5.00", cutoff_time: "11:00", sold_out: false, steps: [...] } }
    sold_out is true when a required step has nothing in stock (steps is then empty)
    Also includes open_time, close_time and slot_capacity (see settings below)
 
@@ -44,17 +43,17 @@ ENDPOINTS:
 
 1. GET /api/sandwiches/manage
    Purpose: The whole sandwich menu for the admin portal, including out-of-stock options
-   Success Response: { return_code, data: { settings: { base_price: "5.00", enabled: false }, steps: [...] } }
+   Success Response: { return_code, data: { settings: { base_price: "5.00", cutoff_time: "11:00", ... }, steps: [...] } }
 
 2. PATCH /api/sandwiches/manage/settings
-   Request Body: { "base_price": 5.00, "enabled": true, "cutoff_time": "11:00",
+   Request Body: { "base_price": 5.00, "cutoff_time": "11:00",
                    "open_time": "11:00", "close_time": "14:00", "slot_capacity": 5 }
-     base_price (number >= 0) and enabled (boolean) are required. The rest are optional and left
+     base_price (number >= 0) is required. The rest are optional and left
      as they are when not sent:
        cutoff_time   - sandwich-only orders placed before it can be collected the same day
        open_time, close_time - collection hours, on 5-minute marks, sent together, open before close
        slot_capacity - most orders with sandwiches per 5-minute collection slot (1 or more)
-   Success Response: { return_code, data: { base_price, enabled, cutoff_time, open_time, close_time, slot_capacity } }
+   Success Response: { return_code, data: { base_price, cutoff_time, open_time, close_time, slot_capacity } }
 
 3. POST /api/sandwiches/manage/steps
    Request Body: { "name": "Bread", "description": null, "min_choices": 1, "max_choices": 1 }

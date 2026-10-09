@@ -89,7 +89,7 @@ function SandwichBuilder() {
       </div>
     );
   }
-  if (!menu.enabled || menu.sold_out || menu.steps.length === 0) {
+  if (menu.sold_out || menu.steps.length === 0) {
     return (
       <div className="sandwich-state">
         <p>{menu.sold_out ? 'Sorry, we have sold out of sandwiches for now.' : 'Sorry, sandwiches are not available to order online right now.'}</p>

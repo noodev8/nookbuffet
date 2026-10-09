@@ -107,9 +107,8 @@ const createOrder = async (req, res) => {
         });
       }
 
-      const settings = await sandwichModel.getSettings();
-      const menu = settings.enabled ? await sandwichModel.getMenuForCustomers() : null;
-      if (!menu || menu.sold_out) {
+      const [settings, menu] = await Promise.all([sandwichModel.getSettings(), sandwichModel.getMenuForCustomers()]);
+      if (menu.sold_out) {
         return res.json({
           return_code: 'SANDWICHES_UNAVAILABLE',
           message: 'Sorry, sandwiches are not available to order right now'

@@ -124,7 +124,7 @@ function Sandwiches() {
   );
 }
 
-// ===== PRICE, ON/OFF, CUTOFF, COLLECTION HOURS AND SLOTS =====
+// ===== PRICE, CUTOFF, COLLECTION HOURS AND SLOTS =====
 function SettingsCard({ settings, setSettings, showToast }) {
   const { api } = useAdmin();
   const [editing, setEditing] = useState(false);
@@ -133,12 +133,11 @@ function SettingsCard({ settings, setSettings, showToast }) {
     setEditing(false);
     showToast('Settings saved');
   });
-  const [form, setForm] = useState({ price: '', enabled: false, cutoff: '', open: '', close: '', capacity: '' });
+  const [form, setForm] = useState({ price: '', cutoff: '', open: '', close: '', capacity: '' });
 
   const startEditing = () => {
     setForm({
       price: parseFloat(settings.base_price).toFixed(2),
-      enabled: settings.enabled,
       cutoff: settings.cutoff_time,
       open: settings.open_time,
       close: settings.close_time,
@@ -165,7 +164,6 @@ function SettingsCard({ settings, setSettings, showToast }) {
       method: 'PATCH',
       body: {
         base_price: price,
-        enabled: form.enabled,
         cutoff_time: form.cutoff,
         open_time: form.open,
         close_time: form.close,
@@ -210,12 +208,6 @@ function SettingsCard({ settings, setSettings, showToast }) {
               onChange={e => setForm(p => ({ ...p, capacity: e.target.value }))} />
             <span className="field-hint">Once a 5-minute slot has this many orders, customers have to pick another time</span>
           </div>
-          <div className="field" style={{ justifyContent: 'center' }}>
-            <label className="check">
-              <input type="checkbox" checked={form.enabled} onChange={e => setForm(p => ({ ...p, enabled: e.target.checked }))} />
-              Customers can order sandwiches
-            </label>
-          </div>
         </div>
         <div className="form-actions">
           <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
@@ -234,9 +226,6 @@ function SettingsCard({ settings, setSettings, showToast }) {
           <p className="card-sub">
             Collection {settings.open_time}–{settings.close_time} · up to {settings.slot_capacity} order{settings.slot_capacity !== 1 ? 's' : ''} every 5 minutes
           </p>
-          <span className={`badge ${settings.enabled ? 'badge-paid' : 'badge-unpaid'}`}>
-            {settings.enabled ? 'Taking sandwich orders' : 'Not taking sandwich orders'}
-          </span>
         </div>
         <button className="btn" onClick={startEditing}>Edit settings</button>
       </div>

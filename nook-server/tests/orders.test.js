@@ -64,7 +64,7 @@ const SANDWICH_STEPS = [
 ];
 
 const SANDWICH_SETTINGS = {
-  base_price: '5.00', enabled: true, cutoff_time: '11:00', open_time: '11:00', close_time: '14:00', slot_capacity: 5
+  base_price: '5.00', cutoff_time: '11:00', open_time: '11:00', close_time: '14:00', slot_capacity: 5
 };
 
 // A sandwich-only order - no business name, address or buffets
@@ -294,14 +294,6 @@ describe('createOrder with sandwiches', () => {
     const { req, res, getResult } = setup(sandwichOrder({ sandwiches: [{ quantity: 0, optionIds: [10, 20] }] }));
     await orderController.createOrder(req, res);
     expect(getResult().return_code).toBe('VALIDATION_ERROR');
-  });
-
-  test('rejects sandwiches when they are switched off', async () => {
-    sandwichModel.getSettings.mockResolvedValue({ ...SANDWICH_SETTINGS, enabled: false });
-    const { req, res, getResult } = setup(sandwichOrder());
-    await orderController.createOrder(req, res);
-    expect(getResult().return_code).toBe('SANDWICHES_UNAVAILABLE');
-    expect(orderModel.createOrder).not.toHaveBeenCalled();
   });
 
   test('passes the slot capacity on so the model can check the slot', async () => {
