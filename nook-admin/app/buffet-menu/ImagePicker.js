@@ -2,7 +2,7 @@
 /* eslint-disable @next/next/no-img-element -- previews of pictures hosted on the customer website, not this app */
 
 import { useRef, useState } from 'react';
-import { WEB_URL, useAdmin } from '../components/AdminShell';
+import { API_URL, WEB_URL, useAdmin } from '../components/AdminShell';
 
 // Pictures that ship with the website
 export const BUILT_IN_IMAGES = [
@@ -16,7 +16,10 @@ export const BUILT_IN_IMAGES = [
   'kidscake.png', 'kidscrisps.png', 'food2.png', 'nook.jpg',
 ].map(file => `/assets/${file}`);
 
-const isUploaded = (url) => url.startsWith('/assets/uploads/');
+const isUploaded = (url) => url.startsWith('/uploads/');
+
+// Uploaded pictures are served by the API server, built-in ones by the website
+export const imageSrc = (url) => `${isUploaded(url) ? API_URL : WEB_URL}${url}`;
 
 /**
  * One image slot. Clicking it opens a picker with every known image, an upload
@@ -78,7 +81,7 @@ export default function ImagePicker({ label, value, onChange, images, onImagesCh
   return (
     <>
       <button type="button" className="img-slot" onClick={() => setOpen(true)} title={`${label} — click to change`}>
-        {value ? <img src={`${WEB_URL}${value}`} alt={label} /> : `${label}: none`}
+        {value ? <img src={imageSrc(value)} alt={label} /> : `${label}: none`}
       </button>
 
       {open && (
@@ -100,7 +103,7 @@ export default function ImagePicker({ label, value, onChange, images, onImagesCh
               </div>
               {images.map(url => (
                 <div key={url} className={`img-option${value === url ? ' selected' : ''}`} onClick={() => pick(url)}>
-                  <img src={`${WEB_URL}${url}`} alt="" />
+                  <img src={imageSrc(url)} alt="" />
                   {url.split('/').pop().replace(/\.[^.]+$/, '')}
                   {isUploaded(url) && (
                     <button type="button" className="img-delete" onClick={(e) => remove(e, url)} disabled={working} title="Delete this picture">✕</button>

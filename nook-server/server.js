@@ -63,6 +63,7 @@ app.use('/api/upgrades', upgradeRoutes);             // Upgrade endpoints
 app.use('/api/customers', customerRoutes);          // Customer account endpoints
 app.use('/api/uploads', uploadRoutes);             // Image upload endpoints
 app.use('/api/sandwiches', sandwichRoutes);        // Sandwich menu endpoints
+app.use('/uploads', express.static(uploadRoutes.UPLOAD_DIR)); // Uploaded images
 
 // ===== HEALTH CHECK ENDPOINT =====
 // This is a simple endpoint that just tells you the server is running

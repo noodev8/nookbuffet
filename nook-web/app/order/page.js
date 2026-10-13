@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { imageSrc, isUploaded } from '../lib/images';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import './order.css';
@@ -364,7 +365,8 @@ function OrderPageContent() {
                       <div className="section-content-with-image">
                         <div className="section-image-left">
                           <Image
-                            src={getCategoryImage(section, 0)}
+                            src={imageSrc(getCategoryImage(section, 0))}
+                            unoptimized={isUploaded(getCategoryImage(section, 0))}
                             alt={section.name}
                             className="section-single-image"
                             width={400}
@@ -511,7 +513,8 @@ function OrderPageContent() {
                           {[0, 1, 2, 3].map((index) => (
                             <Image
                               key={index}
-                              src={getCategoryImage(section, index)}
+                              src={imageSrc(getCategoryImage(section, index))}
+                              unoptimized={isUploaded(getCategoryImage(section, index))}
                               alt={`${section.name} - Image ${index + 1}`}
                               className={`section-image-item ${index === 3 ? 'hide-on-mobile' : ''}`}
                               width={300}
