@@ -376,6 +376,11 @@
     grid-template-columns: 1fr;
   }
 
+  /* Start the heading below the big number so they don't overlap on narrow cards */
+  .info-card {
+    padding-top: 5.5rem;
+  }
+
   .gallery-grid {
     grid-template-columns: repeat(2, 1fr);
   }
