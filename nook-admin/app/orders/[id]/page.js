@@ -129,7 +129,7 @@ function OrderDetails() {
             disabled={busy}
             onClick={() => setStatus('ready', 'Mark this order as ready?\n\nIt stays on the orders list until it is collected.')}
           >
-            Mark as ready
+            Order ready
           </button>
         )}
         {/* Can be collected straight away, e.g. a customer waiting at the counter */}
@@ -139,7 +139,7 @@ function OrderDetails() {
             disabled={busy}
             onClick={() => setStatus('collected', `Mark this order as collected?${isPaid(order) ? '' : '\n\nIt is still marked as UNPAID.'}\n\nIt will leave the orders list and move to the archive.`)}
           >
-            Collected — archive order
+            Collected
           </button>
         )}
         <button className="btn" onClick={() => window.print()}>Print</button>
