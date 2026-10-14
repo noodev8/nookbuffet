@@ -13,7 +13,7 @@ const { checkBuffets } = require('../utils/buffetOrder');
 const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
 const { checkSandwiches } = require('../utils/sandwichOrder');
 const { slotTimes } = require('../utils/sandwichSlots');
-const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail, sendOrderReadyEmail } = require('../utils/emailService');
+const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail, sendOrderCancelledEmail } = require('../utils/emailService');
 
 // ===== CREATE A NEW ORDER =====
 /**
@@ -291,9 +291,9 @@ const getAllOrders = async (req, res) => {
 /**
  * Updates the status of an order from the admin portal:
  *   pending   - placed, being made
- *   ready     - made; the customer is emailed that it is ready to collect
+ *   ready     - made, waiting to be collected
  *   collected - picked up; the order is archived
- *   cancelled - archived without emailing the customer
+ *   cancelled - archived; the customer is emailed that it has been cancelled
  *
  * @param {object} req - The request object 
  * @param {object} res - The response object
@@ -321,14 +321,15 @@ const updateOrderStatus = async (req, res) => {
       return res.json({ return_code: 'NOT_FOUND', message: 'Order not found' });
     }
 
-    // Email the customer when their order is first marked ready - not when a collected
-    // order is restored back to ready from the archive
-    if (status === 'ready' && updatedOrder.previous_status === 'pending' && updatedOrder.customer_email) {
-      const emailResult = await sendOrderReadyEmail(updatedOrder);
+    // Email the customer when an open order is cancelled - not when an order that was
+    // already archived (collected or cancelled) is changed again
+    const wasOpen = ['pending', 'ready'].includes(updatedOrder.previous_status);
+    if (status === 'cancelled' && wasOpen && updatedOrder.customer_email) {
+      const emailResult = await sendOrderCancelledEmail(updatedOrder);
       if (emailResult.success) {
-        console.log('Order ready email sent to:', updatedOrder.customer_email);
+        console.log('Order cancelled email sent to:', updatedOrder.customer_email);
       } else {
-        console.log('Failed to send order ready email:', emailResult.error);
+        console.log('Failed to send order cancelled email:', emailResult.error);
       }
     }
 

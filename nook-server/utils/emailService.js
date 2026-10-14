@@ -337,17 +337,15 @@ const sendNewOrderNotificationEmail = async (orderData, orderNumber) => {
 };
 
 /**
- * Send order ready/complete email to customer
- * Sent when admin marks the order as done
+ * Tell the customer their order has been cancelled
+ * Sent when staff cancel an open order in the admin portal
+ * Replying to it goes straight to the shop
  *
- * @param {object} orderData - The complete order data from database
+ * @param {object} orderData - The order as returned by orderModel.updateOrderStatus
  * @returns {Promise<object>} - Result from Resend
  */
-const sendOrderReadyEmail = async (orderData) => {
+const sendOrderCancelledEmail = async (orderData) => {
   try {
-    const fulfillmentText = 'collection';
-
-    // Format the date 
     const dateText = orderData.fulfillment_date
       ? new Date(orderData.fulfillment_date).toLocaleDateString('en-GB', {
           weekday: 'long',
@@ -355,8 +353,7 @@ const sendOrderReadyEmail = async (orderData) => {
           month: 'long',
           year: 'numeric'
         })
-      : 'your scheduled date';
-
+      : '';
     const timeText = orderData.fulfillment_time || '';
 
     const emailHtml = `
@@ -372,53 +369,49 @@ const sendOrderReadyEmail = async (orderData) => {
             <!-- Header -->
             <div style="background: #1a1a1a; color: white; padding: 30px; text-align: center;">
               <h1 style="margin: 0; font-size: 24px; letter-spacing: 1px;">THE LITTLE NOOK BUFFET</h1>
-              <p style="margin: 10px 0 0 0; opacity: 0.9;">Order Ready!</p>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">Order Cancelled</p>
             </div>
 
             <!-- Content -->
             <div style="padding: 30px;">
-              <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 20px; margin-bottom: 25px; border-radius: 0 8px 8px 0;">
-                <h2 style="margin: 0 0 10px 0; color: #2e7d32; font-size: 20px;">Your order is ready!</h2>
-                <p style="margin: 0; color: #333;">Order <strong>${orderData.order_number}</strong> has been prepared and is ready for ${fulfillmentText}.</p>
+              <div style="background: #fdecea; border-left: 4px solid #d32f2f; padding: 20px; margin-bottom: 25px; border-radius: 0 8px 8px 0;">
+                <h2 style="margin: 0 0 10px 0; color: #b71c1c; font-size: 20px;">Your order has been cancelled</h2>
+                <p style="margin: 0; color: #333;">Order <strong>${orderData.order_number}</strong> has been cancelled and will not be prepared.</p>
               </div>
 
+              ${dateText ? `
               <div style="background: #f9f9f9; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px;">Collection Details</h3>
+                <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px;">Cancelled Collection</h3>
                 <p style="margin: 0 0 8px 0;"><strong>Date:</strong> ${dateText}</p>
                 ${timeText ? `<p style="margin: 0 0 8px 0;"><strong>Time:</strong> ${timeText}</p>` : ''}
               </div>
-              <p style="color: #666;">Your order is ready and waiting for you! Please collect at your scheduled time.</p>
-
-              <!-- Total -->
-              <div style="background: #1a1a1a; color: white; padding: 15px 20px; border-radius: 8px; text-align: right; margin-top: 20px;">
-                <span style="font-size: 16px;">Order Total: </span>
-                <span style="font-size: 22px; font-weight: bold;">£${parseFloat(orderData.total_price).toFixed(2)}</span>
-              </div>
+              ` : ''}
+              <p style="color: #666;">If you weren't expecting this, or would like to place a new order, just reply to this email.</p>
             </div>
 
             <!-- Footer -->
             <div style="background: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 14px;">
-              <p style="margin: 0 0 10px 0;">Thank you for choosing The Little Nook Buffet!</p>
-              <p style="margin: 0;">If you have any questions, please don't hesitate to contact us.</p>
+              <p style="margin: 0 0 10px 0;">If you have any questions, please contact us.</p>
+              <p style="margin: 0;">The Little Nook Buffet</p>
             </div>
           </div>
         </body>
       </html>
     `;
 
-    // Send the email
     const result = await sendEmail({
       from: `${process.env.EMAIL_NAME} <${process.env.FROM_EMAIL}>`,
       to: orderData.customer_email,
-      subject: `Your Order ${orderData.order_number} is Ready! - The Little Nook Buffet`,
+      reply_to: SHOP_EMAIL,
+      subject: `Your Order ${orderData.order_number} has been Cancelled - The Little Nook Buffet`,
       html: emailHtml
     });
 
-    console.log('Order ready email sent:', result);
+    console.log('Order cancelled email sent:', result);
     return { success: true, result };
 
   } catch (error) {
-    console.error('Failed to send order ready email:', error);
+    console.error('Failed to send order cancelled email:', error);
     return { success: false, error: error.message };
   }
 };
@@ -429,6 +422,6 @@ module.exports = {
   sendEmail,
   sendOrderConfirmationEmail,
   sendNewOrderNotificationEmail,
-  sendOrderReadyEmail
+  sendOrderCancelledEmail
 };
 

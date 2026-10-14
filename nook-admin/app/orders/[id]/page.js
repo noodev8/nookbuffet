@@ -66,8 +66,8 @@ function OrderDetails() {
     }
   };
 
-  // 'ready' emails the customer that their order is ready to collect; 'collected' and
-  // 'cancelled' archive it. Restoring from the archive stays on this page.
+  // 'collected' and 'cancelled' archive the order, and cancelling emails the customer.
+  // Restoring from the archive stays on this page.
   const setStatus = async (status, question, { stay = false } = {}) => {
     if (!confirm(question)) return;
     setBusy(true);
@@ -127,9 +127,9 @@ function OrderDetails() {
           <button
             className="btn btn-primary"
             disabled={busy}
-            onClick={() => setStatus('ready', 'Mark this order as ready?\n\nThe customer will be emailed that it is ready to collect. It stays on the orders list until it is collected.')}
+            onClick={() => setStatus('ready', 'Mark this order as ready?\n\nIt stays on the orders list until it is collected.')}
           >
-            Order ready — email customer
+            Mark as ready
           </button>
         )}
         {/* Can be collected straight away, e.g. a customer waiting at the counter */}
@@ -148,7 +148,7 @@ function OrderDetails() {
           <button
             className="btn btn-danger"
             disabled={busy}
-            onClick={() => setStatus('cancelled', 'Cancel this order? It will move to the archive. The customer is not emailed.')}
+            onClick={() => setStatus('cancelled', 'Cancel this order?\n\nThe customer will be emailed that it has been cancelled, and it will move to the archive.')}
           >
             Cancel order
           </button>
@@ -157,7 +157,7 @@ function OrderDetails() {
           <button
             className="btn"
             disabled={busy}
-            // A collected order goes back as ready (no second email); a cancelled one as not ready
+            // A collected order goes back as ready; a cancelled one as not ready
             onClick={() => setStatus(order.status === 'cancelled' ? 'pending' : 'ready', 'Move this order back to the orders list?', { stay: true })}
           >
             Restore to orders list

@@ -9,14 +9,14 @@ jest.mock('../utils/orderDateCalculator');
 jest.mock('../utils/emailService', () => ({
   sendOrderConfirmationEmail: jest.fn(),
   sendNewOrderNotificationEmail: jest.fn(),
-  sendOrderReadyEmail: jest.fn()
+  sendOrderCancelledEmail: jest.fn()
 }));
 
 const orderModel = require('../models/orderModel');
 const sandwichModel = require('../models/sandwichModel');
 const buffetVersionModel = require('../models/buffetVersionModel');
 const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
-const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail, sendOrderReadyEmail } = require('../utils/emailService');
+const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail, sendOrderCancelledEmail } = require('../utils/emailService');
 const orderController = require('../controllers/orderController');
 
 // Helper: build fake req and res objects. user is the logged-in token, if any.
@@ -372,7 +372,7 @@ describe('updateOrderStatus', () => {
   const updated = (status, previous_status) =>
     orderModel.updateOrderStatus.mockResolvedValue({ id: 7, order_number: 'ORD-007', customer_email: 'customer@example.com', status, previous_status });
 
-  beforeEach(() => sendOrderReadyEmail.mockResolvedValue({ success: true }));
+  beforeEach(() => sendOrderCancelledEmail.mockResolvedValue({ success: true }));
 
   test('rejects an unknown status', async () => {
     const { req, res, getResult } = setup({ status: 'done' }, { id: '7' });
@@ -381,28 +381,36 @@ describe('updateOrderStatus', () => {
     expect(orderModel.updateOrderStatus).not.toHaveBeenCalled();
   });
 
-  test('emails the customer when an order is first marked ready', async () => {
+  test('marks an order ready without emailing', async () => {
     updated('ready', 'pending');
     const { req, res, getResult } = setup({ status: 'ready' }, { id: '7' });
     await orderController.updateOrderStatus(req, res);
     expect(getResult().return_code).toBe('SUCCESS');
-    expect(sendOrderReadyEmail).toHaveBeenCalledTimes(1);
+    expect(sendOrderCancelledEmail).not.toHaveBeenCalled();
   });
 
-  test('does not email again when a collected order is restored to ready', async () => {
-    updated('ready', 'collected');
-    const { req, res, getResult } = setup({ status: 'ready' }, { id: '7' });
+  test.each(['pending', 'ready'])('emails the customer when a %s order is cancelled', async (previous) => {
+    updated('cancelled', previous);
+    const { req, res, getResult } = setup({ status: 'cancelled' }, { id: '7' });
     await orderController.updateOrderStatus(req, res);
     expect(getResult().return_code).toBe('SUCCESS');
-    expect(sendOrderReadyEmail).not.toHaveBeenCalled();
+    expect(sendOrderCancelledEmail).toHaveBeenCalledTimes(1);
+  });
+
+  test('does not email when an archived order is cancelled', async () => {
+    updated('cancelled', 'collected');
+    const { req, res, getResult } = setup({ status: 'cancelled' }, { id: '7' });
+    await orderController.updateOrderStatus(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(sendOrderCancelledEmail).not.toHaveBeenCalled();
   });
 
   test('returns NOT_FOUND when the order does not exist', async () => {
     orderModel.updateOrderStatus.mockResolvedValue(null);
-    const { req, res, getResult } = setup({ status: 'ready' }, { id: '999' });
+    const { req, res, getResult } = setup({ status: 'cancelled' }, { id: '999' });
     await orderController.updateOrderStatus(req, res);
     expect(getResult().return_code).toBe('NOT_FOUND');
-    expect(sendOrderReadyEmail).not.toHaveBeenCalled();
+    expect(sendOrderCancelledEmail).not.toHaveBeenCalled();
   });
 
   test('marks an order collected without emailing', async () => {
@@ -411,7 +419,7 @@ describe('updateOrderStatus', () => {
     await orderController.updateOrderStatus(req, res);
     expect(getResult().return_code).toBe('SUCCESS');
     expect(orderModel.updateOrderStatus).toHaveBeenCalledWith('7', 'collected');
-    expect(sendOrderReadyEmail).not.toHaveBeenCalled();
+    expect(sendOrderCancelledEmail).not.toHaveBeenCalled();
   });
 });
 

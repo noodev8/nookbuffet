@@ -65,7 +65,7 @@ export const isPaid = (order) => order.payment_status === 'paid' || order.paymen
 export const paymentLabel = (order) =>
   order.payment_status === 'paid' ? 'Paid' : order.payment_status === 'waived' ? 'Waived' : 'Unpaid';
 
-// Order statuses: pending (being made) -> ready (customer emailed) -> collected (archived).
+// Order statuses: pending (being made) -> ready (made) -> collected (archived).
 // Cancelled orders, and 'completed' ones from before collection was tracked, are archived too.
 export const isArchived = (order) => ['collected', 'completed', 'cancelled'].includes(order.status);
 export const statusLabel = (order) => ({
