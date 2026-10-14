@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import AdminShell, { WEB_URL, useAdmin } from '../components/AdminShell';
-import ImagePicker, { BUILT_IN_IMAGES } from './ImagePicker';
+import AdminShell, { useAdmin } from '../components/AdminShell';
+import ImagePicker, { BUILT_IN_IMAGES, imageSrc } from './ImagePicker';
 import UpgradesPanel from './UpgradesPanel';
 import { money } from '../lib/format';
 
@@ -305,7 +305,7 @@ function CategoryCard({ category, version, items, images, setImages, setCategori
           {outOfStock > 0 && <span className="badge badge-unpaid">{outOfStock} out of stock</span>}
         </div>
         <div className="thumbs">
-          {pictures.map((img, i) => (img ? <img key={i} src={`${WEB_URL}${img}`} alt="" /> : <span key={i} className="thumb-empty" />))}
+          {pictures.map((img, i) => (img ? <img key={i} src={imageSrc(img)} alt="" /> : <span key={i} className="thumb-empty" />))}
         </div>
         <button className="btn-link" onClick={() => setEditing(true)}>Edit</button>
         <button className="btn-link danger" onClick={deleteCategory}>Delete</button>

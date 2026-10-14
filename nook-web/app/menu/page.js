@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { imageSrc, isUploaded } from '../lib/images';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import './menu.css';
@@ -113,7 +114,8 @@ export default function MenuPage() {
                     {[0, 1, 2, 3].map((index) => (
                       <Image
                         key={index}
-                        src={getCategoryImage(section, index)}
+                        src={imageSrc(getCategoryImage(section, index))}
+                        unoptimized={isUploaded(getCategoryImage(section, index))}
                         alt={`${section.name} - Image ${index + 1}`}
                         className={`menu-image ${index === 3 ? 'fourth-image' : ''}`}
                         width={300}

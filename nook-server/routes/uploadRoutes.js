@@ -3,8 +3,8 @@
 UPLOAD ROUTES - Image upload endpoint for admin category images
 =======================================================================================================================================
 POST /api/uploads/image
-  Accepts a multipart image file, saves it to nook-web/public/assets/uploads/,
-  and returns the path so it can be stored in the DB and served by the web app.
+  Accepts a multipart image file, saves it to UPLOAD_DIR, and returns the path
+  so it can be stored in the DB. server.js serves the files at /uploads/<filename>.
 =======================================================================================================================================
 */
 
@@ -15,10 +15,9 @@ const path = require('path');
 const fs = require('fs');
 const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
-// Directory where uploaded images are saved — inside nook-web's public folder
-// so Next.js serves them automatically at /assets/uploads/<filename>
-// __dirname is nook-server/routes, so go up two levels to reach the project root
-const UPLOAD_DIR = path.join(__dirname, '..', '..', 'nook-web', 'public', 'assets', 'uploads');
+// Directory where uploaded images are saved. In production set UPLOAD_DIR to a folder
+// outside the deployed code so a redeploy doesn't wipe it.
+const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads');
 
 // Create the directory if it doesn't exist yet
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
@@ -82,8 +81,8 @@ router.post(
     if (!req.file) {
       return res.json({ return_code: 'NO_FILE', message: 'No image file was uploaded' });
     }
-    // Return path relative to nook-web public root — served at /assets/uploads/<filename>
-    const url = `/assets/uploads/${req.file.filename}`;
+    // Path on this server; the web apps put the API URL in front of it
+    const url = `/uploads/${req.file.filename}`;
     res.json({ return_code: 'SUCCESS', message: 'Image uploaded', url });
   }
 );
@@ -112,3 +111,4 @@ router.delete(
 );
 
 module.exports = router;
+module.exports.UPLOAD_DIR = UPLOAD_DIR;

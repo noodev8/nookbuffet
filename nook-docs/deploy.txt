@@ -1,0 +1,4 @@
+cd /apps/nookbuffet && git pull
+rsync -av --delete --exclude='.env' --exclude='node_modules' --exclude='uploads' /apps/nookbuffet/nook-server/ /apps/production/nook-server/
+cd /apps/production/nook-server && npm install --omit=dev
+pm2 restart nookbuffet_prod --update-env

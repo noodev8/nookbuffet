@@ -42,6 +42,8 @@ export default function Navigation() {
             className="logo-image-option3"
             width={40}
             height={40}
+            priority
+            unoptimized
           />
           <span className="logo-text-option3">The Nook Buffet</span>
         </Link>
