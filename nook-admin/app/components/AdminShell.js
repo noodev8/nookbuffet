@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import useOrderEvents from '../lib/orderEvents';
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 export const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
@@ -32,11 +33,11 @@ const SECTIONS = [
 const ROLE_NAMES = { general: 'General', admin: 'Admin' };
 
 // How often the open-order badges check for new orders
-const COUNT_REFRESH_MS = 60 * 1000;
 
 const AdminContext = createContext(null);
 
-// { user, api, logout } for any page wrapped in <AdminShell>
+// { user, api, logout, ordersVersion, live } for any page wrapped in <AdminShell>.
+// ordersVersion goes up whenever an order is placed or changed - watch it to reload.
 export const useAdmin = () => useContext(AdminContext);
 
 // A single order's page (/orders/7) sits under neither list, so it highlights neither
@@ -95,8 +96,11 @@ export default function AdminShell({ roles, children }) {
     return data;
   }, [logout]);
 
+  // One live connection per tab tells us when orders change (see lib/orderEvents.js)
+  const { version: ordersVersion, live } = useOrderEvents(API_URL, !!user);
+
   // Open-order counts for the badges on the Sandwich Orders and Buffet Orders tabs.
-  // Checked on every page change and every minute, so new orders show up without a refresh.
+  // Checked on every page change and whenever orders change, so new orders show up without a refresh.
   // An order with both buffets and sandwiches counts on both tabs.
   useEffect(() => {
     if (!user) return;
@@ -113,14 +117,12 @@ export default function AdminShell({ roles, children }) {
         .catch(() => {}); // the badges just keep their last numbers
     };
     loadCounts();
-    const timer = setInterval(loadCounts, COUNT_REFRESH_MS);
-    return () => clearInterval(timer);
-  }, [user, api, pathname]);
+  }, [user, api, pathname, ordersVersion]);
 
   if (!user) return null;
 
   return (
-    <AdminContext.Provider value={{ user, api, logout }}>
+    <AdminContext.Provider value={{ user, api, logout, ordersVersion, live }}>
       <header className="shell-header">
         <div className="shell-bar">
           <Link href="/" className="shell-brand">the little nook buffet</Link>

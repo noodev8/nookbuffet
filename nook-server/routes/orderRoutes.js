@@ -84,7 +84,17 @@ ENDPOINTS:
    Orders returned by GET also have "sandwiches": [{ id, quantity, unit_price, subtotal, notes,
    options: [{ sandwich_option_id, step_name, option_name, extra_price }] }]
 
-3. GET /api/orders/earliest-date
+3. GET /api/orders/events
+   Purpose: Live updates for the admin orders screens (Server-Sent Events, protected)
+   Send the admin token as Authorization: Bearer ... (so it is read with fetch, not EventSource).
+   The connection stays open. Whenever an order is placed or its status, payment or staff notes
+   change, the server sends:
+     event: orders-changed
+     data: {}
+   and the screen reloads GET /api/orders. A ": ping" comment is sent every 25 seconds to keep it open.
+   A bad token gets the usual JSON { return_code: 'UNAUTHORIZED' } instead of a stream.
+
+4. GET /api/orders/earliest-date
    Purpose: Earliest collection dates (public)
    Success Response: { return_code, data: { earliestDate, cutoffTime, isAfterCutoff,
      sandwiches: { earliestDate, today, cutoffTime, isAfterCutoff } } }
@@ -105,6 +115,10 @@ const { verifyToken, optionalToken, checkRole } = require('../middleware/authMid
 // When someone GETs /api/orders/earliest-date, run the getEarliestOrderDate function
 // NOTE: This must come BEFORE any parameterized routes like /:id
 router.get('/earliest-date', orderController.getEarliestOrderDate);
+
+// ===== ROUTE: LIVE ORDER UPDATES (PROTECTED) =====
+// Also before /:id
+router.get('/events', verifyToken, checkRole(['general', 'admin']), orderController.orderEvents);
 
 // ===== ROUTE: GET ALL ORDERS (PROTECTED) =====
 // When someone GETs /api/orders, run the getAllOrders function

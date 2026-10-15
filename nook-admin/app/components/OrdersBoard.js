@@ -38,7 +38,7 @@ const KINDS = {
  */
 export default function OrdersBoard({ kind }) {
   const config = KINDS[kind];
-  const { api } = useAdmin();
+  const { api, ordersVersion, live } = useAdmin();
   const [allOrders, setAllOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,7 +48,6 @@ export default function OrdersBoard({ kind }) {
 
   // Open orders only (not ready and ready) - collected and cancelled ones are in the archive
   const loadOrders = useCallback(() => {
-    setRefreshing(true);
     return api('/api/orders')
       .then(data => {
         if (data.return_code === 'SUCCESS') {
@@ -66,7 +65,8 @@ export default function OrdersBoard({ kind }) {
       });
   }, [api]);
 
-  useEffect(() => { loadOrders(); }, [loadOrders]);
+  // Reload straight away whenever an order is placed or changed
+  useEffect(() => { loadOrders(); }, [loadOrders, ordersVersion]);
 
   if (loading) return <div className="notice">Loading orders...</div>;
 
@@ -101,10 +101,13 @@ export default function OrdersBoard({ kind }) {
             <span><strong>{orders.length}</strong> open order{orders.length !== 1 ? 's' : ''}</span>
             {unpaid.length > 0 && <span><strong>{money(unpaidTotal)}</strong> still to be paid</span>}
             {updatedAt && <span>Updated {updatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+            {live !== null && (
+              <span className={`live-status${live ? ' on' : ''}`}>{live ? 'Live' : 'Not live — press Refresh'}</span>
+            )}
           </div>
         </div>
         <div className="page-actions no-print">
-          <button className="btn btn-primary btn-refresh" onClick={loadOrders} disabled={refreshing}>
+          <button className="btn btn-primary btn-refresh" onClick={() => { setRefreshing(true); loadOrders(); }} disabled={refreshing}>
             {refreshing ? 'Refreshing...' : '↻ Refresh'}
           </button>
           {orders.length > 0 && <button className="btn" onClick={() => window.print()}>Print all</button>}

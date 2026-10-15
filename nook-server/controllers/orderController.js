@@ -14,6 +14,7 @@ const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('.
 const { checkSandwiches } = require('../utils/sandwichOrder');
 const { slotTimes } = require('../utils/sandwichSlots');
 const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail, sendOrderCancelledEmail } = require('../utils/emailService');
+const { addClient, notifyOrdersChanged } = require('../utils/orderEvents');
 
 // ===== CREATE A NEW ORDER =====
 /**
@@ -228,6 +229,9 @@ const createOrder = async (req, res) => {
         console.error(`Notification email error for ${createdOrder.order_number}:`, err);
       });
 
+    // Update the open orders screens
+    notifyOrdersChanged();
+
     // Send success response back to the website
     res.json({
       return_code: 'SUCCESS',
@@ -320,6 +324,7 @@ const updateOrderStatus = async (req, res) => {
     if (!updatedOrder) {
       return res.json({ return_code: 'NOT_FOUND', message: 'Order not found' });
     }
+    notifyOrdersChanged();
 
     // Email the customer when an open order is cancelled - not when an order that was
     // already archived (collected or cancelled) is changed again
@@ -446,6 +451,7 @@ const updateStaffNotes = async (req, res) => {
     const { staff_notes } = req.body;
     const updated = await orderModel.updateStaffNotes(orderId, staff_notes);
     if (!updated) return res.json({ return_code: 'NOT_FOUND', message: 'Order not found' });
+    notifyOrdersChanged();
     res.json({ return_code: 'SUCCESS', message: 'Staff notes updated', data: updated });
   } catch (error) {
     console.error('Error updating staff notes:', error);
@@ -467,6 +473,7 @@ const updatePaymentStatus = async (req, res) => {
     }
     const updated = await orderModel.updatePaymentStatus(orderId, payment_status);
     if (!updated) return res.json({ return_code: 'NOT_FOUND', message: 'Order not found' });
+    notifyOrdersChanged();
     res.json({ return_code: 'SUCCESS', message: 'Payment status updated', data: updated });
   } catch (error) {
     console.error('Error updating payment status:', error);
@@ -474,9 +481,14 @@ const updatePaymentStatus = async (req, res) => {
   }
 };
 
+// ===== LIVE ORDER UPDATES =====
+// Keeps the connection open and sends "orders-changed" whenever an order is placed or changed
+const orderEvents = (req, res) => addClient(req, res);
+
 // Export the functions so routes can use them
 module.exports = {
   createOrder,
+  orderEvents,
   getAllOrders,
   getOrderById,
   updateOrderStatus,
