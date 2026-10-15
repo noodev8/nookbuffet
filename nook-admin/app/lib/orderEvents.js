@@ -9,13 +9,15 @@ const RETRY_MS = 5000;
  * Listens to GET /api/orders/events (Server-Sent Events) and counts changes.
  * Uses fetch rather than EventSource so the login token goes in a header, not the URL.
  *
- * Returns { version, live }:
+ * Returns { version, newOrders, live }:
  *   version - goes up whenever orders change, and after every reconnect (in case something
  *             changed while the connection was down), so watch it and reload
+ *   newOrders - goes up when a customer places an order - watch it to play a sound
  *   live    - true while connected, false once a connection fails, null before the first try finishes
  */
 export default function useOrderEvents(apiUrl, enabled) {
   const [version, setVersion] = useState(0);
+  const [newOrders, setNewOrders] = useState(0);
   const [live, setLive] = useState(null);
 
   useEffect(() => {
@@ -50,9 +52,9 @@ export default function useOrderEvents(apiUrl, enabled) {
           // Messages end with a blank line
           const messages = buffer.split('\n\n');
           buffer = messages.pop();
-          if (messages.some(m => m.split('\n').includes('event: orders-changed'))) {
-            setVersion(v => v + 1);
-          }
+          const changes = messages.filter(m => m.split('\n').includes('event: orders-changed'));
+          if (changes.length > 0) setVersion(v => v + 1);
+          if (changes.some(m => m.includes('"newOrder":true'))) setNewOrders(n => n + 1);
         }
       } catch {
         // dropped or couldn't connect - retry below
@@ -69,5 +71,5 @@ export default function useOrderEvents(apiUrl, enabled) {
     };
   }, [apiUrl, enabled]);
 
-  return { version, live };
+  return { version, newOrders, live };
 }

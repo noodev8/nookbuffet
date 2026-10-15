@@ -90,8 +90,9 @@ ENDPOINTS:
    The connection stays open. Whenever an order is placed or its status, payment or staff notes
    change, the server sends:
      event: orders-changed
-     data: {}
-   and the screen reloads GET /api/orders. A ": ping" comment is sent every 25 seconds to keep it open.
+     data: { "newOrder": true | false }
+   and the screen reloads GET /api/orders. newOrder is true when a customer has just placed an
+   order (the screens play a sound), false for status, payment and staff notes changes. A ": ping" comment is sent every 25 seconds to keep it open.
    A bad token gets the usual JSON { return_code: 'UNAUTHORIZED' } instead of a stream.
 
 4. GET /api/orders/earliest-date

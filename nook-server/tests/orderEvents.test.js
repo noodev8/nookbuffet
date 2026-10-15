@@ -28,6 +28,15 @@ describe('order events', () => {
     b.close();
   });
 
+  test('says whether it is a new order', () => {
+    const client = connect();
+    notifyOrdersChanged({ newOrder: true });
+    expect(client.res.written).toContain('data: {"newOrder":true}\n');
+    notifyOrdersChanged();
+    expect(client.res.written).toContain('data: {"newOrder":false}\n');
+    client.close();
+  });
+
   test('stops sending once the connection closes', () => {
     const client = connect();
     client.close();

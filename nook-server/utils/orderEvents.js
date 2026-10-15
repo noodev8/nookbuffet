@@ -44,9 +44,11 @@ const addClient = (req, res) => {
   });
 };
 
-// Tells every open orders screen to reload
-const notifyOrdersChanged = () => {
-  for (const client of clients) client.write('event: orders-changed\ndata: {}\n\n');
+// Tells every open orders screen to reload. { newOrder: true } when a customer has just
+// placed an order, so the screens can play a sound.
+const notifyOrdersChanged = ({ newOrder = false } = {}) => {
+  const message = `event: orders-changed\ndata: ${JSON.stringify({ newOrder })}\n\n`;
+  for (const client of clients) client.write(message);
 };
 
 module.exports = { addClient, notifyOrdersChanged };

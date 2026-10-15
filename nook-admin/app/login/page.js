@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import './login.css';
+import { unlockSound } from '../lib/chime';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,6 +21,9 @@ export default function LoginPage() {
   // Check email/password and log in
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Pressing Log in counts as the tap browsers need before they'll play sound,
+    // so the new order chime works straight away without the "tap to turn on" bar
+    unlockSound().catch(() => {});
     setLoading(true);
     setError('');
 

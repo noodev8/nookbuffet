@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import useOrderEvents from '../lib/orderEvents';
+import { playChime, unlockSound } from '../lib/chime';
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 export const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
@@ -97,7 +98,23 @@ export default function AdminShell({ roles, children }) {
   }, [logout]);
 
   // One live connection per tab tells us when orders change (see lib/orderEvents.js)
-  const { version: ordersVersion, live } = useOrderEvents(API_URL, !!user);
+  const { version: ordersVersion, newOrders, live } = useOrderEvents(API_URL, !!user);
+
+  // Chime when a customer places an order. Browsers only allow sound after the page has been
+  // clicked or tapped - pressing Log in counts (see login/page.js). After a full page reload,
+  // the first tap or key press anywhere quietly turns it back on.
+  useEffect(() => {
+    const unlock = () => unlockSound().catch(() => {});
+    window.addEventListener('pointerdown', unlock);
+    window.addEventListener('keydown', unlock);
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
+  useEffect(() => {
+    if (newOrders > 0) playChime();
+  }, [newOrders]);
 
   // Open-order counts for the badges on the Sandwich Orders and Buffet Orders tabs.
   // Checked on every page change and whenever orders change, so new orders show up without a refresh.

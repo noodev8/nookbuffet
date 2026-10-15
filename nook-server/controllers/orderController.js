@@ -229,8 +229,8 @@ const createOrder = async (req, res) => {
         console.error(`Notification email error for ${createdOrder.order_number}:`, err);
       });
 
-    // Update the open orders screens
-    notifyOrdersChanged();
+    // Update the open orders screens (and play the new order sound)
+    notifyOrdersChanged({ newOrder: true });
 
     // Send success response back to the website
     res.json({
