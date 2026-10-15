@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAdmin } from './AdminShell';
 import {
@@ -43,19 +43,32 @@ export default function OrdersBoard({ kind }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [refreshing, setRefreshing] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState(null);
+
   // Open orders only (not ready and ready) - collected and cancelled ones are in the archive
-  useEffect(() => {
-    api('/api/orders')
+  const loadOrders = useCallback(() => {
+    setRefreshing(true);
+    return api('/api/orders')
       .then(data => {
-        if (data.return_code === 'SUCCESS') setAllOrders(data.data || []);
-        else setError(data.message || 'Failed to load orders');
+        if (data.return_code === 'SUCCESS') {
+          setAllOrders(data.data || []);
+          setError(null);
+          setUpdatedAt(new Date());
+        } else {
+          setError(data.message || 'Failed to load orders');
+        }
       })
       .catch(() => setError('Could not reach the server. Please try again.'))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setRefreshing(false);
+      });
   }, [api]);
 
+  useEffect(() => { loadOrders(); }, [loadOrders]);
+
   if (loading) return <div className="notice">Loading orders...</div>;
-  if (error) return <div className="notice notice-error">{error}</div>;
 
   const orders = allOrders.filter(config.includes);
 
@@ -87,15 +100,20 @@ export default function OrdersBoard({ kind }) {
           <div className="summary-strip">
             <span><strong>{orders.length}</strong> open order{orders.length !== 1 ? 's' : ''}</span>
             {unpaid.length > 0 && <span><strong>{money(unpaidTotal)}</strong> still to be paid</span>}
+            {updatedAt && <span>Updated {updatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
           </div>
         </div>
         <div className="page-actions no-print">
+          <button className="btn btn-primary btn-refresh" onClick={loadOrders} disabled={refreshing}>
+            {refreshing ? 'Refreshing...' : '↻ Refresh'}
+          </button>
           {orders.length > 0 && <button className="btn" onClick={() => window.print()}>Print all</button>}
           <Link href="/archive" className="btn">Archive</Link>
         </div>
       </div>
 
-      {orders.length === 0 && <div className="notice">{config.empty}</div>}
+      {error && <div className="notice notice-error">{error}</div>}
+      {!error && orders.length === 0 && <div className="notice">{config.empty}</div>}
 
       <div className="no-print">
         {groupKeys.map(key => (
