@@ -182,6 +182,12 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
                 <strong>Order ${orderNumber}</strong> has been received and is being processed.
               </div>
 
+              <!-- No payment is taken online -->
+              <div style="background: #fff8e1; border: 2px solid #f9a825; border-radius: 8px; padding: 15px; margin-bottom: 25px; text-align: center;">
+                <strong style="display: block; font-size: 18px; color: #1a1a1a; letter-spacing: 1px;">PAY ON COLLECTION</strong>
+                You haven't been charged. Please pay <strong>£${parseFloat(orderData.totalPrice).toFixed(2)}</strong> in the shop when you collect your order.
+              </div>
+
               <!-- Order Details -->
               <h2 style="color: #1a1a1a; font-size: 18px; border-bottom: 2px solid #1a1a1a; padding-bottom: 10px;">
                 ${fulfillmentText} Details
@@ -212,7 +218,7 @@ const sendOrderConfirmationEmail = async (orderData, orderNumber) => {
 
               <!-- Total -->
               <div style="background: #1a1a1a; color: white; padding: 20px; border-radius: 8px; text-align: right; margin-top: 20px;">
-                <span style="font-size: 18px;">Total: </span>
+                <span style="font-size: 18px;">Total to pay on collection: </span>
                 <span style="font-size: 24px; font-weight: bold;">£${parseFloat(orderData.totalPrice).toFixed(2)}</span>
               </div>
             </div>
