@@ -185,6 +185,27 @@
   color: white;
 }
 
+/* Sandwiches sold out: still shown so people know they are on offer, but faded and not clickable */
+.order-choice-sold-out,
+.order-choice-sold-out:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.45);
+  transform: none;
+  box-shadow: none;
+  cursor: default;
+}
+
+.order-choice-sold-out .order-choice-title {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.order-choice-sold-out .order-choice-button,
+.order-choice-sold-out:hover .order-choice-button {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
 /* ========== SCROLL INDICATOR ========== */
 .scroll-indicator {
   position: absolute;

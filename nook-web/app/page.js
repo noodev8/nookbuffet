@@ -80,13 +80,14 @@ export default function Home() {
     setHasBasket(hasBasketItems());
   }, []);
 
-  // Offer sandwiches unless they have sold out
+  // Offer sandwiches whenever the menu loads. If they have sold out the card still shows,
+  // so people know sandwiches are generally on offer, but it can't be clicked
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
     fetch(`${apiUrl}/api/sandwiches`)
       .then(res => res.json())
       .then(data => {
-        if (data.return_code === 'SUCCESS' && !data.data.sold_out) setSandwichMenu(data.data);
+        if (data.return_code === 'SUCCESS') setSandwichMenu(data.data);
       })
       .catch(() => {});
   }, []);
@@ -139,7 +140,17 @@ export default function Home() {
             </p>
             <h2 className="order-choices-title">{CONFIG.hero.choicesTitle}</h2>
             <div className={`order-choices${sandwichMenu ? '' : ' single'}`}>
-              {sandwichMenu && (
+              {sandwichMenu?.sold_out && (
+                <div className="order-choice order-choice-sold-out">
+                  <span className="order-choice-title">{CONFIG.choices.sandwich.title}</span>
+                  <span className="order-choice-text">
+                    Build your own for lunch from £{parseFloat(sandwichMenu.base_price).toFixed(2)}.
+                    We&apos;ve sold out for now - please check back soon.
+                  </span>
+                  <span className="order-choice-button">Sold Out</span>
+                </div>
+              )}
+              {sandwichMenu && !sandwichMenu.sold_out && (
                 <Link href={CONFIG.choices.sandwich.link} className="order-choice order-choice-primary">
                   <span className="order-choice-title">{CONFIG.choices.sandwich.title}</span>
                   <span className="order-choice-text">
