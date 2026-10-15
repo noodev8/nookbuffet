@@ -105,6 +105,12 @@ function CheckoutContent() {
             <p>This is a test version of a ordering system. No real orders will be processed and no payments will be charged. Please do not enter real payment information.</p>
           </div> */}
 
+          {/* Make it clear up front that nothing is paid online */}
+          <div className="pay-on-collection-banner">
+            <strong>Pay on collection</strong>
+            <p>No payment is needed online. You pay in the shop when you collect your order.</p>
+          </div>
+
           <div className="checkout-section">
             <h2 className="checkout-section-title">Order Summary ({orders.length} item{orders.length !== 1 ? 's' : ''})</h2>
             <div className="checkout-orders-list">
@@ -150,7 +156,7 @@ function CheckoutContent() {
             </div>
             {orders.length > 0 && (
               <div className="checkout-grand-total">
-                <span>Grand Total:</span>
+                <span>Total to pay on collection:</span>
                 <span className="checkout-grand-total-value">{money(grandTotal)}</span>
               </div>
             )}
@@ -201,7 +207,7 @@ function CheckoutContent() {
           <div className="checkout-section">
             <h2 className="checkout-section-title">Place Your Order</h2>
             <p className="checkout-payment-note">
-              No payment is taken online – please pay when you collect your order.
+              Placing your order does <strong>not</strong> take any payment. Please pay {money(grandTotal)} when you collect your order.
             </p>
 
             {orderError && (
@@ -216,7 +222,7 @@ function CheckoutContent() {
               disabled={loading || orders.length === 0}
               style={{ width: '100%', marginTop: '1.5rem' }}
             >
-              {loading ? 'Placing Order...' : `Place Order (${money(grandTotal)})`}
+              {loading ? 'Placing Order...' : 'Place Order – Pay on Collection'}
             </button>
           </div>
 

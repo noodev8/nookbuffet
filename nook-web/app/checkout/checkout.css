@@ -55,6 +55,33 @@
   line-height: 1.5;
 }
 
+/* ===== PAY ON COLLECTION BANNER ===== */
+.pay-on-collection-banner {
+  background: rgba(74, 222, 128, 0.1);
+  border: 2px solid rgb(144, 200, 164);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.pay-on-collection-banner strong {
+  display: block;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.4rem;
+  color: rgb(144, 200, 164);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.4rem;
+}
+
+.pay-on-collection-banner p {
+  margin: 0;
+  color: white;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
 /* ===== FORM SECTIONS ===== */
 .checkout-section {
   background: rgba(255, 255, 255, 0.05);
@@ -294,8 +321,8 @@
 
 /* ===== PLACE ORDER ===== */
 .checkout-payment-note {
-  color: #aaa;
-  font-size: 0.95rem;
+  color: white;
+  font-size: 1.05rem;
   margin: 0 0 1rem;
 }
 

@@ -26,6 +26,10 @@ function SuccessContent() {
             <p style={{ color: '#aaa', marginBottom: '2rem' }}>
               Thank you for your order! You will receive a confirmation email shortly.
             </p>
+            <div className="pay-on-collection-banner">
+              <strong>Pay on collection</strong>
+              <p>You haven&apos;t been charged. Please pay in the shop when you collect your order.</p>
+            </div>
             <button
               className="checkout-submit-button"
               onClick={() => router.push('/')}
