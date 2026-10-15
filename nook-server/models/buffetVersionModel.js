@@ -12,6 +12,15 @@ Each version has a name, description, and price per person.
 
 const { query, getClient } = require('../database');  // Import the database query function
 
+// A buffet is sold out when one of its required sections has nothing in stock, because
+// it can't be ordered without picking something from every required section.
+// (Deleted menu items are also set inactive, so is_active alone is enough here.)
+const SOLD_OUT_SQL = `EXISTS (
+  SELECT 1 FROM categories c
+  WHERE c.buffet_version_id = bv.id AND c.is_active = true AND c.is_required = true
+    AND NOT EXISTS (SELECT 1 FROM menu_items mi WHERE mi.category_id = c.id AND mi.is_active = true)
+) AS sold_out`;
+
 // ===== GET ONE SPECIFIC BUFFET VERSION =====
 /**
  * Get a specific buffet version by its ID
@@ -63,10 +72,11 @@ const getAllBuffetVersions = async () => {
   try {
     // Query the database for all active buffet versions
     const result = await query(
-      `SELECT id, title, description, price_per_person, is_active, created_at
-       FROM buffet_versions
-       WHERE is_active = true
-       ORDER BY id`
+      `SELECT bv.id, bv.title, bv.description, bv.price_per_person, bv.is_active, bv.created_at,
+              ${SOLD_OUT_SQL}
+       FROM buffet_versions bv
+       WHERE bv.is_active = true
+       ORDER BY bv.id`
     );
 
     // Return all rows (each row is one buffet version)
@@ -227,15 +237,16 @@ const deactivateBuffetVersion = async (id) => {
  * so an order can be priced on the server. Inactive versions and upgrades are left out.
  *
  * @param {number[]} versionIds - The buffet version IDs in the order
- * @returns {Promise<object>} { versions: [{ id, title, price_per_person }],
+ * @returns {Promise<object>} { versions: [{ id, title, price_per_person, sold_out }],
  *                              upgrades: [{ buffet_version_id, id, name, price_per_person }] }
  */
 const getPricesForOrder = async (versionIds) => {
   const ids = versionIds.map(Number).filter(Number.isInteger);
   const [versions, upgrades] = await Promise.all([
     query(
-      `SELECT id, title, price_per_person FROM buffet_versions
-       WHERE id = ANY($1::int[]) AND is_active = true`,
+      `SELECT bv.id, bv.title, bv.price_per_person, ${SOLD_OUT_SQL}
+       FROM buffet_versions bv
+       WHERE bv.id = ANY($1::int[]) AND bv.is_active = true`,
       [ids]
     ),
     query(

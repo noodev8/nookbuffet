@@ -15,7 +15,7 @@ const cleanText = (value) => (typeof value === 'string' && value.trim() ? value.
 
 /**
  * @param {array} rawBuffets - [{ buffetVersionId, numPeople, items, upgrades: [{ upgradeId, selectedItems }], notes, ... }]
- * @param {array} versions - active buffet versions [{ id, title, price_per_person }]
+ * @param {array} versions - active buffet versions [{ id, title, price_per_person, sold_out }]
  * @param {array} upgradeLinks - active upgrades offered with those versions [{ buffet_version_id, id, name, price_per_person }]
  * @returns {{ error: string } | { buffets: array, total: number }}
  */
@@ -29,6 +29,9 @@ const checkBuffets = (rawBuffets, versions, upgradeLinks) => {
     const version = versionsById.get(Number(raw?.buffetVersionId));
     if (!version) {
       return { error: 'One of the buffets in your basket is no longer available. Please remove it and choose again.' };
+    }
+    if (version.sold_out) {
+      return { error: `Sorry, the ${version.title} has sold out for now. Please remove it from your basket.` };
     }
 
     const numPeople = Number(raw.numPeople);

@@ -15,11 +15,12 @@ export default function SelectBuffetPage() {
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
 
-    // Offer sandwiches too, unless they have sold out
+    // Offer sandwiches too. If they have sold out the box still shows, so people know
+    // sandwiches are generally on offer, but there is no button to build one
     fetch(`${apiUrl}/api/sandwiches`)
       .then(res => res.json())
       .then(data => {
-        if (data.return_code === 'SUCCESS' && !data.data.sold_out) setSandwichMenu(data.data);
+        if (data.return_code === 'SUCCESS') setSandwichMenu(data.data);
       })
       .catch(() => {});
 
@@ -59,10 +60,15 @@ export default function SelectBuffetPage() {
               <div>
                 <h2 className="sandwich-offer-title">Just want a sandwich?</h2>
                 <p className="sandwich-offer-text">
-                  Build your own from £{parseFloat(sandwichMenu.base_price).toFixed(2)}. Order before {sandwichMenu.cutoff_time} to collect it today.
+                  Build your own from £{parseFloat(sandwichMenu.base_price).toFixed(2)}.{' '}
+                  {sandwichMenu.sold_out
+                    ? <>We&apos;ve sold out for now - please check back soon.</>
+                    : <>Order before {sandwichMenu.cutoff_time} to collect it today.</>}
                 </p>
               </div>
-              <Link href="/sandwiches" className="sandwich-offer-button">Build a Sandwich</Link>
+              {sandwichMenu.sold_out
+                ? <span className="sandwich-offer-button sandwich-offer-sold-out">Sold Out</span>
+                : <Link href="/sandwiches" className="sandwich-offer-button">Build a Sandwich</Link>}
             </div>
           )}
 
@@ -90,7 +96,7 @@ export default function SelectBuffetPage() {
           {!loading && !error && buffetVersions.length > 0 && (
             <div className="buffet-versions-grid">
               {buffetVersions.map((version) => (
-                <div key={version.id} className="buffet-version-card">
+                <div key={version.id} className={`buffet-version-card${version.sold_out ? ' buffet-version-sold-out' : ''}`}>
                   <div className="buffet-version-header">
                     <h2 className="buffet-version-title">{version.title}</h2>
                     <div className="buffet-version-price">
@@ -103,11 +109,16 @@ export default function SelectBuffetPage() {
                     <p className="buffet-version-description">{version.description}</p>
                   )}
                   
+                  {/* Sold out buffets stay on the page so people know we do them, but can't be picked */}
+                  {version.sold_out && (
+                    <p className="buffet-version-sold-out-note">Sold out for now - please check back soon.</p>
+                  )}
                   <button
                     className="select-buffet-button"
                     onClick={() => handleSelectBuffet(version.id)}
+                    disabled={version.sold_out}
                   >
-                    Select This Buffet
+                    {version.sold_out ? 'Sold Out' : 'Select This Buffet'}
                   </button>
                 </div>
               ))}

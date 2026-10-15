@@ -190,6 +190,31 @@
   transform: translateY(0);
 }
 
+/* Buffet sold out: faded and can't be selected */
+.buffet-version-sold-out,
+.buffet-version-sold-out:hover {
+  opacity: 0.6;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #444;
+  transform: none;
+  box-shadow: none;
+}
+
+.buffet-version-sold-out-note {
+  color: #ccc;
+  margin: 0 0 1rem;
+  text-align: center;
+}
+
+.select-buffet-button:disabled,
+.select-buffet-button:disabled:hover {
+  background: transparent;
+  border-color: #444;
+  transform: none;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 /* ===== SANDWICH OFFER ===== */
 .sandwich-offer {
   display: flex;
@@ -231,6 +256,16 @@
 .sandwich-offer-button:hover {
   background: transparent;
   color: white;
+}
+
+/* Sandwiches sold out: faded and not clickable */
+.sandwich-offer-sold-out,
+.sandwich-offer-sold-out:hover {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.35);
+  text-align: center;
+  cursor: default;
 }
 
 /* ===== RESPONSIVE DESIGN ===== */

@@ -74,6 +74,7 @@ export default function Home() {
   // Starts false so the first render matches the server, then picks up the saved basket
   const [hasBasket, setHasBasket] = useState(false);
   const [sandwichMenu, setSandwichMenu] = useState(null);
+  const [buffetsSoldOut, setBuffetsSoldOut] = useState(false);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage only exists after hydration
@@ -88,6 +89,18 @@ export default function Home() {
       .then(res => res.json())
       .then(data => {
         if (data.return_code === 'SUCCESS') setSandwichMenu(data.data);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Buffets show as sold out only when every buffet has sold out
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
+    fetch(`${apiUrl}/api/buffet-versions`)
+      .then(res => res.json())
+      .then(data => {
+        const versions = data.return_code === 'SUCCESS' ? data.data || [] : [];
+        setBuffetsSoldOut(versions.length > 0 && versions.every(v => v.sold_out));
       })
       .catch(() => {});
   }, []);
@@ -160,11 +173,21 @@ export default function Home() {
                   <span className="order-choice-button">{CONFIG.choices.sandwich.button} →</span>
                 </Link>
               )}
-              <Link href={CONFIG.choices.buffet.link} className="order-choice">
-                <span className="order-choice-title">{CONFIG.choices.buffet.title}</span>
-                <span className="order-choice-text">{CONFIG.choices.buffet.text}</span>
-                <span className="order-choice-button">{CONFIG.choices.buffet.button} →</span>
-              </Link>
+              {buffetsSoldOut ? (
+                <div className="order-choice order-choice-sold-out">
+                  <span className="order-choice-title">{CONFIG.choices.buffet.title}</span>
+                  <span className="order-choice-text">
+                    {CONFIG.choices.buffet.text} We&apos;ve sold out for now - please check back soon.
+                  </span>
+                  <span className="order-choice-button">Sold Out</span>
+                </div>
+              ) : (
+                <Link href={CONFIG.choices.buffet.link} className="order-choice">
+                  <span className="order-choice-title">{CONFIG.choices.buffet.title}</span>
+                  <span className="order-choice-text">{CONFIG.choices.buffet.text}</span>
+                  <span className="order-choice-button">{CONFIG.choices.buffet.button} →</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>

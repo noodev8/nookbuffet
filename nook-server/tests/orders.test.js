@@ -188,6 +188,18 @@ describe('createOrder', () => {
     expect(orderModel.createOrder).not.toHaveBeenCalled();
   });
 
+  test('rejects a buffet that has sold out', async () => {
+    buffetVersionModel.getPricesForOrder.mockResolvedValue({
+      ...BUFFET_PRICES,
+      versions: [{ ...BUFFET_PRICES.versions[0], sold_out: true }]
+    });
+    const { req, res, getResult } = setup(validOrder());
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('VALIDATION_ERROR');
+    expect(getResult().message).toMatch(/sold out/);
+    expect(orderModel.createOrder).not.toHaveBeenCalled();
+  });
+
   test('rejects a buffet with no people', async () => {
     const order = validOrder();
     order.buffets[0].numPeople = 0;

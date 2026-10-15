@@ -185,7 +185,7 @@
   color: white;
 }
 
-/* Sandwiches sold out: still shown so people know they are on offer, but faded and not clickable */
+/* Sold out (sandwiches or every buffet): still shown so people know it is on offer, but faded and not clickable */
 .order-choice-sold-out,
 .order-choice-sold-out:hover {
   border-color: rgba(255, 255, 255, 0.35);
