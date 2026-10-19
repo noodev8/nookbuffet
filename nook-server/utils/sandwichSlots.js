@@ -3,7 +3,8 @@
 SANDWICH SLOTS - Collection times for sandwich orders
 =======================================================================================================================================
 Sandwiches are collected in 5-minute slots between the opening and closing times staff set in the admin
-portal (e.g. 11:00, 11:05 ... 13:55 when open 11:00 - 14:00). Each slot takes up to slot_capacity orders.
+portal (e.g. 11:00, 11:05 ... 13:55 when open 11:00 - 14:00). Each slot holds up to slot_capacity sandwiches,
+which is how many the kitchen can make in 5 minutes.
 =======================================================================================================================================
 */
 
@@ -27,13 +28,13 @@ const slotTimes = (openTime, closeTime) => {
 /**
  * The slots a customer can pick for one day.
  * @param {object} settings - sandwich settings (open_time, close_time, slot_capacity)
- * @param {object} counts - { "12:30": 3, ... } orders already booked per slot that day
+ * @param {object} counts - { "12:30": 3, ... } sandwiches already booked per slot that day
  * @param {string|null} afterTime - "HH:MM" - only slots after this (now, when the day is today)
- * @returns {array} [{ time: "12:30", available: true }, ...]
+ * @returns {array} [{ time: "12:30", remaining: 7 }, ...] - remaining is how many more sandwiches fit
  */
 const buildSlots = (settings, counts, afterTime = null) =>
   slotTimes(settings.open_time, settings.close_time)
     .filter(time => !afterTime || time > afterTime)
-    .map(time => ({ time, available: (counts[time] || 0) < settings.slot_capacity }));
+    .map(time => ({ time, remaining: Math.max(0, settings.slot_capacity - (counts[time] || 0)) }));
 
 module.exports = { SLOT_MINUTES, slotTimes, buildSlots, toMinutes };

@@ -132,6 +132,15 @@ const createOrder = async (req, res) => {
       }
       sandwiches = checked.sandwiches;
       sandwichTotal = checked.total;
+
+      // A slot is how many sandwiches the kitchen can make in 5 minutes, so a bigger order can't fit in any
+      const sandwichCount = sandwiches.reduce((sum, s) => sum + s.quantity, 0);
+      if (sandwichCount > settings.slot_capacity) {
+        return res.json({
+          return_code: 'TOO_MANY_SANDWICHES',
+          message: `We can make up to ${settings.slot_capacity} sandwiches for one collection time. For a bigger order please call the shop.`
+        });
+      }
     }
 
     const totalPrice = Math.round((buffetTotal + sandwichTotal) * 100) / 100;
@@ -192,7 +201,7 @@ const createOrder = async (req, res) => {
       if (error.code !== 'SLOT_FULL') throw error;
       return res.json({
         return_code: 'SLOT_FULL',
-        message: `Sorry, ${orderData.fulfillmentTime} has just filled up. Please choose another collection time.`
+        message: `Sorry, ${orderData.fulfillmentTime} no longer has room for your sandwiches. Please choose another collection time.`
       });
     }
 

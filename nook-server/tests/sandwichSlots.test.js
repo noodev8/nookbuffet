@@ -11,13 +11,17 @@ describe('slotTimes', () => {
 });
 
 describe('buildSlots', () => {
-  test('marks slots with slot_capacity orders as full', () => {
+  test('says how many more sandwiches each slot can take', () => {
     expect(buildSlots(settings, { '11:05': 2, '11:10': 1 })).toEqual([
-      { time: '11:00', available: true },
-      { time: '11:05', available: false },
-      { time: '11:10', available: true },
-      { time: '11:15', available: true },
+      { time: '11:00', remaining: 2 },
+      { time: '11:05', remaining: 0 },
+      { time: '11:10', remaining: 1 },
+      { time: '11:15', remaining: 2 },
     ]);
+  });
+
+  test('never goes below 0 if a slot was booked before the capacity was lowered', () => {
+    expect(buildSlots(settings, { '11:00': 5 })[0].remaining).toBe(0);
   });
 
   test('leaves out slots that have passed', () => {

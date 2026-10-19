@@ -159,7 +159,7 @@ function SettingsCard({ settings, setSettings, showToast }) {
       return setFormError('Collection hours must be on a 5-minute mark, e.g. 11:00 or 13:45');
     }
     const capacity = Number(form.capacity);
-    if (!Number.isInteger(capacity) || capacity < 1) return setFormError('Orders per 5 minutes must be 1 or more');
+    if (!Number.isInteger(capacity) || capacity < 1) return setFormError('Sandwiches per 5 minutes must be 1 or more');
     save(() => api('/api/sandwiches/manage/settings', {
       method: 'PATCH',
       body: {
@@ -203,10 +203,10 @@ function SettingsCard({ settings, setSettings, showToast }) {
             <span className="field-hint">Last collection is 5 minutes before this</span>
           </div>
           <div className="field">
-            <label htmlFor="slot-capacity">Orders per 5 minutes</label>
+            <label htmlFor="slot-capacity">Sandwiches per 5 minutes</label>
             <input id="slot-capacity" className="input" type="number" min="1" step="1" value={form.capacity}
               onChange={e => setForm(p => ({ ...p, capacity: e.target.value }))} />
-            <span className="field-hint">Once a 5-minute slot has this many orders, customers have to pick another time</span>
+            <span className="field-hint">How many sandwiches you can make in 5 minutes. Customers pick a time with room for their whole order</span>
           </div>
         </div>
         <div className="form-actions">
@@ -224,7 +224,7 @@ function SettingsCard({ settings, setSettings, showToast }) {
           <p className="price-line"><strong>{money(settings.base_price)}</strong> per sandwich, plus extras</p>
           <p className="card-sub">Order before {settings.cutoff_time} to collect the same day</p>
           <p className="card-sub">
-            Collection {settings.open_time}–{settings.close_time} · up to {settings.slot_capacity} order{settings.slot_capacity !== 1 ? 's' : ''} every 5 minutes
+            Collection {settings.open_time}–{settings.close_time} · up to {settings.slot_capacity} sandwich{settings.slot_capacity !== 1 ? 'es' : ''} every 5 minutes
           </p>
         </div>
         <button className="btn" onClick={startEditing}>Edit settings</button>

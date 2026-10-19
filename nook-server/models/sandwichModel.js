@@ -52,7 +52,7 @@ const SETTINGS = {
   cutoff_time:   { key: 'sandwich_cutoff_time',  default: '11:00', description: 'Order sandwiches before this time to collect them the same day' },
   open_time:     { key: 'sandwich_open_time',    default: '11:00', description: 'First sandwich collection time of the day' },
   close_time:    { key: 'sandwich_close_time',   default: '14:00', description: 'Sandwich collections must be before this time' },
-  slot_capacity: { key: 'sandwich_slot_capacity', default: '5',    description: 'Most sandwich orders that can be collected in each 5-minute slot' },
+  slot_capacity: { key: 'sandwich_slot_capacity', default: '10',   description: 'Most sandwiches that can be collected in each 5-minute slot' },
 };
 
 const getSettings = async () => {
@@ -98,19 +98,19 @@ const updateSettings = async (changes) => {
 };
 
 // ===== SLOT BOOKINGS =====
-// How many open orders with sandwiches are already booked in each collection slot on a day.
+// How many sandwiches open orders have already booked in each collection slot on a day.
 // Returns { "12:30": 3, ... }
 const getSlotCounts = async (date) => {
   const result = await query(
-    `SELECT o.fulfillment_time, COUNT(*)::int AS orders
+    `SELECT o.fulfillment_time, SUM(os.quantity)::int AS sandwiches
      FROM orders o
+     JOIN order_sandwiches os ON os.order_id = o.id
      WHERE o.fulfillment_date = $1
        AND o.status <> 'cancelled'
-       AND EXISTS (SELECT 1 FROM order_sandwiches os WHERE os.order_id = o.id)
      GROUP BY o.fulfillment_time`,
     [date]
   );
-  return Object.fromEntries(result.rows.map(r => [r.fulfillment_time, r.orders]));
+  return Object.fromEntries(result.rows.map(r => [r.fulfillment_time, r.sandwiches]));
 };
 
 // ===== STEPS =====

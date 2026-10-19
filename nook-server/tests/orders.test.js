@@ -314,6 +314,21 @@ describe('createOrder with sandwiches', () => {
     expect(orderModel.createOrder.mock.calls[0][0].slotCapacity).toBe(5);
   });
 
+  test('turns away an order with more sandwiches than one slot holds', async () => {
+    const { req, res, getResult } = setup(sandwichOrder({ sandwiches: [
+      { quantity: 3, optionIds: [10, 20] }, { quantity: 3, optionIds: [10, 20] }
+    ] }));
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('TOO_MANY_SANDWICHES');
+    expect(orderModel.createOrder).not.toHaveBeenCalled();
+  });
+
+  test('accepts an order that exactly fills a slot', async () => {
+    const { req, res, getResult } = setup(sandwichOrder({ sandwiches: [{ quantity: 5, optionIds: [10, 20] }] }));
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+  });
+
   test('rejects a time outside collection hours', async () => {
     const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '15:00' }));
     await orderController.createOrder(req, res);

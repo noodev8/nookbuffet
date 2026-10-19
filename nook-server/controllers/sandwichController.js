@@ -82,7 +82,7 @@ const getSlots = async (req, res) => {
     res.json({
       return_code: 'SUCCESS',
       message: 'Got collection times',
-      data: { open_time: settings.open_time, close_time: settings.close_time, slots }
+      data: { open_time: settings.open_time, close_time: settings.close_time, slot_capacity: settings.slot_capacity, slots }
     });
   } catch (error) {
     console.error('Get sandwich slots error:', error);
