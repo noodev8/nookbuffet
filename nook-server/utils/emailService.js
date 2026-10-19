@@ -23,6 +23,12 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * @returns {Promise<object>} - The sent email's data from Resend
  */
 const sendEmail = async (message) => {
+  // Set EMAILS_DISABLED=true in .env to skip sending (e.g. while testing)
+  if (process.env.EMAILS_DISABLED === 'true') {
+    console.log(`Emails disabled - skipped "${message.subject}" for ${message.to}`);
+    return { id: 'disabled' };
+  }
+
   let { data, error } = await resend.emails.send(message);
 
   if (error && error.statusCode == null) {
