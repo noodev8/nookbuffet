@@ -471,7 +471,7 @@
   border-radius: 6px;
   padding: 0.8rem 1rem;
   margin-bottom: 0;
-  transition: all 0.3s ease;
+  transition: all 0.15s ease;
   position: relative;
   color: #ddd;
   cursor: pointer;
@@ -490,15 +490,21 @@
   opacity: 0.5;
 }
 
-.menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #555;
+/* Only on devices with a mouse - phones keep hover stuck on the last tapped option */
+@media (hover: hover) {
+  .menu-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #555;
+  }
 }
 
-.menu-item.selected:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #ffffff;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+/* Only on devices with a mouse - phones keep hover stuck on the last tapped option */
+@media (hover: hover) {
+  .menu-item.selected:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #ffffff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  }
 }
 
 .item-checkbox {
@@ -711,14 +717,17 @@
   border-radius: 6px;
   padding: 0.5rem 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.15s ease;
   font-size: 0.9rem;
   color: #888;
 }
 
-.bread-inline-option:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #777;
+/* Only on devices with a mouse - phones keep hover stuck on the last tapped option */
+@media (hover: hover) {
+  .bread-inline-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #777;
+  }
 }
 
 .bread-inline-option.selected {
@@ -1014,13 +1023,16 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   font-size: 0.9rem;
 }
 
-.upgrade-item:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.3);
+/* Only on devices with a mouse - phones keep hover stuck on the last tapped option */
+@media (hover: hover) {
+  .upgrade-item:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
 }
 
 .upgrade-item.selected {

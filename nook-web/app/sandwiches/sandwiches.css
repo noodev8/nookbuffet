@@ -155,12 +155,15 @@
   flex-wrap: wrap;
   align-items: baseline;
   column-gap: 0.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
-.sandwich-option:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #666;
+/* Only on devices with a mouse - phones keep hover stuck on the last tapped option */
+@media (hover: hover) {
+  .sandwich-option:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #666;
+  }
 }
 
 .sandwich-option.selected {
