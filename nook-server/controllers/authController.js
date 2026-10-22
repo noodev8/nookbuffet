@@ -6,7 +6,7 @@ This controller handles authentication for admin users. It checks their credenti
 verifies their password, and returns a JWT token if everything is valid.
 
 The flow:
-1. User submits email/username and password
+1. User submits their username and password
 2. look up the user in the database
 3. compare the password with the stored hash using bcrypt
 4. If valid, create a JWT token and send it back
@@ -23,33 +23,25 @@ const { JWT_SECRET } = require('../middleware/authMiddleware');
 // Authenticates an admin user and returns a JWT token
 const login = async (req, res) => {
   try {
-    // Get the email/username and password from the request
-    const { email, password } = req.body;
+    // Staff log in to the admin portal with their username and password
+    const username = req.body.username?.trim();
+    const { password } = req.body;
 
     // ===== VALIDATION =====
     // Make sure both fields are provided
-    if (!email || !password) {
+    if (!username || !password) {
       return res.json({
         return_code: 'MISSING_FIELDS',
-        message: 'Email and password are required'
+        message: 'Username and password are required'
       });
     }
 
     // ===== FIND USER =====
-    // Try to find the user by email first, then by username
-    // This allows users to log in with either
-    let user = await authModel.findUserByEmail(email);
-    
-    if (!user) {
-      // If not found by email, try username
-      user = await authModel.findUserByUsername(email);
-    }
-
-    // If still no user found, return error
+    const user = await authModel.findUserByUsername(username);
     if (!user) {
       return res.json({
         return_code: 'INVALID_CREDENTIALS',
-        message: 'Invalid email or password'
+        message: 'Invalid username or password'
       });
     }
 
@@ -70,7 +62,7 @@ const login = async (req, res) => {
     if (!isPasswordValid) {
       return res.json({
         return_code: 'INVALID_CREDENTIALS',
-        message: 'Invalid email or password'
+        message: 'Invalid username or password'
       });
     }
 
@@ -137,14 +129,16 @@ const getAllUsers = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     // Get the user data from the request
-    const { username, email, password, full_name, role } = req.body;
+    const { username, password, full_name, role } = req.body;
+    // Email is optional - staff log in with their username
+    const email = req.body.email?.trim() || null;
 
     // ===== VALIDATION =====
     // Make sure all required fields are provided
-    if (!username || !email || !password || !full_name || !role) {
+    if (!username || !password || !full_name || !role) {
       return res.json({
         return_code: 'MISSING_FIELDS',
-        message: 'All fields are required (username, email, password, full_name, role)'
+        message: 'Name, username, password and role are required'
       });
     }
 
@@ -157,8 +151,7 @@ const createUser = async (req, res) => {
     }
 
     // Check if email already exists
-    const emailInUse = await authModel.emailExists(email);
-    if (emailInUse) {
+    if (email && await authModel.emailExists(email)) {
       return res.json({
         return_code: 'EMAIL_EXISTS',
         message: 'This email is already in use'
@@ -249,7 +242,7 @@ const updateUser = async (req, res) => {
     }
 
     // ===== CHECK FOR DUPLICATE USERNAME =====
-    if (username && username !== existingUser.username) {
+    if (username && username.toLowerCase() !== existingUser.username.toLowerCase()) {
       const usernameTaken = await authModel.usernameExists(username);
       if (usernameTaken) {
         return res.json({

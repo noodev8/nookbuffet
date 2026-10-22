@@ -11,7 +11,7 @@ const ROLES = [
   { value: 'admin', label: 'Admin', help: 'everything, including the sandwich and buffet menus, prices, upgrades and staff accounts' },
 ];
 
-const EMPTY_FORM = { full_name: '', username: '', email: '', password: '', role: 'general' };
+const EMPTY_FORM = { full_name: '', username: '', password: '', role: 'general' };
 
 export default function StaffPage() {
   return (
@@ -100,12 +100,12 @@ function StaffList() {
                   <span className="badge">{ROLES.find(r => r.value === staffUser.role)?.label || staffUser.role}</span>{' '}
                   {!staffUser.is_active && <span className="badge badge-unpaid">Inactive</span>}
                 </div>
-                <div className="staff-info">{staffUser.email} · username {staffUser.username}</div>
+                <div className="staff-info">Username: {staffUser.username}</div>
               </div>
               <div className="staff-info">Last login: {formatDateTime(staffUser.last_login)}</div>
               <div>
                 <button className="btn-link" onClick={() => setEditing(staffUser)}>Edit</button>
-                {staffUser.email !== user.email && (
+                {staffUser.id !== user.id && (
                   <button className="btn-link danger" onClick={() => deleteUser(staffUser)}>Delete</button>
                 )}
               </div>
@@ -120,7 +120,7 @@ function StaffList() {
 function StaffForm({ existing, onCancel, onSaved }) {
   const { api } = useAdmin();
   const [form, setForm] = useState(existing
-    ? { full_name: existing.full_name, username: existing.username, email: existing.email, password: '', role: existing.role }
+    ? { full_name: existing.full_name, username: existing.username, password: '', role: existing.role }
     : EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
@@ -156,13 +156,9 @@ function StaffForm({ existing, onCancel, onSaved }) {
           <input id="full_name" name="full_name" className="input" value={form.full_name} onChange={set} required />
         </div>
         <div className="field">
-          <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" className="input" value={form.email} onChange={set} required />
-          <span className="field-hint">Their login code is sent here</span>
-        </div>
-        <div className="field">
           <label htmlFor="username">Username</label>
-          <input id="username" name="username" className="input" value={form.username} onChange={set} required />
+          <input id="username" name="username" className="input" value={form.username} onChange={set} required autoCapitalize="none" />
+          <span className="field-hint">What they type to log in</span>
         </div>
         <div className="field">
           <label htmlFor="password">{existing ? 'New password' : 'Password'}</label>

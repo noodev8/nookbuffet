@@ -22,7 +22,7 @@ function setup(body = {}, params = {}, user = { userId: 999, role: 'admin' }) {
 
 describe('createUser', () => {
   test('returns MISSING_FIELDS when required fields are absent', async () => {
-    const { req, res, getResult } = setup({ username: 'bob' }); // missing email, password, full_name, role
+    const { req, res, getResult } = setup({ username: 'bob' }); // missing password, full_name, role
     await authController.createUser(req, res);
     expect(getResult().return_code).toBe('MISSING_FIELDS');
   });
@@ -71,6 +71,36 @@ describe('createUser', () => {
     await authController.createUser(req, res);
     expect(getResult().return_code).toBe('SUCCESS');
     expect(getResult().data.username).toBe('bob');
+  });
+
+  test('does not need an email', async () => {
+    authModel.emailExists.mockClear();
+    authModel.usernameExists.mockResolvedValue(false);
+    authModel.createUser.mockResolvedValue({ id: 2, username: 'sam', email: null, full_name: 'Sam', role: 'general' });
+    const { req, res, getResult } = setup({ username: 'sam', password: 'pass123', full_name: 'Sam', role: 'general' });
+    await authController.createUser(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(authModel.emailExists).not.toHaveBeenCalled();
+    expect(authModel.createUser).toHaveBeenCalledWith(expect.objectContaining({ username: 'sam', email: null }));
+  });
+});
+
+// ─── LOGIN ──────────────────────────────────────────────────────────────────
+
+describe('login', () => {
+  test('logs in with a username, never looking up an email', async () => {
+    authModel.findUserByUsername.mockResolvedValue(undefined);
+    const { req, res, getResult } = setup({ username: 'sam', password: 'pass123' });
+    await authController.login(req, res);
+    expect(authModel.findUserByUsername).toHaveBeenCalledWith('sam');
+    expect(authModel.findUserByEmail).not.toHaveBeenCalled();
+    expect(getResult().return_code).toBe('INVALID_CREDENTIALS');
+  });
+
+  test('needs a username and password', async () => {
+    const { req, res, getResult } = setup({ username: ' ', password: 'pass123' });
+    await authController.login(req, res);
+    expect(getResult().return_code).toBe('MISSING_FIELDS');
   });
 });
 

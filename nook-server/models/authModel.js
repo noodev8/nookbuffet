@@ -25,13 +25,13 @@ const findUserByEmail = async (email) => {
 };
 
 // ===== FIND USER BY USERNAME =====
-// Look up an admin user by their username
-// Used during login if they enter username instead of email
+// Look up an admin user by their username, ignoring capitals ("summer" finds "Summer" -
+// phones often capitalise the first letter)
 const findUserByUsername = async (username) => {
   const sql = `
     SELECT id, username, email, password_hash, full_name, role, is_active, last_login
     FROM admin_users
-    WHERE username = $1
+    WHERE LOWER(username) = LOWER($1)
   `;
 
   const result = await query(sql, [username]);
@@ -68,7 +68,7 @@ const getAllUsers = async () => {
 
 // ===== CREATE USER =====
 // Create a new admin user
-// Takes username, email, password_hash, full_name and role
+// Takes username, email (optional), password_hash, full_name and role
 const createUser = async (userData) => {
   const sql = `
     INSERT INTO admin_users (username, email, password_hash, full_name, role, is_active)
@@ -78,7 +78,7 @@ const createUser = async (userData) => {
 
   const result = await query(sql, [
     userData.username,
-    userData.email,
+    userData.email || null,
     userData.password_hash,
     userData.full_name,
     userData.role
@@ -104,7 +104,7 @@ const emailExists = async (email) => {
 // Used before creating a new user to prevent duplicates
 const usernameExists = async (username) => {
   const sql = `
-    SELECT id FROM admin_users WHERE username = $1
+    SELECT id FROM admin_users WHERE LOWER(username) = LOWER($1)
   `;
 
   const result = await query(sql, [username]);

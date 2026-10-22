@@ -10,7 +10,7 @@ ENDPOINTS:
    Purpose: Authenticate an admin user and return a JWT token
    Request Body:
    {
-     "email": "admin@example.com",        // string, required - email or username
+     "username": "sam",                   // string, required
      "password": "securepassword123"      // string, required - user's password
    }
    Success Response:
@@ -54,7 +54,7 @@ ENDPOINTS:
    Request Body:
    {
      "username": "newuser",               // string, required - unique username
-     "email": "newuser@example.com",      // string, required - unique email
+     "email": "newuser@example.com",      // string, optional - staff log in with their username
      "password": "securepassword123",     // string, required - user's password
      "full_name": "New User",             // string, required - user's full name
      "role": "general"                      // string, required - general or admin
@@ -126,7 +126,7 @@ const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
 // ===== LOGIN ROUTE =====
 // POST /api/auth/login
-// Accepts email/username and password - returns a JWT token if valid
+// Accepts username and password - returns a JWT token if valid
 router.post('/login', authController.login);
 
 // ===== STAFF WEB LOGIN ROUTE =====

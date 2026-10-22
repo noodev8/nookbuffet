@@ -7,7 +7,7 @@ import { unlockSound } from '../lib/chime';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +18,7 @@ export default function LoginPage() {
     setError('');
   };
 
-  // Check email/password and log in
+  // Check username/password and log in
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Pressing Log in counts as the tap browsers need before they'll play sound,
@@ -63,14 +63,15 @@ export default function LoginPage() {
           {error && <div className="error-message">{error}</div>}
 
           <div className="form-group">
-            <label htmlFor="email">Email or Username</label>
+            <label htmlFor="username">Username</label>
             <input
               type="text"
-              id="email"
-              name="email"
-              value={formData.email}
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
-              placeholder="Enter your email or username"
+              placeholder="Enter your username"
+              autoCapitalize="none"
               required
               autoComplete="username"
             />
