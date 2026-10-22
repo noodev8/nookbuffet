@@ -115,6 +115,36 @@ const getSlotCounts = async (date) => {
   return Object.fromEntries(result.rows.map(r => [r.fulfillment_time, r.orders]));
 };
 
+// ===== BLOCKED SLOTS =====
+// Slots staff have blocked, kept in order_config as { "2026-10-24": ["13:00", "13:10"], ... }.
+// A blocked slot is full for that day only. Past days are dropped whenever it is saved.
+const BLOCKED_KEY = 'sandwich_blocked_slots';
+
+const getAllBlocked = async () => {
+  const result = await query(`SELECT config_value FROM order_config WHERE config_key = $1`, [BLOCKED_KEY]);
+  try {
+    return JSON.parse(result.rows[0]?.config_value || '{}');
+  } catch {
+    return {};
+  }
+};
+
+// ["13:00", ...] blocked on one day
+const getBlockedSlots = async (date) => (await getAllBlocked())[date] || [];
+
+// Blocks or unblocks one slot on a day. Returns that day's blocked slots.
+const setSlotBlocked = async (date, time, blocked, today) => {
+  const all = await getAllBlocked();
+  for (const day of Object.keys(all)) if (day < today) delete all[day];
+  const times = new Set(all[date] || []);
+  if (blocked) times.add(time);
+  else times.delete(time);
+  if (times.size > 0) all[date] = [...times].sort();
+  else delete all[date];
+  await setConfig(BLOCKED_KEY, JSON.stringify(all), 'Sandwich collection slots staff have blocked, by day');
+  return all[date] || [];
+};
+
 // ===== STEPS =====
 const createStep = async ({ name, description, min_choices, max_choices }) => {
   // New steps go on the end
@@ -194,6 +224,8 @@ module.exports = {
   getMenuForCustomers,
   getSettings,
   getSlotCounts,
+  getBlockedSlots,
+  setSlotBlocked,
   updateSettings,
   createStep,
   updateStep,

@@ -29,6 +29,10 @@ describe('buildSlots', () => {
     expect(buildSlots(settings, { '11:00': 5 })[0].available).toBe(false);
   });
 
+  test('marks blocked slots as full', () => {
+    expect(buildSlots(settings, {}, null, ['11:10']).map(s => s.available)).toEqual([true, true, false, true]);
+  });
+
   test('only lists slots from the earliest time on', () => {
     expect(buildSlots(settings, {}, '11:10').map(s => s.time)).toEqual(['11:10', '11:15']);
   });

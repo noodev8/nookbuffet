@@ -2,9 +2,11 @@
 // Tests the controller logic with the model layer stubbed out.
 
 jest.mock('../models/sandwichModel');
+jest.mock('../utils/orderDateCalculator');
 
 const sandwichModel = require('../models/sandwichModel');
 const sandwichController = require('../controllers/sandwichController');
+const { calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
 
 // Helper: build fake req and res objects
 function setup(body = {}, params = {}) {
@@ -206,5 +208,50 @@ describe('updateSettings collection hours and slots', () => {
     const { req, res, getResult } = setup({ ...base, slot_capacity: 0 });
     await sandwichController.updateSettings(req, res);
     expect(getResult().return_code).toBe('INVALID_DATA');
+  });
+});
+
+describe('setSlotBlocked', () => {
+  beforeEach(() => {
+    sandwichModel.getSettings.mockResolvedValue({ open_time: '11:00', close_time: '14:00', slot_minutes: 10 });
+    calculateEarliestSandwichDate.mockResolvedValue({ success: true, today: '2026-10-22', currentTime: '09:00' });
+    sandwichModel.setSlotBlocked.mockResolvedValue(['13:00']);
+  });
+
+  test('blocks a slot on a day', async () => {
+    const { req, res, getResult } = setup({ date: '2026-10-24', time: '13:00', blocked: true });
+    await sandwichController.setSlotBlocked(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(sandwichModel.setSlotBlocked).toHaveBeenCalledWith('2026-10-24', '13:00', true, '2026-10-22');
+  });
+
+  test('rejects a time that is not a slot', async () => {
+    const { req, res, getResult } = setup({ date: '2026-10-24', time: '13:05', blocked: true });
+    await sandwichController.setSlotBlocked(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATA');
+    expect(sandwichModel.setSlotBlocked).not.toHaveBeenCalled();
+  });
+
+  test('rejects a day that has passed', async () => {
+    const { req, res, getResult } = setup({ date: '2026-10-21', time: '13:00', blocked: true });
+    await sandwichController.setSlotBlocked(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATA');
+  });
+});
+
+describe('getDaySlots', () => {
+  test('lists every slot with its orders and whether it is blocked or passed', async () => {
+    sandwichModel.getSettings.mockResolvedValue({ open_time: '11:00', close_time: '11:30', slot_minutes: 10, slot_capacity: 3 });
+    sandwichModel.getSlotCounts.mockResolvedValue({ '11:10': 2 });
+    sandwichModel.getBlockedSlots.mockResolvedValue(['11:20']);
+    calculateEarliestSandwichDate.mockResolvedValue({ success: true, today: '2026-10-22', currentTime: '11:05' });
+    const { req, res, getResult } = setup();
+    req.query = { date: '2026-10-22' };
+    await sandwichController.getDaySlots(req, res);
+    expect(getResult().data.slots).toEqual([
+      { time: '11:00', orders: 0, blocked: false, passed: true },
+      { time: '11:10', orders: 2, blocked: false, passed: false },
+      { time: '11:20', orders: 0, blocked: true, passed: false },
+    ]);
   });
 });

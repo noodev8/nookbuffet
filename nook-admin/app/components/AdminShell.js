@@ -18,6 +18,7 @@ const SECTIONS = [
     label: 'Sandwiches',
     items: [
       { href: '/', label: 'Orders', count: 'sandwich' },
+      { href: '/sandwich-slots', label: 'Block times' },
       { href: '/sandwich-menu', label: 'Menu', roles: ['admin'] },
       { href: '/sandwich-settings', label: 'Settings', roles: ['admin'] },
     ],

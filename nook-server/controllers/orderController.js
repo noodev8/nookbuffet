@@ -127,6 +127,15 @@ const createOrder = async (req, res) => {
       orderData.slotCapacity = settings.slot_capacity;
       orderData.noticeMinutes = settings.notice_minutes;
 
+      // Staff can block a slot on a day, which fills it
+      const blocked = await sandwichModel.getBlockedSlots(String(orderData.fulfillmentDate).slice(0, 10));
+      if (blocked.includes(orderData.fulfillmentTime)) {
+        return res.json({
+          return_code: 'SLOT_FULL',
+          message: `Sorry, ${orderData.fulfillmentTime} is not available. Please choose another collection time.`
+        });
+      }
+
       const checked = checkSandwiches(rawSandwiches, menu.steps, settings.base_price);
       if (checked.error) {
         return res.json({ return_code: 'VALIDATION_ERROR', message: checked.error });

@@ -9,9 +9,11 @@ with any extra cost, and the base price. The customer side will read this to bui
 
 const sandwichModel = require('../models/sandwichModel');
 const { calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
-const { buildSlots, earliestSlotTime, toMinutes, TIME_STEP } = require('../utils/sandwichSlots');
+const { buildSlots, slotTimes, earliestSlotTime, toMinutes, TIME_STEP } = require('../utils/sandwichSlots');
 
 // ===== HELPERS =====
+const isDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value || '') && !isNaN(new Date(value).getTime());
+
 const isTime = (value) => typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 
 const parseId = (value) => {
@@ -70,15 +72,16 @@ const getMenuForCustomers = async (req, res) => {
 const getSlots = async (req, res) => {
   try {
     const date = req.query.date;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date || '') || isNaN(new Date(date).getTime())) {
+    if (!isDate(date)) {
       return res.json({ return_code: 'INVALID_DATA', message: 'date must be YYYY-MM-DD' });
     }
-    const [settings, counts, now] = await Promise.all([
-      sandwichModel.getSettings(), sandwichModel.getSlotCounts(date), calculateEarliestSandwichDate()
+    const [settings, counts, blocked, now] = await Promise.all([
+      sandwichModel.getSettings(), sandwichModel.getSlotCounts(date), sandwichModel.getBlockedSlots(date), calculateEarliestSandwichDate()
     ]);
     if (!now.success) return res.json({ return_code: 'SERVER_ERROR', message: 'Could not get collection times' });
 
-    const slots = date < now.today ? [] : buildSlots(settings, counts, date === now.today ? earliestSlotTime(now.currentTime, settings.notice_minutes) : null);
+    const earliest = date === now.today ? earliestSlotTime(now.currentTime, settings.notice_minutes) : null;
+    const slots = date < now.today ? [] : buildSlots(settings, counts, earliest, blocked);
     res.json({
       return_code: 'SUCCESS',
       message: 'Got collection times',
@@ -87,6 +90,52 @@ const getSlots = async (req, res) => {
   } catch (error) {
     console.error('Get sandwich slots error:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not get collection times' });
+  }
+};
+
+// ===== SLOTS ON A DAY (staff) =====
+// Every collection slot on a day with how many orders it has and whether it is blocked,
+// for the Block times page. Today's slots that have passed are marked so they can't be changed.
+const getDaySlots = async (req, res) => {
+  try {
+    const date = req.query.date;
+    if (!isDate(date)) return res.json({ return_code: 'INVALID_DATA', message: 'date must be YYYY-MM-DD' });
+    const [settings, counts, blocked, now] = await Promise.all([
+      sandwichModel.getSettings(), sandwichModel.getSlotCounts(date), sandwichModel.getBlockedSlots(date), calculateEarliestSandwichDate()
+    ]);
+    if (!now.success) return res.json({ return_code: 'SERVER_ERROR', message: 'Could not get collection times' });
+
+    const slots = slotTimes(settings.open_time, settings.close_time, settings.slot_minutes).map(time => ({
+      time,
+      orders: counts[time] || 0,
+      blocked: blocked.includes(time),
+      passed: date < now.today || (date === now.today && time <= now.currentTime)
+    }));
+    res.json({ return_code: 'SUCCESS', message: 'Got collection times', data: { slot_capacity: settings.slot_capacity, slots } });
+  } catch (error) {
+    console.error('Get sandwich day slots error:', error);
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not get collection times' });
+  }
+};
+
+// ===== BLOCK / UNBLOCK A SLOT (staff) =====
+const setSlotBlocked = async (req, res) => {
+  try {
+    const { date, time, blocked } = req.body;
+    if (!isDate(date)) return res.json({ return_code: 'INVALID_DATA', message: 'date must be YYYY-MM-DD' });
+    if (typeof blocked !== 'boolean') return res.json({ return_code: 'INVALID_DATA', message: 'blocked must be true or false' });
+    const [settings, now] = await Promise.all([sandwichModel.getSettings(), calculateEarliestSandwichDate()]);
+    if (!now.success) return res.json({ return_code: 'SERVER_ERROR', message: 'Could not update the time' });
+    if (!slotTimes(settings.open_time, settings.close_time, settings.slot_minutes).includes(time)) {
+      return res.json({ return_code: 'INVALID_DATA', message: 'time must be one of the collection slots' });
+    }
+    if (date < now.today) return res.json({ return_code: 'INVALID_DATA', message: 'That day has already passed' });
+
+    const blockedTimes = await sandwichModel.setSlotBlocked(date, time, blocked, now.today);
+    res.json({ return_code: 'SUCCESS', message: blocked ? 'Time blocked' : 'Time unblocked', data: { date, blocked: blockedTimes } });
+  } catch (error) {
+    console.error('Block sandwich slot error:', error);
+    res.json({ return_code: 'SERVER_ERROR', message: 'Could not update the time' });
   }
 };
 
@@ -272,6 +321,8 @@ const deleteOption = async (req, res) => {
 };
 
 module.exports = {
+  getDaySlots,
+  setSlotBlocked,
   getMenuForCustomers,
   getSlots,
   getMenuForManagement,

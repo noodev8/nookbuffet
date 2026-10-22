@@ -97,6 +97,7 @@ beforeEach(() => {
   });
   buffetVersionModel.getPricesForOrder.mockResolvedValue(BUFFET_PRICES);
   sandwichModel.getSettings.mockResolvedValue(SANDWICH_SETTINGS);
+  sandwichModel.getBlockedSlots.mockResolvedValue([]);
   sandwichModel.getMenuForCustomers.mockResolvedValue({ sold_out: false, steps: SANDWICH_STEPS });
   orderModel.createOrder.mockResolvedValue({ id: 7, order_number: 'ORD-007', created_at: '2026-09-18' });
   sendOrderConfirmationEmail.mockResolvedValue({ success: true });
@@ -250,6 +251,14 @@ describe('createOrder with sandwiches', () => {
     const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '11:30' }));
     await orderController.createOrder(req, res);
     expect(getResult().return_code).toBe('INVALID_DATE');
+    expect(orderModel.createOrder).not.toHaveBeenCalled();
+  });
+
+  test('rejects a time staff have blocked', async () => {
+    sandwichModel.getBlockedSlots.mockResolvedValue(['12:30']);
+    const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '12:30' }));
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('SLOT_FULL');
     expect(orderModel.createOrder).not.toHaveBeenCalled();
   });
 

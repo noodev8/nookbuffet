@@ -38,7 +38,7 @@ ENDPOINTS:
    Purpose: The collection slots on a day, slot_minutes apart (public). Today only lists slots at least notice_minutes from now.
    Success Response: { return_code, data: { open_time: "11:00", close_time: "14:00", slot_minutes: 5,
      slots: [ { time: "11:00", available: true }, { time: "11:05", available: false }, ... ] } }
-   available is false once a slot has slot_capacity orders in it
+   available is false once a slot has slot_capacity orders in it, or staff have blocked it
    Return Codes: SUCCESS, INVALID_DATA, SERVER_ERROR
 
 1. GET /api/sandwiches/manage
@@ -55,6 +55,17 @@ ENDPOINTS:
        slot_capacity - most orders with sandwiches per collection slot (1 or more)
        notice_minutes - customers must order at least this long before their collection time (0 to 240)
    Success Response: { return_code, data: { base_price, open_time, close_time, slot_minutes, slot_capacity, notice_minutes } }
+
+2b. GET /api/sandwiches/manage/slots?date=2026-10-24   (all staff)
+   Purpose: Every collection slot on a day, for the Block times page
+   Success Response: { return_code, data: { slot_capacity: 5,
+     slots: [ { time: "13:00", orders: 2, blocked: false, passed: false }, ... ] } }
+
+2c. PATCH /api/sandwiches/manage/slots   (all staff)
+   Purpose: Block or unblock one slot on one day. A blocked slot is full for customers, like it
+   had slot_capacity orders. Orders already booked in it stay as they are.
+   Request Body: { "date": "2026-10-24", "time": "13:00", "blocked": true }
+   Success Response: { return_code, data: { date, blocked: ["13:00", ...] } }
 
 3. POST /api/sandwiches/manage/steps
    Request Body: { "name": "Bread", "description": null, "min_choices": 1, "max_choices": 1 }
@@ -94,11 +105,14 @@ const sandwichController = require('../controllers/sandwichController');
 const { verifyToken, checkRole } = require('../middleware/authMiddleware');
 
 const admin = [verifyToken, checkRole(['admin'])];
+const staff = [verifyToken, checkRole(['general', 'admin'])];
 
 router.get('/', sandwichController.getMenuForCustomers);
 router.get('/slots', sandwichController.getSlots);
 router.get('/manage', admin, sandwichController.getMenuForManagement);
 router.patch('/manage/settings', admin, sandwichController.updateSettings);
+router.get('/manage/slots', staff, sandwichController.getDaySlots);
+router.patch('/manage/slots', staff, sandwichController.setSlotBlocked);
 
 // reorder must come before /:id so "reorder" isn't treated as an ID
 router.post('/manage/steps', admin, sandwichController.createStep);
