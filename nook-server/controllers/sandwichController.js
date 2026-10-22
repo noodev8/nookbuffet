@@ -153,10 +153,12 @@ const setSlotBlocked = async (req, res) => {
 };
 
 // ===== GET MENU (management) =====
+// All staff can see the menu (to mark items sold out); only admins get the settings with it
 const getMenuForManagement = async (req, res) => {
   try {
     const [settings, steps] = await Promise.all([sandwichModel.getSettings(), sandwichModel.getMenuForManagement()]);
-    res.json({ return_code: 'SUCCESS', message: 'Got sandwich menu', data: { settings, steps } });
+    const data = req.user?.role === 'admin' ? { settings, steps } : { steps };
+    res.json({ return_code: 'SUCCESS', message: 'Got sandwich menu', data });
   } catch (error) {
     console.error('Get sandwich menu error:', error);
     res.json({ return_code: 'SERVER_ERROR', message: 'Could not get the sandwich menu' });
@@ -281,6 +283,8 @@ const createOption = async (req, res) => {
     if (!stepId) return res.json({ return_code: 'INVALID_ID', message: 'Invalid step ID' });
     const { error, option } = readOption(req.body);
     if (error) return res.json({ return_code: 'INVALID_DATA', message: error });
+    // All staff can add an item (e.g. a special), but only admins can give it its own price
+    if (req.user?.role !== 'admin') option.extra_price = 0;
     const created = await sandwichModel.createOption(stepId, option);
     if (!created) return res.json({ return_code: 'NOT_FOUND', message: 'Step not found' });
     res.json({ return_code: 'SUCCESS', message: 'Option created', data: created });

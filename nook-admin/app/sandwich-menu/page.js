@@ -7,7 +7,7 @@ import useSave from '../lib/useSave';
 
 export default function SandwichesPage() {
   return (
-    <AdminShell roles={['admin']}>
+    <AdminShell>
       <Sandwiches />
     </AdminShell>
   );
@@ -35,10 +35,12 @@ const describeSection = (section) => {
 
 /**
  * The build-your-own sandwich menu. Day to day, staff tap an item to mark it sold out
- * or back in stock. "Change" on a section opens everything else about it.
+ * or back in stock. "Change" on a section opens everything else about it - admins only,
+ * so other staff can't change prices or items.
  */
 function Sandwiches() {
-  const { api } = useAdmin();
+  const { api, user } = useAdmin();
+  const isAdmin = user.role === 'admin';
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -91,12 +93,15 @@ function Sandwiches() {
           <h1 className="page-title">Sandwich Menu</h1>
           <p className="page-sub">
             <strong>Tap an item to mark it sold out.</strong> Tap it again when it&apos;s back in stock.
-            To add, rename or remove items, press <strong>Change</strong> on that section.
+            To add a new item, like a special, tap <strong>+ Add new</strong>.
+            {isAdmin && <> To rename or remove items, or change prices, press <strong>Change</strong> on that section.</>}
           </p>
         </div>
       </div>
 
-      {sections.length === 0 && !adding && <div className="notice">The menu is empty — add the first section below, e.g. Bread.</div>}
+      {sections.length === 0 && !adding && (
+        <div className="notice">{isAdmin ? 'The menu is empty — add the first section below, e.g. Bread.' : 'The menu is empty.'}</div>
+      )}
 
       {sections.map((section, index) => (
         changing === section.id ? (
@@ -116,7 +121,7 @@ function Sandwiches() {
             key={section.id}
             section={section}
             update={(change) => updateSection(section.id, change)}
-            onChange={() => setChanging(section.id)}
+            onChange={isAdmin ? () => setChanging(section.id) : null}
           />
         )
       ))}
@@ -127,11 +132,10 @@ function Sandwiches() {
           onAdded={(created) => {
             setSections(prev => [...prev, { ...created, options: [] }]);
             setAdding(false);
-            setChanging(created.id); // straight into adding its items
-            showToast(`${created.name} added — now add its items`);
+            showToast(`${created.name} added — tap "+ Add new" to add its items`);
           }}
         />
-      ) : (
+      ) : isAdmin && (
         <button className="btn" onClick={() => setAdding(true)}>+ Add a new section</button>
       )}
 
@@ -169,14 +173,11 @@ function SectionCard({ section, update, onChange }) {
           <p className="card-sub">{describeSection(section)}</p>
         </div>
         {soldOut > 0 && <span className="badge badge-unpaid">{soldOut} sold out</span>}
-        <button className="btn" onClick={onChange}>Change</button>
+        {onChange && <button className="btn" onClick={onChange}>Change</button>}
       </div>
 
-      {section.options.length === 0 ? (
-        <p className="card-sub">No items yet — press Change to add some.</p>
-      ) : (
-        <div className="item-grid">
-          {section.options.map(item => (
+      <div className="item-grid">
+        {section.options.map(item => (
             <button
               key={item.id}
               type="button"
@@ -189,15 +190,65 @@ function SectionCard({ section, update, onChange }) {
               <span className="item-tile-state">{item.is_active ? 'In stock' : 'Sold out'}</span>
             </button>
           ))}
-        </div>
-      )}
+          <AddItemTile sectionId={section.id} update={update} />
+      </div>
     </div>
+  );
+}
+
+// The grey last tile in a section: tap it, type the name of a new item (e.g. a special), add it.
+// All staff can do this - it goes on the menu in stock, with no price of its own.
+function AddItemTile({ sectionId, update }) {
+  const { api } = useAdmin();
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const close = () => { setOpen(false); setName(''); };
+
+  const add = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setBusy(true);
+    try {
+      const data = await api(`/api/sandwiches/manage/steps/${sectionId}/options`, { method: 'POST', body: { name: name.trim() } });
+      if (data.return_code === 'SUCCESS') {
+        update(s => ({ ...s, options: [...s.options, data.data] }));
+        close();
+      } else {
+        alert(data.message || 'Could not add this item');
+      }
+    } catch {
+      alert('Could not reach the server. Please try again.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <button type="button" className="item-tile item-tile-new" onClick={() => setOpen(true)}>
+        <span className="item-tile-name">+ Add new</span>
+        <span className="item-tile-state">e.g. a special</span>
+      </button>
+    );
+  }
+
+  return (
+    <form className="item-tile item-tile-new item-tile-form" onSubmit={add}>
+      <input className="input" placeholder="Name, e.g. Pastrami" value={name} onChange={e => setName(e.target.value)}
+        autoFocus aria-label="Name of the new item" />
+      <div className="item-tile-actions">
+        <button className="btn btn-primary btn-sm" type="submit" disabled={busy || !name.trim()}>{busy ? 'Adding...' : 'Add'}</button>
+        <button className="btn btn-sm" type="button" onClick={close} disabled={busy}>Cancel</button>
+      </div>
+    </form>
   );
 }
 
 // ===== CHANGING A SECTION =====
 // The section's details and price at the top, saved with one button. Items below are
-// added, renamed and removed straight away.
+// renamed and removed straight away. New items are added with the "+ Add new" tile instead.
 function ChangeSection({ section, isFirst, isLast, onMove, update, onDeleted, onDone, showToast }) {
   const { api } = useAdmin();
   const { saving, formError, setFormError, save } = useSave((saved) => {
@@ -302,7 +353,6 @@ function ChangeSection({ section, isFirst, isLast, onMove, update, onDeleted, on
       {section.options.map(item => (
         <ItemRow key={item.id} item={item} update={update} showToast={showToast} />
       ))}
-      <AddItem sectionId={section.id} update={update} showToast={showToast} />
 
       <div className="section-footer">
         <span className="card-sub">Where it shows on the menu:</span>
@@ -365,38 +415,6 @@ function ItemRow({ item, update, showToast }) {
   );
 }
 
-function AddItem({ sectionId, update, showToast }) {
-  const { api } = useAdmin();
-  const [name, setName] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  const add = async (e) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-    setBusy(true);
-    try {
-      const data = await api(`/api/sandwiches/manage/steps/${sectionId}/options`, { method: 'POST', body: { name: name.trim() } });
-      if (data.return_code === 'SUCCESS') {
-        update(s => ({ ...s, options: [...s.options, data.data] }));
-        setName('');
-        showToast(`${data.data.name} added`);
-      } else {
-        alert(data.message || 'Could not add this item');
-      }
-    } catch {
-      alert('Could not reach the server. Please try again.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <form className="item-row item-row-add" onSubmit={add}>
-      <input className="input" placeholder="New item, e.g. Pastrami" value={name} onChange={e => setName(e.target.value)} />
-      <button className="btn btn-primary btn-sm" type="submit" disabled={busy || !name.trim()}>+ Add</button>
-    </form>
-  );
-}
 
 // A new section only needs a name to start with - the rest is set while changing it
 function AddSection({ onCancel, onAdded }) {

@@ -2,7 +2,7 @@
 =======================================================================================================================================
 SANDWICH ROUTES - API endpoints for the build-your-own sandwich menu
 =======================================================================================================================================
-GET /api/sandwiches is public; everything under /manage is admin only. Every response has a return_code; errors also have a message.
+GET /api/sandwiches is public; everything under /manage is admin only, except where it says all staff. Every response has a return_code; errors also have a message.
 Common return codes: SUCCESS, INVALID_ID, INVALID_DATA, NOT_FOUND, UNAUTHORIZED, FORBIDDEN, SERVER_ERROR
 
 A step looks like:
@@ -43,9 +43,10 @@ ENDPOINTS:
    available is false once a slot has slot_capacity orders in it, or staff have blocked it
    Return Codes: SUCCESS, INVALID_DATA, SERVER_ERROR
 
-1. GET /api/sandwiches/manage
+1. GET /api/sandwiches/manage   (all staff)
    Purpose: The whole sandwich menu for the admin portal, including out-of-stock options
    Success Response: { return_code, data: { settings: { base_price: "5.00", open_time: "11:00", ... }, steps: [...] } }
+   settings is only included for admins
 
 2. PATCH /api/sandwiches/manage/settings
    Request Body: { "base_price": 5.00,
@@ -85,15 +86,16 @@ ENDPOINTS:
 6. DELETE /api/sandwiches/manage/steps/:id
    Purpose: Remove a step and its options (soft delete)
 
-7. POST /api/sandwiches/manage/steps/:id/options
+7. POST /api/sandwiches/manage/steps/:id/options   (all staff - e.g. adding a special)
    Request Body: { "name": "Ham", "description": null, "extra_price": 0.50 }   // extra_price optional, defaults to 0
+   extra_price is only saved for admins - for other staff it is always 0
    Success Response: { return_code, data: option }
 
 8. PATCH /api/sandwiches/manage/options/:id
    Request Body: same as creating an option
    Success Response: { return_code, data: option }
 
-9. PATCH /api/sandwiches/manage/options/:id/stock
+9. PATCH /api/sandwiches/manage/options/:id/stock   (all staff - marking items sold out)
    Request Body: { "is_active": false }
    Success Response: { return_code, data: option }
 
@@ -113,7 +115,7 @@ const staff = [verifyToken, checkRole(['general', 'admin'])];
 
 router.get('/', sandwichController.getMenuForCustomers);
 router.get('/slots', sandwichController.getSlots);
-router.get('/manage', admin, sandwichController.getMenuForManagement);
+router.get('/manage', staff, sandwichController.getMenuForManagement);
 router.patch('/manage/settings', admin, sandwichController.updateSettings);
 router.get('/manage/slots', staff, sandwichController.getDaySlots);
 router.patch('/manage/slots', staff, sandwichController.setSlotBlocked);
@@ -124,9 +126,9 @@ router.patch('/manage/steps/reorder', admin, sandwichController.reorderSteps);
 router.patch('/manage/steps/:id', admin, sandwichController.updateStep);
 router.delete('/manage/steps/:id', admin, sandwichController.deleteStep);
 
-router.post('/manage/steps/:id/options', admin, sandwichController.createOption);
+router.post('/manage/steps/:id/options', staff, sandwichController.createOption);
 router.patch('/manage/options/:id', admin, sandwichController.updateOption);
-router.patch('/manage/options/:id/stock', admin, sandwichController.setOptionStock);
+router.patch('/manage/options/:id/stock', staff, sandwichController.setOptionStock);
 router.delete('/manage/options/:id', admin, sandwichController.deleteOption);
 
 module.exports = router;

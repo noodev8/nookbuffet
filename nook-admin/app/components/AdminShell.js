@@ -10,7 +10,7 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013
 export const WEB_URL = process.env.NEXT_PUBLIC_WEB_URL || 'http://localhost:3000';
 
 // The nav is split into a Sandwiches section and a Buffets section, each with its own
-// orders, prep, menu and settings pages, one row each. Everyone sees Orders and Prep; only admins see the menus.
+// orders, prep, menu and settings pages, one row each. Everyone sees Orders, Prep, Time slots and the Sandwich Menu; only admins see Settings and the Buffet Menu.
 // Staff sits up by Log out (admins only) so it doesn't need a row of its own.
 // count: which open-order count to show as a badge on the tab
 const SECTIONS = [
@@ -19,7 +19,7 @@ const SECTIONS = [
     items: [
       { href: '/', label: 'Orders', count: 'sandwich' },
       { href: '/sandwich-slots', label: 'Time slots' },
-      { href: '/sandwich-menu', label: 'Menu', roles: ['admin'] },
+      { href: '/sandwich-menu', label: 'Menu' },
       { href: '/sandwich-settings', label: 'Settings', roles: ['admin'] },
     ],
   },

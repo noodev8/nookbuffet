@@ -540,6 +540,14 @@ h1, h2, h3 { font-family: 'Oswald', sans-serif; font-weight: 600; }
 .item-tile.sold-out .item-tile-name { text-decoration: line-through; color: var(--red-text); }
 .item-tile.sold-out .item-tile-state { color: var(--red-text); }
 
+/* The grey "+ Add new" tile at the end of each section */
+.item-tile.item-tile-new { background: #f7fafc; border: 2px dashed #cbd5e0; }
+.item-tile.item-tile-new:hover { border-color: #a0aec0; }
+.item-tile-new .item-tile-name, .item-tile-new .item-tile-state { color: var(--muted); }
+.item-tile-form { cursor: default; gap: 0.5rem; }
+.item-tile-form .input { width: 100%; }
+.item-tile-actions { display: flex; gap: 0.4rem; }
+
 .section-changing { border: 2px solid var(--brand); }
 .section-subtitle { font-size: 1rem; margin: 1.5rem 0 0.5rem; }
 

@@ -134,6 +134,23 @@ describe('createOption', () => {
     expect(getResult().return_code).toBe('SUCCESS');
   });
 
+  test('lets admins give a new item its own price', async () => {
+    sandwichModel.createOption.mockResolvedValue({ id: 3 });
+    const { req, res } = setup({ name: 'Pastrami', extra_price: 1 }, { id: '1' });
+    req.user = { role: 'admin' };
+    await sandwichController.createOption(req, res);
+    expect(sandwichModel.createOption).toHaveBeenCalledWith(1, expect.objectContaining({ extra_price: 1 }));
+  });
+
+  test('other staff can add an item, but never with a price', async () => {
+    sandwichModel.createOption.mockResolvedValue({ id: 3 });
+    const { req, res, getResult } = setup({ name: 'Pastrami', extra_price: 1 }, { id: '1' });
+    req.user = { role: 'general' };
+    await sandwichController.createOption(req, res);
+    expect(sandwichModel.createOption).toHaveBeenCalledWith(1, expect.objectContaining({ name: 'Pastrami', extra_price: 0 }));
+    expect(getResult().return_code).toBe('SUCCESS');
+  });
+
   test('returns NOT_FOUND when the step has been deleted', async () => {
     sandwichModel.createOption.mockResolvedValue(null);
     const { req, res, getResult } = setup({ name: 'Ham' }, { id: '1' });
@@ -272,5 +289,26 @@ describe('getDaySlots', () => {
       { time: '11:10', orders: 2, blocked: false, passed: false },
       { time: '11:20', orders: 0, blocked: true, passed: false },
     ]);
+  });
+});
+
+describe('getMenuForManagement', () => {
+  beforeEach(() => {
+    sandwichModel.getSettings.mockResolvedValue({ base_price: '5.00' });
+    sandwichModel.getMenuForManagement.mockResolvedValue([{ id: 1 }]);
+  });
+
+  test('gives admins the settings with the menu', async () => {
+    const { req, res, getResult } = setup();
+    req.user = { role: 'admin' };
+    await sandwichController.getMenuForManagement(req, res);
+    expect(getResult().data).toEqual({ settings: { base_price: '5.00' }, steps: [{ id: 1 }] });
+  });
+
+  test('leaves the settings out for other staff', async () => {
+    const { req, res, getResult } = setup();
+    req.user = { role: 'general' };
+    await sandwichController.getMenuForManagement(req, res);
+    expect(getResult().data).toEqual({ steps: [{ id: 1 }] });
   });
 });
