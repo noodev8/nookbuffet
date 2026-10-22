@@ -64,7 +64,7 @@ const SANDWICH_STEPS = [
 ];
 
 const SANDWICH_SETTINGS = {
-  base_price: '5.00', cutoff_time: '11:00', open_time: '11:00', close_time: '14:00', slot_minutes: 5, slot_capacity: 5
+  base_price: '5.00', open_time: '11:00', close_time: '14:00', slot_minutes: 5, slot_capacity: 5, notice_minutes: 30
 };
 
 // A sandwich-only order - no business name, address or buffets
@@ -93,9 +93,7 @@ beforeEach(() => {
     success: true,
     earliestDate: '2026-09-18',
     today: '2026-09-18',
-    currentTime: '09:30',
-    cutoffTime: '11:00',
-    isAfterCutoff: false
+    currentTime: '09:30'
   });
   buffetVersionModel.getPricesForOrder.mockResolvedValue(BUFFET_PRICES);
   sandwichModel.getSettings.mockResolvedValue(SANDWICH_SETTINGS);
@@ -247,12 +245,28 @@ describe('createOrder with sandwiches', () => {
   test('rejects a same-day time that has already passed', async () => {
     // 11:30 is within collection hours, but it is already 12:00
     calculateEarliestSandwichDate.mockResolvedValue({
-      success: true, earliestDate: '2026-09-18', today: '2026-09-18', currentTime: '12:00', cutoffTime: '11:00', isAfterCutoff: true
+      success: true, earliestDate: '2026-09-18', today: '2026-09-18', currentTime: '12:00'
     });
     const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '11:30' }));
     await orderController.createOrder(req, res);
     expect(getResult().return_code).toBe('INVALID_DATE');
     expect(orderModel.createOrder).not.toHaveBeenCalled();
+  });
+
+  test('rejects a same-day time inside the notice period', async () => {
+    // It is 09:30 and 30 minutes notice is needed, so 09:55 is too soon (pretend collection opens at 09:00)
+    sandwichModel.getSettings.mockResolvedValue({ ...SANDWICH_SETTINGS, open_time: '09:00' });
+    const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '09:55' }));
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATE');
+    expect(getResult().message).toMatch(/30 minutes/);
+  });
+
+  test('accepts a same-day time exactly the notice period away', async () => {
+    sandwichModel.getSettings.mockResolvedValue({ ...SANDWICH_SETTINGS, open_time: '09:00' });
+    const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '10:00' }));
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
   });
 
   test('uses the buffet date rules when there is a buffet too', async () => {

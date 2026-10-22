@@ -1,6 +1,6 @@
 // Unit tests for sandwich collection slots
 
-const { slotTimes, buildSlots } = require('../utils/sandwichSlots');
+const { slotTimes, buildSlots, earliestSlotTime } = require('../utils/sandwichSlots');
 
 const settings = { open_time: '11:00', close_time: '11:20', slot_minutes: 5, slot_capacity: 2 };
 
@@ -29,7 +29,21 @@ describe('buildSlots', () => {
     expect(buildSlots(settings, { '11:00': 5 })[0].available).toBe(false);
   });
 
-  test('leaves out slots that have passed', () => {
-    expect(buildSlots(settings, {}, '11:05').map(s => s.time)).toEqual(['11:10', '11:15']);
+  test('only lists slots from the earliest time on', () => {
+    expect(buildSlots(settings, {}, '11:10').map(s => s.time)).toEqual(['11:10', '11:15']);
+  });
+});
+
+describe('earliestSlotTime', () => {
+  test('adds the notice to now', () => {
+    expect(earliestSlotTime('11:02', 30)).toBe('11:32');
+  });
+
+  test('with no notice, still has to be later than now', () => {
+    expect(earliestSlotTime('11:05', 0)).toBe('11:06');
+  });
+
+  test('past midnight is later than every slot', () => {
+    expect(earliestSlotTime('23:50', 30) > '23:55').toBe(true);
   });
 });

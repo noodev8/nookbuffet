@@ -30,12 +30,12 @@ ENDPOINTS:
 
 0. GET /api/sandwiches
    Purpose: The sandwich menu for the website - in-stock options only (public)
-   Success Response: { return_code, data: { base_price: "5.00", cutoff_time: "11:00", sold_out: false, steps: [...] } }
+   Success Response: { return_code, data: { base_price: "5.00", sold_out: false, steps: [...] } }
    sold_out is true when a required step has nothing in stock (steps is then empty)
-   Also includes open_time, close_time, slot_minutes and slot_capacity (see settings below)
+   Also includes open_time, close_time, slot_minutes, slot_capacity and notice_minutes (see settings below)
 
 0b. GET /api/sandwiches/slots?date=2026-10-05
-   Purpose: The collection slots on a day, slot_minutes apart (public). Today only lists slots still to come.
+   Purpose: The collection slots on a day, slot_minutes apart (public). Today only lists slots at least notice_minutes from now.
    Success Response: { return_code, data: { open_time: "11:00", close_time: "14:00", slot_minutes: 5,
      slots: [ { time: "11:00", available: true }, { time: "11:05", available: false }, ... ] } }
    available is false once a slot has slot_capacity orders in it
@@ -43,18 +43,18 @@ ENDPOINTS:
 
 1. GET /api/sandwiches/manage
    Purpose: The whole sandwich menu for the admin portal, including out-of-stock options
-   Success Response: { return_code, data: { settings: { base_price: "5.00", cutoff_time: "11:00", ... }, steps: [...] } }
+   Success Response: { return_code, data: { settings: { base_price: "5.00", open_time: "11:00", ... }, steps: [...] } }
 
 2. PATCH /api/sandwiches/manage/settings
-   Request Body: { "base_price": 5.00, "cutoff_time": "11:00",
-                   "open_time": "11:00", "close_time": "14:00", "slot_minutes": 5, "slot_capacity": 5 }
+   Request Body: { "base_price": 5.00,
+                   "open_time": "11:00", "close_time": "14:00", "slot_minutes": 5, "slot_capacity": 5, "notice_minutes": 30 }
      base_price (number >= 0) is required. The rest are optional and left
      as they are when not sent:
-       cutoff_time   - sandwich-only orders placed before it can be collected the same day
        open_time, close_time - collection hours, on 5-minute marks, sent together, open before close
        slot_minutes  - how long each collection slot is (5 to 120, in steps of 5)
        slot_capacity - most orders with sandwiches per collection slot (1 or more)
-   Success Response: { return_code, data: { base_price, cutoff_time, open_time, close_time, slot_minutes, slot_capacity } }
+       notice_minutes - customers must order at least this long before their collection time (0 to 240)
+   Success Response: { return_code, data: { base_price, open_time, close_time, slot_minutes, slot_capacity, notice_minutes } }
 
 3. POST /api/sandwiches/manage/steps
    Request Body: { "name": "Bread", "description": null, "min_choices": 1, "max_choices": 1 }

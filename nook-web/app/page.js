@@ -168,7 +168,7 @@ export default function Home() {
                   <span className="order-choice-title">{CONFIG.choices.sandwich.title}</span>
                   <span className="order-choice-text">
                     Build your own for lunch from £{parseFloat(sandwichMenu.base_price).toFixed(2)}.
-                    Order by {sandwichMenu.cutoff_time} to collect today.
+                    Collect today between {sandwichMenu.open_time} and {sandwichMenu.close_time}.
                   </span>
                   <span className="order-choice-button">{CONFIG.choices.sandwich.button} →</span>
                 </Link>

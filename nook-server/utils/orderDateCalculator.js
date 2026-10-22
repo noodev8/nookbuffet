@@ -63,25 +63,16 @@ const calculateEarliestOrderDate = async () => {
 };
 
 // ===== CALCULATE EARLIEST SANDWICH DATE =====
-// Orders with only sandwiches (no buffets) can be collected the same day if placed before
-// the sandwich cutoff (default 11am), otherwise from tomorrow.
+// Orders with only sandwiches (no buffets) can be collected today, in any collection
+// slot that hasn't passed yet. currentTime is used to hide and reject past slots.
 const calculateEarliestSandwichDate = async () => {
   try {
-    const cutoffTime = await getConfigValue('sandwich_cutoff_time', '11:00');
     const now = new Date();
-    const currentTime = now.toTimeString().slice(0, 5);
-    const isAfterCutoff = currentTime >= cutoffTime;
-
-    const earliestDate = new Date();
-    if (isAfterCutoff) earliestDate.setDate(earliestDate.getDate() + 1);
-
     return {
       success: true,
-      earliestDate: toDateKey(earliestDate),
+      earliestDate: toDateKey(now),
       today: toDateKey(now),
-      currentTime,
-      cutoffTime,
-      isAfterCutoff
+      currentTime: now.toTimeString().slice(0, 5)
     };
   } catch (error) {
     console.error('Error calculating earliest sandwich date:', error);

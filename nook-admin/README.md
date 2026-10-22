@@ -46,7 +46,8 @@ Orders and Menu pages (plus Prep for buffets).
 
   Sandwiches
   /               - Sandwich Orders - open sandwich orders by collection time, with what to make listed in each row
-  /sandwich-menu  - Sandwich Menu - base price, on/off, same-day cutoff, collection hours, time slot length and orders per slot, steps (bread, fillings...) and their options (admins only)
+  /sandwich-menu  - Sandwich Menu - steps (bread, fillings...) and their options, in stock or not (admins only)
+  /sandwich-settings - Sandwich Settings - base price, collection hours, time slot length, orders per slot, minimum notice (admins only)
 
   Buffets
   /buffet-orders  - Buffet Orders - open buffet orders grouped by collection day, overdue first

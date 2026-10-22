@@ -63,7 +63,7 @@ export default function SelectBuffetPage() {
                   Build your own from £{parseFloat(sandwichMenu.base_price).toFixed(2)}.{' '}
                   {sandwichMenu.sold_out
                     ? <>We&apos;ve sold out for now - please check back soon.</>
-                    : <>Order before {sandwichMenu.cutoff_time} to collect it today.</>}
+                    : <>Collect it today between {sandwichMenu.open_time} and {sandwichMenu.close_time}.</>}
                 </p>
               </div>
               {sandwichMenu.sold_out

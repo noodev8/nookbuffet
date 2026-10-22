@@ -67,7 +67,7 @@ ENDPOINTS:
      upgrade prices, sandwiches from the current menu. Any prices or totals sent are ignored.
    - upgrades must be ones offered with that buffet, and only menu items on that buffet's menu are saved
    - send the customer's login token (Authorization: Bearer ...) to link the order to their account
-   - sandwich-only orders can be collected the same day if placed before sandwich_cutoff_time;
+   - sandwich-only orders can be collected today, in a slot at least sandwich notice_minutes away;
      anything with a buffet follows the usual daily_cutoff_time rule
    Success Response:
    {
@@ -98,7 +98,7 @@ ENDPOINTS:
 4. GET /api/orders/earliest-date
    Purpose: Earliest collection dates (public)
    Success Response: { return_code, data: { earliestDate, cutoffTime, isAfterCutoff,
-     sandwiches: { earliestDate, today, cutoffTime, isAfterCutoff } } }
+     sandwiches: { earliestDate, today } } }
 
 =======================================================================================================================================
 */

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import AdminShell, { useAdmin } from '../components/AdminShell';
 import { money } from '../lib/format';
 import useSave from '../lib/useSave';
@@ -29,7 +30,7 @@ const extraLabel = (price) => (parseFloat(price) > 0 ? `+${money(price)}` : 'No 
  */
 function Sandwiches() {
   const { api } = useAdmin();
-  const [settings, setSettings] = useState(null);
+  const [basePrice, setBasePrice] = useState(null);
   const [steps, setSteps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,7 +44,7 @@ function Sandwiches() {
           setError(data.message || 'Failed to load the sandwich menu');
           return;
         }
-        setSettings(data.data.settings);
+        setBasePrice(data.data.settings.base_price);
         setSteps(data.data.steps);
       })
       .catch(() => setError('Could not reach the server. Please try again.'))
@@ -86,7 +87,13 @@ function Sandwiches() {
         </div>
       </div>
 
-      <SettingsCard settings={settings} setSettings={setSettings} showToast={showToast} />
+      {/* Price and collection rules live on their own Settings page */}
+      <div className="card">
+        <div className="card-head" style={{ marginBottom: 0 }}>
+          <p className="price-line"><strong>{money(basePrice)}</strong> per sandwich, plus extras</p>
+          <Link href="/sandwich-settings" className="btn">Price and collection settings</Link>
+        </div>
+      </div>
 
       {steps.length === 0 && !addingStep && <div className="notice">No steps yet — add the first one below, e.g. Bread.</div>}
 
@@ -121,128 +128,6 @@ function Sandwiches() {
 
       {toast && <div className="toast">{toast}</div>}
     </>
-  );
-}
-
-// ===== PRICE, CUTOFF, COLLECTION HOURS AND SLOTS =====
-// Lengths staff can choose for a collection time slot, in minutes
-const SLOT_LENGTHS = [5, 10, 15, 20, 30, 45, 60];
-
-function SettingsCard({ settings, setSettings, showToast }) {
-  const { api } = useAdmin();
-  const [editing, setEditing] = useState(false);
-  const { saving, formError, setFormError, save } = useSave((saved) => {
-    setSettings(saved);
-    setEditing(false);
-    showToast('Settings saved');
-  });
-  const [form, setForm] = useState({ price: '', cutoff: '', open: '', close: '', minutes: '', capacity: '' });
-
-  const startEditing = () => {
-    setForm({
-      price: parseFloat(settings.base_price).toFixed(2),
-      cutoff: settings.cutoff_time,
-      open: settings.open_time,
-      close: settings.close_time,
-      minutes: String(settings.slot_minutes),
-      capacity: String(settings.slot_capacity)
-    });
-    setFormError('');
-    setEditing(true);
-  };
-
-  const submit = (e) => {
-    e.preventDefault();
-    const price = parseFloat(form.price);
-    if (isNaN(price) || price < 0) return setFormError('Enter the price of a sandwich before extras, e.g. 5.00');
-    if (!form.cutoff) return setFormError('Enter the same-day cutoff time, e.g. 11:00');
-    if (!form.open || !form.close) return setFormError('Enter the collection hours, e.g. 11:00 to 14:00');
-    if (form.open >= form.close) return setFormError('Collection must finish after it starts');
-    const onFiveMinutes = (time) => Number(time.split(':')[1]) % 5 === 0;
-    if (!onFiveMinutes(form.open) || !onFiveMinutes(form.close)) {
-      return setFormError('Collection hours must be on a 5-minute mark, e.g. 11:00 or 13:45');
-    }
-    const capacity = Number(form.capacity);
-    if (!Number.isInteger(capacity) || capacity < 1) return setFormError('Orders per time slot must be 1 or more');
-    save(() => api('/api/sandwiches/manage/settings', {
-      method: 'PATCH',
-      body: {
-        base_price: price,
-        cutoff_time: form.cutoff,
-        open_time: form.open,
-        close_time: form.close,
-        slot_minutes: Number(form.minutes),
-        slot_capacity: capacity
-      }
-    }));
-  };
-
-  if (editing) {
-    return (
-      <form className="card" onSubmit={submit}>
-        <h2 className="card-title" style={{ marginBottom: '0.75rem' }}>Sandwich settings</h2>
-        {formError && <div className="form-error">{formError}</div>}
-        <div className="form-grid">
-          <div className="field">
-            <label htmlFor="base-price">Base price (£)</label>
-            <input id="base-price" className="input" type="number" step="0.01" min="0" value={form.price}
-              onChange={e => setForm(p => ({ ...p, price: e.target.value }))} autoFocus />
-            <span className="field-hint">What a sandwich costs before any extras</span>
-          </div>
-          <div className="field">
-            <label htmlFor="cutoff-time">Same-day cutoff</label>
-            <input id="cutoff-time" className="input" type="time" value={form.cutoff}
-              onChange={e => setForm(p => ({ ...p, cutoff: e.target.value }))} />
-            <span className="field-hint">Sandwich orders placed before this can be collected the same day</span>
-          </div>
-          <div className="field">
-            <label htmlFor="open-time">Collection from</label>
-            <input id="open-time" className="input" type="time" step="300" value={form.open}
-              onChange={e => setForm(p => ({ ...p, open: e.target.value }))} />
-            <span className="field-hint">First time customers can collect a sandwich</span>
-          </div>
-          <div className="field">
-            <label htmlFor="close-time">Collection until</label>
-            <input id="close-time" className="input" type="time" step="300" value={form.close}
-              onChange={e => setForm(p => ({ ...p, close: e.target.value }))} />
-            <span className="field-hint">The last time slot starts before this</span>
-          </div>
-          <div className="field">
-            <label htmlFor="slot-minutes">Time slot length</label>
-            <select id="slot-minutes" className="input" value={form.minutes}
-              onChange={e => setForm(p => ({ ...p, minutes: e.target.value }))}>
-              {SLOT_LENGTHS.map(m => <option key={m} value={m}>{m} minutes</option>)}
-            </select>
-            <span className="field-hint">Customers pick a collection time every this many minutes</span>
-          </div>
-          <div className="field">
-            <label htmlFor="slot-capacity">Orders per time slot</label>
-            <input id="slot-capacity" className="input" type="number" min="1" step="1" value={form.capacity}
-              onChange={e => setForm(p => ({ ...p, capacity: e.target.value }))} />
-            <span className="field-hint">Once a time slot has this many orders, customers have to pick another time</span>
-          </div>
-        </div>
-        <div className="form-actions">
-          <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
-          <button className="btn" type="button" onClick={() => setEditing(false)} disabled={saving}>Cancel</button>
-        </div>
-      </form>
-    );
-  }
-
-  return (
-    <div className="card">
-      <div className="card-head" style={{ marginBottom: 0 }}>
-        <div>
-          <p className="price-line"><strong>{money(settings.base_price)}</strong> per sandwich, plus extras</p>
-          <p className="card-sub">Order before {settings.cutoff_time} to collect the same day</p>
-          <p className="card-sub">
-            Collection {settings.open_time}–{settings.close_time} · up to {settings.slot_capacity} order{settings.slot_capacity !== 1 ? 's' : ''} every {settings.slot_minutes} minutes
-          </p>
-        </div>
-        <button className="btn" onClick={startEditing}>Edit settings</button>
-      </div>
-    </div>
   );
 }
 

@@ -12,7 +12,7 @@ const buffetVersionModel = require('../models/buffetVersionModel');
 const { checkBuffets } = require('../utils/buffetOrder');
 const { calculateEarliestOrderDate, calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
 const { checkSandwiches } = require('../utils/sandwichOrder');
-const { slotTimes } = require('../utils/sandwichSlots');
+const { slotTimes, earliestSlotTime } = require('../utils/sandwichSlots');
 const { sendOrderConfirmationEmail, sendNewOrderNotificationEmail, sendOrderCancelledEmail } = require('../utils/emailService');
 const { addClient, notifyOrdersChanged } = require('../utils/orderEvents');
 
@@ -125,6 +125,7 @@ const createOrder = async (req, res) => {
         });
       }
       orderData.slotCapacity = settings.slot_capacity;
+      orderData.noticeMinutes = settings.notice_minutes;
 
       const checked = checkSandwiches(rawSandwiches, menu.steps, settings.base_price);
       if (checked.error) {
@@ -142,8 +143,8 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Validate the collection date against cutoff rules. Buffets need the usual notice;
-    // sandwich-only orders can be collected the same day if placed before the sandwich cutoff.
+    // Validate the collection date. Buffets need the usual notice and cutoff;
+    // sandwich-only orders can be collected today, in a slot at least notice_minutes away.
     const sandwichOnly = buffets.length === 0;
     const dateValidation = sandwichOnly ? await calculateEarliestSandwichDate() : await calculateEarliestOrderDate();
     if (!dateValidation.success) {
@@ -159,7 +160,9 @@ const createOrder = async (req, res) => {
     if (requestedDate < earliestDate) {
       return res.json({
         return_code: 'INVALID_DATE',
-        message: `Orders must be placed for ${dateValidation.earliestDate} or later. Current cutoff time is ${dateValidation.cutoffTime}.`,
+        message: sandwichOnly
+          ? `Please choose ${dateValidation.earliestDate} or later`
+          : `Orders must be placed for ${dateValidation.earliestDate} or later. Current cutoff time is ${dateValidation.cutoffTime}.`,
         data: {
           earliestDate: dateValidation.earliestDate,
           cutoffTime: dateValidation.cutoffTime,
@@ -168,12 +171,14 @@ const createOrder = async (req, res) => {
       });
     }
 
-    // Same-day collection has to be later than now
+    // Same-day collection needs at least notice_minutes to make the order
     if (sandwichOnly && String(orderData.fulfillmentDate).slice(0, 10) === dateValidation.today &&
-        orderData.fulfillmentTime <= dateValidation.currentTime) {
+        orderData.fulfillmentTime < earliestSlotTime(dateValidation.currentTime, orderData.noticeMinutes)) {
       return res.json({
         return_code: 'INVALID_DATE',
-        message: 'Please choose a collection time later today'
+        message: orderData.noticeMinutes > 0
+          ? `Please order at least ${orderData.noticeMinutes} minutes before your collection time`
+          : 'Please choose a collection time later today'
       });
     }
 
@@ -375,12 +380,10 @@ const getEarliestOrderDate = async (req, res) => {
         earliestDate: result.earliestDate,
         cutoffTime: result.cutoffTime,
         isAfterCutoff: result.isAfterCutoff,
-        // For orders with only sandwiches - same day if before the sandwich cutoff
+        // For orders with only sandwiches - today, in any slot still to come
         sandwiches: {
           earliestDate: sandwichResult.earliestDate,
-          today: sandwichResult.today,
-          cutoffTime: sandwichResult.cutoffTime,
-          isAfterCutoff: sandwichResult.isAfterCutoff
+          today: sandwichResult.today
         }
       }
     });

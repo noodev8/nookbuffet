@@ -138,8 +138,8 @@ function SandwichBuilder() {
   return (
     <>
       <p className="sandwich-subtitle">
-        Build it your way, from <strong>{money(menu.base_price)}</strong>. Collect between {menu.open_time} and {menu.close_time} -
-        today if you order before {menu.cutoff_time}.
+        Build it your way, from <strong>{money(menu.base_price)}</strong>. Collect today or another day,
+        between {menu.open_time} and {menu.close_time}.
       </p>
 
       <div className="sandwich-steps">

@@ -49,11 +49,11 @@ const getMenuForCustomers = async () => {
 // Each setting's order_config key, description and default (used until staff save one)
 const SETTINGS = {
   base_price:    { key: 'sandwich_base_price',   default: '0.00',  description: 'Price of a sandwich before any extras' },
-  cutoff_time:   { key: 'sandwich_cutoff_time',  default: '11:00', description: 'Order sandwiches before this time to collect them the same day' },
   open_time:     { key: 'sandwich_open_time',    default: '11:00', description: 'First sandwich collection time of the day' },
   close_time:    { key: 'sandwich_close_time',   default: '14:00', description: 'Sandwich collections must be before this time' },
   slot_minutes:  { key: 'sandwich_slot_minutes',  default: '5',    description: 'How long each sandwich collection slot is, in minutes' },
   slot_capacity: { key: 'sandwich_slot_capacity', default: '5',    description: 'Most sandwich orders that can be collected in each slot' },
+  notice_minutes: { key: 'sandwich_notice_minutes', default: '30',  description: 'Customers must order at least this many minutes before their collection time' },
 };
 
 const getSettings = async () => {
@@ -66,11 +66,11 @@ const getSettings = async () => {
   const value = (name) => config[SETTINGS[name].key] ?? SETTINGS[name].default;
   return {
     base_price: value('base_price'),
-    cutoff_time: value('cutoff_time'),
     open_time: value('open_time'),
     close_time: value('close_time'),
     slot_minutes: parseInt(value('slot_minutes')),
     slot_capacity: parseInt(value('slot_capacity')),
+    notice_minutes: parseInt(value('notice_minutes')),
   };
 };
 

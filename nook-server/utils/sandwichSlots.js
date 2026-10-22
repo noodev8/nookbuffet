@@ -4,7 +4,8 @@ SANDWICH SLOTS - Collection times for sandwich orders
 =======================================================================================================================================
 Sandwiches are collected in slots between the opening and closing times staff set in the admin portal. Staff
 also set how long each slot is (slot_minutes) and how many orders each slot takes (slot_capacity), e.g. 15-minute
-slots when open 11:00 - 14:00 gives 11:00, 11:15 ... 13:45.
+slots when open 11:00 - 14:00 gives 11:00, 11:15 ... 13:45. Customers have to order at least notice_minutes
+before the slot they pick.
 =======================================================================================================================================
 */
 
@@ -26,16 +27,21 @@ const slotTimes = (openTime, closeTime, slotMinutes) => {
   return times;
 };
 
+// The earliest slot time a customer ordering now can pick: at least noticeMinutes from now,
+// and always later than now. Past midnight gives e.g. "24:10", which is later than every slot.
+const earliestSlotTime = (currentTime, noticeMinutes) =>
+  fromMinutes(toMinutes(currentTime) + Math.max(noticeMinutes, 1));
+
 /**
  * The slots a customer can pick for one day.
  * @param {object} settings - sandwich settings (open_time, close_time, slot_minutes, slot_capacity)
  * @param {object} counts - { "12:30": 3, ... } orders already booked per slot that day
- * @param {string|null} afterTime - "HH:MM" - only slots after this (now, when the day is today)
+ * @param {string|null} earliest - "HH:MM" - only slots from this time on (see earliestSlotTime, when the day is today)
  * @returns {array} [{ time: "12:30", available: true }, ...]
  */
-const buildSlots = (settings, counts, afterTime = null) =>
+const buildSlots = (settings, counts, earliest = null) =>
   slotTimes(settings.open_time, settings.close_time, settings.slot_minutes)
-    .filter(time => !afterTime || time > afterTime)
+    .filter(time => !earliest || time >= earliest)
     .map(time => ({ time, available: (counts[time] || 0) < settings.slot_capacity }));
 
-module.exports = { TIME_STEP, slotTimes, buildSlots, toMinutes };
+module.exports = { TIME_STEP, slotTimes, buildSlots, earliestSlotTime, toMinutes };

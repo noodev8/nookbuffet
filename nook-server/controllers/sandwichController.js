@@ -9,7 +9,7 @@ with any extra cost, and the base price. The customer side will read this to bui
 
 const sandwichModel = require('../models/sandwichModel');
 const { calculateEarliestSandwichDate } = require('../utils/orderDateCalculator');
-const { buildSlots, toMinutes, TIME_STEP } = require('../utils/sandwichSlots');
+const { buildSlots, earliestSlotTime, toMinutes, TIME_STEP } = require('../utils/sandwichSlots');
 
 // ===== HELPERS =====
 const isTime = (value) => typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
@@ -66,7 +66,7 @@ const getMenuForCustomers = async (req, res) => {
 
 // ===== GET COLLECTION SLOTS (customers) =====
 // Public - the collection slots on a day, and whether each still has room.
-// Today only shows slots that haven't passed.
+// Today only shows slots at least notice_minutes away.
 const getSlots = async (req, res) => {
   try {
     const date = req.query.date;
@@ -78,7 +78,7 @@ const getSlots = async (req, res) => {
     ]);
     if (!now.success) return res.json({ return_code: 'SERVER_ERROR', message: 'Could not get collection times' });
 
-    const slots = date < now.today ? [] : buildSlots(settings, counts, date === now.today ? now.currentTime : null);
+    const slots = date < now.today ? [] : buildSlots(settings, counts, date === now.today ? earliestSlotTime(now.currentTime, settings.notice_minutes) : null);
     res.json({
       return_code: 'SUCCESS',
       message: 'Got collection times',
@@ -107,8 +107,8 @@ const updateSettings = async (req, res) => {
     const basePrice = parsePrice(req.body.base_price);
     if (basePrice === null) return res.json({ return_code: 'INVALID_DATA', message: 'base_price must be 0 or more' });
     // The rest are optional - anything not sent is left as it is
-    const { cutoff_time, open_time, close_time } = req.body;
-    for (const [name, value] of Object.entries({ cutoff_time, open_time, close_time })) {
+    const { open_time, close_time } = req.body;
+    for (const [name, value] of Object.entries({ open_time, close_time })) {
       if (value !== undefined && !isTime(value)) {
         return res.json({ return_code: 'INVALID_DATA', message: `${name} must be a time like 11:00` });
       }
@@ -133,14 +133,18 @@ const updateSettings = async (req, res) => {
         (!Number.isInteger(slotMinutes) || slotMinutes < TIME_STEP || slotMinutes > 120 || slotMinutes % TIME_STEP !== 0)) {
       return res.json({ return_code: 'INVALID_DATA', message: 'slot_minutes must be 5 to 120, in steps of 5' });
     }
+    const noticeMinutes = req.body.notice_minutes === undefined ? undefined : Number(req.body.notice_minutes);
+    if (noticeMinutes !== undefined && (!Number.isInteger(noticeMinutes) || noticeMinutes < 0 || noticeMinutes > 240)) {
+      return res.json({ return_code: 'INVALID_DATA', message: 'notice_minutes must be 0 to 240' });
+    }
 
     const settings = await sandwichModel.updateSettings({
       base_price: basePrice,
-      cutoff_time,
       open_time,
       close_time,
       slot_minutes: slotMinutes,
-      slot_capacity: capacity
+      slot_capacity: capacity,
+      notice_minutes: noticeMinutes
     });
     res.json({ return_code: 'SUCCESS', message: 'Settings saved', data: settings });
   } catch (error) {

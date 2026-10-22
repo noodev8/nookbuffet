@@ -29,7 +29,7 @@ describe('updateSettings', () => {
     sandwichModel.updateSettings.mockResolvedValue({ base_price: '5.50' });
     const { req, res, getResult } = setup({ base_price: '5.499' });
     await sandwichController.updateSettings(req, res);
-    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ base_price: 5.5, cutoff_time: undefined })); // not sent - left as it is
+    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ base_price: 5.5, open_time: undefined })); // not sent - left as it is
     expect(getResult().return_code).toBe('SUCCESS');
   });
 });
@@ -133,7 +133,7 @@ describe('setOptionStock', () => {
 
 describe('getMenuForCustomers', () => {
   test('returns the settings and in-stock menu', async () => {
-    sandwichModel.getSettings.mockResolvedValue({ base_price: '5.00', cutoff_time: '11:00' });
+    sandwichModel.getSettings.mockResolvedValue({ base_price: '5.00' });
     sandwichModel.getMenuForCustomers.mockResolvedValue({ sold_out: false, steps: [{ id: 1 }] });
     const { req, res, getResult } = setup();
     await sandwichController.getMenuForCustomers(req, res);
@@ -141,19 +141,11 @@ describe('getMenuForCustomers', () => {
   });
 });
 
-describe('updateSettings cutoff_time', () => {
-  test('rejects a badly formatted cutoff time', async () => {
-    const { req, res, getResult } = setup({ base_price: 5, cutoff_time: '11am' });
+describe('updateSettings collection time format', () => {
+  test('rejects a badly formatted time', async () => {
+    const { req, res, getResult } = setup({ base_price: 5, open_time: '11am', close_time: '14:00' });
     await sandwichController.updateSettings(req, res);
     expect(getResult().return_code).toBe('INVALID_DATA');
-  });
-
-  test('saves a valid cutoff time', async () => {
-    sandwichModel.updateSettings.mockResolvedValue({ base_price: '5.00', cutoff_time: '11:30' });
-    const { req, res, getResult } = setup({ base_price: 5, cutoff_time: '11:30' });
-    await sandwichController.updateSettings(req, res);
-    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ cutoff_time: '11:30' }));
-    expect(getResult().return_code).toBe('SUCCESS');
   });
 });
 
@@ -192,6 +184,20 @@ describe('updateSettings collection hours and slots', () => {
 
   test.each([0, 7, 125])('rejects a slot length of %s minutes', async (minutes) => {
     const { req, res, getResult } = setup({ ...base, slot_minutes: minutes });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATA');
+  });
+
+  test('saves the notice period', async () => {
+    sandwichModel.updateSettings.mockResolvedValue({});
+    const { req, res, getResult } = setup({ ...base, notice_minutes: '45' });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ notice_minutes: 45 }));
+  });
+
+  test.each([-5, 2.5, 300])('rejects a notice period of %s minutes', async (minutes) => {
+    const { req, res, getResult } = setup({ ...base, notice_minutes: minutes });
     await sandwichController.updateSettings(req, res);
     expect(getResult().return_code).toBe('INVALID_DATA');
   });
