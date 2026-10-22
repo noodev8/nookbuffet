@@ -459,7 +459,7 @@ ALTER SEQUENCE public.order_buffets_id_seq OWNED BY public.order_buffets.id;
 CREATE TABLE public.order_config (
     id integer NOT NULL,
     config_key character varying(50) NOT NULL,
-    config_value character varying(100) NOT NULL,
+    config_value text NOT NULL,
     description text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
