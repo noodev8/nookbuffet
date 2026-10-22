@@ -59,12 +59,6 @@ export const orderSize = (order) => {
 export const describeSandwich = (sandwich) =>
   (sandwich.options || []).map(option => option.option_name).join(', ');
 
-// No payment is taken online, so every order starts unpaid until staff mark it paid.
-// 'waived' only appears on older orders placed through the old staff skip-payment option.
-export const isPaid = (order) => order.payment_status === 'paid' || order.payment_status === 'waived';
-export const paymentLabel = (order) =>
-  order.payment_status === 'paid' ? 'Paid' : order.payment_status === 'waived' ? 'Waived' : 'Unpaid';
-
 // Order statuses: pending (being made) -> ready (made) -> collected (archived).
 // Cancelled orders, and 'completed' ones from before collection was tracked, are archived too.
 export const isArchived = (order) => ['collected', 'completed', 'cancelled'].includes(order.status);

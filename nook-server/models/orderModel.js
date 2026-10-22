@@ -96,7 +96,7 @@ const createOrder = async (orderData) => {
     const orderNumber = `ORD-${nextNum.toString().padStart(3, '0')}`;
     
     // Insert the main order record
-    // No payment is taken online - every order starts unpaid and staff mark it paid in the admin portal
+    // No payment is taken online - every order is stored as unpaid and the customer pays on collection
     const orderQuery = `
       INSERT INTO orders (
         order_number, customer_email, customer_phone,
@@ -596,16 +596,6 @@ const updateStaffNotes = async (orderId, staffNotes) => {
   return result.rows[0];
 };
 
-// ===== UPDATE PAYMENT STATUS =====
-// Staff mark an order paid (or back to unpaid) once they've taken payment
-const updatePaymentStatus = async (orderId, paymentStatus) => {
-  const result = await query(
-    `UPDATE orders SET payment_status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, payment_status`,
-    [paymentStatus, orderId]
-  );
-  return result.rows[0];
-};
-
 // Export the functions so other files can use them
 module.exports = {
   createOrder,
@@ -613,7 +603,6 @@ module.exports = {
   getOrderById,
   updateOrderStatus,
   getOrdersByCustomerId,
-  updateStaffNotes,
-  updatePaymentStatus
+  updateStaffNotes
 };
 

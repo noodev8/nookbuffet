@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import AdminShell, { useAdmin } from '../components/AdminShell';
-import { formatDate, money, orderSize, isPaid, paymentLabel, statusLabel } from '../lib/format';
+import { formatDate, money, orderSize, statusLabel } from '../lib/format';
 
 export default function ArchivePage() {
   return (
@@ -78,7 +78,6 @@ function Archive() {
           </div>
           <span className="order-row-people">{orderSize(order)}</span>
           <span className="order-row-total">{money(order.total_price)}</span>
-          <span className={`badge ${isPaid(order) ? 'badge-paid' : 'badge-unpaid'}`}>{paymentLabel(order)}</span>
         </Link>
       ))}
     </>

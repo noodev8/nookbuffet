@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import AdminShell, { useAdmin } from '../../components/AdminShell';
 import {
-  formatDate, formatDateTime, money, orderSize, isPaid, paymentLabel, groupByCategory, isArchived, statusLabel
+  formatDate, formatDateTime, money, orderSize, groupByCategory, isArchived, statusLabel
 } from '../../lib/format';
 
 export default function OrderPage() {
@@ -51,21 +51,6 @@ function OrderDetails() {
   const listName = listHref === '/' ? 'sandwich orders' : 'buffet orders';
   const backHref = archived ? '/archive' : listHref;
 
-  const togglePaid = async () => {
-    const newStatus = order.payment_status === 'paid' ? 'unpaid' : 'paid';
-    if (newStatus === 'unpaid' && !confirm('Mark this order as unpaid?')) return;
-    setBusy(true);
-    try {
-      const data = await api(`/api/orders/${orderId}/payment-status`, { method: 'PATCH', body: { payment_status: newStatus } });
-      if (data.return_code === 'SUCCESS') setOrder(prev => ({ ...prev, payment_status: data.data.payment_status }));
-      else alert(data.message || 'Could not update payment');
-    } catch {
-      alert('Could not reach the server. Please try again.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
   // 'collected' and 'cancelled' archive the order, and cancelling emails the customer.
   // Restoring from the archive stays on this page.
   const setStatus = async (status, question, { stay = false } = {}) => {
@@ -109,7 +94,6 @@ function OrderDetails() {
         <div>
           <h1 className="page-title">
             {order.order_number}{' '}
-            <span className={`badge ${isPaid(order) ? 'badge-paid' : 'badge-unpaid'}`}>{paymentLabel(order)}</span>{' '}
             {order.status !== 'pending' && <span className={`badge badge-status-${order.status}`}>{statusLabel(order)}</span>}
           </h1>
           <p className="page-sub">
@@ -120,9 +104,6 @@ function OrderDetails() {
       </div>
 
       <div className="card action-bar no-print">
-        <button className={order.payment_status === 'paid' ? 'btn' : 'btn btn-success'} onClick={togglePaid} disabled={busy}>
-          {order.payment_status === 'paid' ? 'Mark as unpaid' : 'Mark as paid'}
-        </button>
         {order.status === 'pending' && (
           <button
             className="btn btn-primary"
@@ -137,7 +118,7 @@ function OrderDetails() {
           <button
             className={order.status === 'ready' ? 'btn btn-primary' : 'btn'}
             disabled={busy}
-            onClick={() => setStatus('collected', `Mark this order as collected?${isPaid(order) ? '' : '\n\nIt is still marked as UNPAID.'}\n\nIt will leave the orders list and move to the archive.`)}
+            onClick={() => setStatus('collected', 'Mark this order as collected?\n\nIt will leave the orders list and move to the archive.')}
           >
             Collected
           </button>

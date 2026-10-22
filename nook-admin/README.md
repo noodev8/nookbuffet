@@ -53,7 +53,7 @@ Orders and Menu pages (plus Prep for buffets).
   /buffet-prep    - Buffet Prep - everything to make for buffets, added up per collection day
   /buffet-menu    - Buffet Menu - pick a buffet to change its price, categories, items and stock; Upgrades tab (admins only)
 
-  /orders/[id]    - One order - mark paid, mark ready (emails the customer), mark collected, print, cancel, note to customer
+  /orders/[id]    - One order - mark ready (emails the customer), mark collected, print, cancel, note to customer
   /archive        - Collected and cancelled orders, newest first, with search; open one to restore it
   /staff          - Staff accounts (admins only)
 

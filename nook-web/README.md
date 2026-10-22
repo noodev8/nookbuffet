@@ -7,7 +7,7 @@ WHAT IT DOES
 
 Lets customers pick a buffet, choose their food, add upgrades, and check out. They can also build their own sandwich (bread, fillings, sauce...) on its own or alongside buffets. Sandwich-only orders can be collected the same day if placed before the sandwich cutoff (11:00 by default, set in the admin portal); the sandwich options only appear when staff have switched sandwiches on. They can create an account to view their order history and reorder.
 
-No payment is taken online. Customers pay on collection. Every order goes through as unpaid, and staff mark it paid in the admin portal once the customer has paid.
+No payment is taken online. Customers pay on collection. Every order goes through as unpaid.
 
 Staff can also log in here using their admin credentials to place phone orders or walk-ins.
 

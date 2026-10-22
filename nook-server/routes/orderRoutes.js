@@ -144,10 +144,6 @@ router.patch('/:id/status', verifyToken, checkRole(['general', 'admin']), orderC
 // ===== ROUTE: UPDATE STAFF NOTES (PROTECTED) =====
 router.patch('/:id/staff-notes', verifyToken, checkRole(['general', 'admin']), orderController.updateStaffNotes);
 
-// ===== ROUTE: MARK ORDER PAID / UNPAID (PROTECTED) =====
-// Body: { "payment_status": "paid" | "unpaid" }
-router.patch('/:id/payment-status', verifyToken, checkRole(['general', 'admin']), orderController.updatePaymentStatus);
-
 // Export the router so server.js can use it
 module.exports = router;
 

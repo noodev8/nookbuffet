@@ -30,8 +30,7 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false);
   const [orderError, setOrderError] = useState('');
 
-  // No payment is taken online - the order goes through as unpaid and staff
-  // mark it paid in the admin portal once the customer has paid
+  // No payment is taken online - the customer pays on collection
   const handlePlaceOrder = async () => {
     setLoading(true);
     setOrderError('');

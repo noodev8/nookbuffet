@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAdmin } from './AdminShell';
 import {
-  dayKey, dayLabel, isPast, formatDate, money, peopleCount, sandwichCount, isPaid, paymentLabel,
+  dayKey, dayLabel, isPast, formatDate, money, peopleCount, sandwichCount,
   groupByCategory, describeSandwich
 } from '../lib/format';
 
@@ -89,9 +89,6 @@ export default function OrdersBoard({ kind }) {
     }
   }
 
-  const unpaid = orders.filter(o => !isPaid(o));
-  const unpaidTotal = unpaid.reduce((sum, o) => sum + parseFloat(o.total_price || 0), 0);
-
   return (
     <>
       <div className="page-head">
@@ -99,7 +96,6 @@ export default function OrdersBoard({ kind }) {
           <h1 className="page-title">{config.title}</h1>
           <div className="summary-strip">
             <span><strong>{orders.length}</strong> open order{orders.length !== 1 ? 's' : ''}</span>
-            {unpaid.length > 0 && <span><strong>{money(unpaidTotal)}</strong> still to be paid</span>}
             {updatedAt && <span>Updated {updatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
             {live !== null && (
               <span className={`live-status${live ? ' on' : ''}`}>{live ? 'Live' : 'Not live — press Refresh'}</span>
@@ -143,7 +139,6 @@ export default function OrdersBoard({ kind }) {
                   {config.other(order) && <span className="order-row-other">{config.other(order)}</span>}
                 </span>
                 <span className="order-row-total">{money(order.total_price)}</span>
-                <span className={`badge ${isPaid(order) ? 'badge-paid' : 'badge-unpaid'}`}>{paymentLabel(order)}</span>
 
                 {kind === 'sandwich' && (
                   <ul className="order-row-sandwiches">
@@ -178,7 +173,7 @@ function PrintedOrder({ order, kind }) {
         {order.notes && <><strong>{order.notes}</strong> · </>}
         {order.customer_email}{order.customer_phone && ` · ${order.customer_phone}`}
       </p>
-      <p>{config.size(order)} · {money(order.total_price)} · {paymentLabel(order)}</p>
+      <p>{config.size(order)} · {money(order.total_price)}</p>
       {config.other(order) && <p><strong>Also in this order:</strong> {config.other(order).replace(/^\+ /, '')}</p>}
       {order.staff_notes && <p><strong>Staff notes:</strong> {order.staff_notes}</p>}
 

@@ -409,7 +409,7 @@ h1, h2, h3 { font-family: 'Oswald', sans-serif; font-weight: 600; }
 
 .order-row {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
   gap: 1rem;
   background: white;
