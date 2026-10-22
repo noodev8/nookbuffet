@@ -42,7 +42,20 @@ const readStep = (body) => {
   if (hasMax && (!Number.isInteger(max) || max < 1)) return { error: 'max_choices must be 1 or more, or empty for no limit' };
   if (max !== null && max < min) return { error: 'max_choices cannot be less than min_choices' };
 
-  return { step: { name, description: body.description?.trim() || null, min_choices: min, max_choices: max } };
+  // included_choices: picks included in the base price, null = all of them.
+  // extra_choice_price: what each pick after those costs.
+  const hasIncluded = body.included_choices !== undefined && body.included_choices !== null && body.included_choices !== '';
+  const included = hasIncluded ? Number(body.included_choices) : null;
+  if (hasIncluded && (!Number.isInteger(included) || included < 0)) return { error: 'included_choices must be 0 or more, or empty for all' };
+  const extraChoicePrice = body.extra_choice_price === undefined || body.extra_choice_price === '' ? 0 : parsePrice(body.extra_choice_price);
+  if (extraChoicePrice === null) return { error: 'extra_choice_price must be 0 or more' };
+
+  return {
+    step: {
+      name, description: body.description?.trim() || null, min_choices: min, max_choices: max,
+      included_choices: included, extra_choice_price: extraChoicePrice
+    }
+  };
 };
 
 // Checks and tidies option fields. Returns { error } or { option }.

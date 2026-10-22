@@ -4,12 +4,23 @@ SANDWICH ORDER - Checks and prices the sandwiches in an order
 =======================================================================================================================================
 The website sends each sandwich as the option IDs the customer picked. Prices are worked out here from
 the current menu, never taken from the browser, and every step's min/max picks are checked again.
+
+A sandwich costs the base price, plus each pick's own extra_price, plus extra_choice_price for every pick
+in a step after the first included_choices (e.g. Meat: 1 included, then 40p each).
 =======================================================================================================================================
 */
 
 const MAX_QUANTITY = 50;
 
 const toPennies = (value) => Math.round(parseFloat(value) * 100);
+
+// What each pick in one step adds to the price, in pennies, in the order given (menu order).
+// The first included_choices picks only cost their own extra_price; NULL means all are included.
+const stepPickPennies = (step, options) =>
+  options.map((option, i) => {
+    const beyondIncluded = step.included_choices !== null && step.included_choices !== undefined && i >= step.included_choices;
+    return toPennies(option.extra_price) + (beyondIncluded ? toPennies(step.extra_choice_price || 0) : 0);
+  });
 
 /**
  * @param {array} rawSandwiches - [{ quantity, notes, optionIds: [1, 5, 9] }] from the request
@@ -57,7 +68,13 @@ const checkSandwiches = (rawSandwiches, steps, basePrice) => {
     // Keep the picks in menu order, whatever order they were sent in
     picked.sort((a, b) => a.menuIndex - b.menuIndex);
 
-    const unitPennies = toPennies(basePrice) + picked.reduce((sum, p) => sum + toPennies(p.option.extra_price), 0);
+    // Price each step's picks, so the extras land on the picks after the included ones
+    for (const step of steps) {
+      const inStep = picked.filter(p => p.step === step);
+      stepPickPennies(step, inStep.map(p => p.option)).forEach((pennies, i) => { inStep[i].pennies = pennies; });
+    }
+
+    const unitPennies = toPennies(basePrice) + picked.reduce((sum, p) => sum + p.pennies, 0);
     const subtotalPennies = unitPennies * quantity;
     totalPennies += subtotalPennies;
 
@@ -70,7 +87,7 @@ const checkSandwiches = (rawSandwiches, steps, basePrice) => {
         optionId: p.option.id,
         stepName: p.step.name,
         optionName: p.option.name,
-        extraPrice: parseFloat(p.option.extra_price),
+        extraPrice: p.pennies / 100, // what this pick added, so the order shows e.g. "Cheddar (+£0.40)"
         position
       }))
     });
@@ -79,4 +96,4 @@ const checkSandwiches = (rawSandwiches, steps, basePrice) => {
   return { sandwiches, total: totalPennies / 100 };
 };
 
-module.exports = { checkSandwiches, MAX_QUANTITY };
+module.exports = { checkSandwiches, stepPickPennies, MAX_QUANTITY };

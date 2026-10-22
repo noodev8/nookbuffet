@@ -3,14 +3,15 @@
 SANDWICH MODEL - Database queries for the build-your-own sandwich menu
 =======================================================================================================================================
 A sandwich is built step by step (bread, fillings, sauce, toasted...). Each step says how many options
-can be picked, and each option can add to the base price. The base price and the on/off switch are
+can be picked and how many are included in the base price, with a price for each one after that.
+Each option can also add its own extra to the price. The base price and the on/off switch are
 stored in order_config.
 =======================================================================================================================================
 */
 
 const { query } = require('../database');
 
-const STEP_FIELDS = 'id, name, description, min_choices, max_choices, position';
+const STEP_FIELDS = 'id, name, description, min_choices, max_choices, included_choices, extra_choice_price, position';
 const OPTION_FIELDS = 'id, step_id, name, description, extra_price, is_active';
 
 // ===== GET THE WHOLE SANDWICH MENU FOR MANAGEMENT =====
@@ -146,23 +147,24 @@ const setSlotBlocked = async (date, time, blocked, today) => {
 };
 
 // ===== STEPS =====
-const createStep = async ({ name, description, min_choices, max_choices }) => {
+const createStep = async ({ name, description, min_choices, max_choices, included_choices, extra_choice_price }) => {
   // New steps go on the end
   const result = await query(
-    `INSERT INTO sandwich_steps (name, description, min_choices, max_choices, position)
-     VALUES ($1, $2, $3, $4, (SELECT COALESCE(MAX(position) + 1, 0) FROM sandwich_steps WHERE is_deleted = false))
+    `INSERT INTO sandwich_steps (name, description, min_choices, max_choices, included_choices, extra_choice_price, position)
+     VALUES ($1, $2, $3, $4, $5, $6, (SELECT COALESCE(MAX(position) + 1, 0) FROM sandwich_steps WHERE is_deleted = false))
      RETURNING ${STEP_FIELDS}`,
-    [name, description, min_choices, max_choices]
+    [name, description, min_choices, max_choices, included_choices, extra_choice_price]
   );
   return { ...result.rows[0], options: [] };
 };
 
-const updateStep = async (id, { name, description, min_choices, max_choices }) => {
+const updateStep = async (id, { name, description, min_choices, max_choices, included_choices, extra_choice_price }) => {
   const result = await query(
-    `UPDATE sandwich_steps SET name = $1, description = $2, min_choices = $3, max_choices = $4
-     WHERE id = $5 AND is_deleted = false
+    `UPDATE sandwich_steps SET name = $1, description = $2, min_choices = $3, max_choices = $4,
+       included_choices = $5, extra_choice_price = $6
+     WHERE id = $7 AND is_deleted = false
      RETURNING ${STEP_FIELDS}`,
-    [name, description, min_choices, max_choices, id]
+    [name, description, min_choices, max_choices, included_choices, extra_choice_price, id]
   );
   return result.rows[0] || null;
 };

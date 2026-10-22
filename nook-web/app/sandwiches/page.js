@@ -18,6 +18,22 @@ const stepHint = (step) => {
   return `Choose ${min} to ${max}`;
 };
 
+const toPence = (value) => Math.round(parseFloat(value || 0) * 100);
+const hasIncludedLimit = (step) => step.included_choices !== null && step.included_choices !== undefined;
+
+// "1 included, then +£0.40 each", "+£0.40 each", or nothing when every pick is included
+const priceHint = (step) => {
+  if (!hasIncludedLimit(step) || toPence(step.extra_choice_price) === 0) return null;
+  const each = `+${money(step.extra_choice_price)} each`;
+  return step.included_choices === 0 ? each : `${step.included_choices} included, then ${each}`;
+};
+
+// What each pick in a step adds, in pence, in menu order - the same rule the server uses.
+// The first included_choices picks only cost their own extra_price.
+const pickPence = (step, options) =>
+  options.map((option, i) =>
+    toPence(option.extra_price) + (hasIncludedLimit(step) && i >= step.included_choices ? toPence(step.extra_choice_price) : 0));
+
 function SandwichBuilder() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -99,11 +115,13 @@ function SandwichBuilder() {
   }
 
   const steps = menu.steps;
-  const pickedOptions = steps.flatMap(step =>
-    step.options.filter(o => (selected[step.id] || []).includes(o.id)).map(o => ({ step, option: o }))
-  );
-  const unitPrice = parseFloat(menu.base_price) + pickedOptions.reduce((sum, p) => sum + parseFloat(p.option.extra_price), 0);
-  const unitPence = Math.round(unitPrice * 100);
+  // Picks in menu order, each with what it adds to the price
+  const pickedOptions = steps.flatMap(step => {
+    const options = step.options.filter(o => (selected[step.id] || []).includes(o.id));
+    const pence = pickPence(step, options);
+    return options.map((option, i) => ({ step, option, pence: pence[i] }));
+  });
+  const unitPence = toPence(menu.base_price) + pickedOptions.reduce((sum, p) => sum + p.pence, 0);
   const totalPrice = (unitPence * quantity) / 100;
   const missingSteps = steps.filter(step => (selected[step.id] || []).length < step.min_choices);
 
@@ -121,7 +139,7 @@ function SandwichBuilder() {
       picks: pickedOptions.map(p => ({
         stepName: p.step.name,
         optionName: p.option.name,
-        extraPrice: parseFloat(p.option.extra_price)
+        extraPrice: p.pence / 100
       })),
       unitPrice: unitPence / 100,
       totalPrice,
@@ -147,13 +165,17 @@ function SandwichBuilder() {
           const picked = selected[step.id] || [];
           const full = step.max_choices !== null && step.max_choices > 1 && picked.length >= step.max_choices;
           const isMissing = showMissing && picked.length < step.min_choices;
+          const pricing = priceHint(step);
+          // Picking one more would be pick number picksBefore + 1 (a choose-1 step swaps instead)
+          const picksBefore = step.max_choices === 1 ? 0 : picked.length;
+          const addsExtra = hasIncludedLimit(step) && picksBefore >= step.included_choices;
           return (
             <section key={step.id} id={`step-${step.id}`} className={`sandwich-step${isMissing ? ' missing' : ''}`}>
               <div className="sandwich-step-head">
                 <span className="sandwich-step-number">{index + 1}</span>
                 <div>
                   <h2 className="sandwich-step-title">{step.name}</h2>
-                  <span className="sandwich-step-hint">{stepHint(step)}</span>
+                  <span className="sandwich-step-hint">{stepHint(step)}{pricing && ` · ${pricing}`}</span>
                 </div>
               </div>
               {step.description && <p className="sandwich-step-description">{step.description}</p>}
@@ -162,7 +184,10 @@ function SandwichBuilder() {
               <div className="sandwich-options">
                 {step.options.map(option => {
                   const isSelected = picked.includes(option.id);
-                  const extra = parseFloat(option.extra_price);
+                  // Picked: what it adds now. Not picked: what picking it would add.
+                  const extra = isSelected
+                    ? pickedOptions.find(p => p.option.id === option.id).pence / 100
+                    : (toPence(option.extra_price) + (addsExtra ? toPence(step.extra_choice_price) : 0)) / 100;
                   return (
                     <button
                       key={option.id}

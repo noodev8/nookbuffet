@@ -14,14 +14,20 @@ export default function SandwichesPage() {
   );
 }
 
-// "Choose 1", "Choose 1–3", "Optional — up to 2" ...
+// "Required — choose 1", "Optional", "Required" ...
 const ruleLabel = ({ min_choices: min, max_choices: max }) => {
-  if (min === 0) return max ? `Optional — up to ${max}` : 'Optional — any number';
-  if (max === min) return `Choose ${min}`;
-  return max ? `Choose ${min}–${max}` : `Choose at least ${min}`;
+  const label = min > 0 ? 'Required' : 'Optional';
+  return max === 1 ? `${label} — choose 1` : label;
 };
 
-const extraLabel = (price) => (parseFloat(price) > 0 ? `+${money(price)}` : 'No extra charge');
+// "All included", "1 included, then +£0.40 each", "+£0.40 each"
+const pricingLabel = ({ included_choices: included, extra_choice_price: price }) => {
+  if (included === null || included === undefined || !(parseFloat(price) > 0)) return 'All included';
+  return included === 0 ? `+${money(price)} each` : `${included} included, then +${money(price)} each`;
+};
+
+// An option's own extra, on top of the step's pricing - most have none
+const extraLabel = (price) => (parseFloat(price) > 0 ? `+${money(price)} on top` : null);
 
 /**
  * The build-your-own sandwich menu. Customers go through the steps in order
@@ -184,7 +190,8 @@ function StepCard({ step, number, isFirst, isLast, onMove, update, onDeleted, sh
         <div className="menu-cat-head">
           <div className="grow">
             <h3>{number}. {step.name}</h3>
-            <span className="badge">{ruleLabel(step)}</span>
+            <span className="badge">{ruleLabel(step)}</span>{' '}
+            <span className="badge">{pricingLabel(step)}</span>
             {outOfStock > 0 && <span className="badge badge-unpaid">{outOfStock} out of stock</span>}
           </div>
           <button className="btn-link" onClick={() => onMove(-1)} disabled={isFirst} title="Move up" aria-label="Move up">↑</button>
@@ -253,20 +260,30 @@ function StepForm({ existing, onCancel, onSaved }) {
   const [form, setForm] = useState({
     name: existing?.name || '',
     description: existing?.description || '',
-    min: existing ? String(existing.min_choices) : '1',
-    max: existing?.max_choices ? String(existing.max_choices) : existing ? '' : '1',
+    required: existing ? existing.min_choices > 0 : false,
+    included: existing?.included_choices != null ? String(existing.included_choices) : '',
+    extraPrice: existing && parseFloat(existing.extra_choice_price) > 0 ? parseFloat(existing.extra_choice_price).toFixed(2) : '',
   });
   const set = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   const submit = (e) => {
     e.preventDefault();
-    const min = form.min === '' ? 0 : parseInt(form.min);
-    const max = form.max === '' ? null : parseInt(form.max);
+    // Required means at least 1 pick. The most a customer can pick isn't edited here any more:
+    // existing steps keep theirs (Bread and Toasted? are choose 1), new steps have no limit.
+    const min = form.required ? 1 : 0;
+    const max = existing ? existing.max_choices : null;
+    const included = form.included === '' ? null : Number(form.included);
+    const extraPrice = form.extraPrice === '' ? 0 : parseFloat(form.extraPrice);
     if (!form.name.trim()) return setFormError('Give the step a name, e.g. Bread');
-    if (isNaN(min) || min < 0) return setFormError('"Must pick at least" should be 0 or more');
-    if (max !== null && (isNaN(max) || max < 1)) return setFormError('"Can pick up to" should be 1 or more, or blank for no limit');
-    if (max !== null && max < min) return setFormError('"Can pick up to" cannot be less than "Must pick at least"');
-    const body = { name: form.name.trim(), description: form.description.trim() || null, min_choices: min, max_choices: max };
+    if (included !== null && (!Number.isInteger(included) || included < 0)) {
+      return setFormError('"Included in the base price" should be 0 or more, or blank for all of them');
+    }
+    if (isNaN(extraPrice) || extraPrice < 0) return setFormError('Enter what each extra costs, e.g. 0.40, or leave it blank');
+    if (included !== null && extraPrice === 0) return setFormError('Enter what each extra costs, or leave "Included in the base price" blank');
+    const body = {
+      name: form.name.trim(), description: form.description.trim() || null, min_choices: min, max_choices: max,
+      included_choices: included, extra_choice_price: included === null ? 0 : extraPrice
+    };
     save(() => (existing
       ? api(`/api/sandwiches/manage/steps/${existing.id}`, { method: 'PATCH', body })
       : api('/api/sandwiches/manage/steps', { method: 'POST', body })));
@@ -281,18 +298,25 @@ function StepForm({ existing, onCancel, onSaved }) {
           <input id="step-name" name="name" className="input" placeholder="e.g. Bread" value={form.name} onChange={set} autoFocus />
         </div>
         <div className="field">
-          <label htmlFor="step-min">Must pick at least</label>
-          <input id="step-min" name="min" className="input" type="number" min="0" value={form.min} onChange={set} />
-          <span className="field-hint">0 makes the step optional</span>
+          <label htmlFor="step-included">Included in the base price</label>
+          <input id="step-included" name="included" className="input" type="number" min="0" placeholder="All of them" value={form.included} onChange={set} />
+          <span className="field-hint">How many picks are free. 0 means every pick costs extra. Leave blank if they&apos;re all free</span>
         </div>
         <div className="field">
-          <label htmlFor="step-max">Can pick up to</label>
-          <input id="step-max" name="max" className="input" type="number" min="1" placeholder="No limit" value={form.max} onChange={set} />
-          <span className="field-hint">Leave blank for no limit</span>
+          <label htmlFor="step-extra-price">Each extra costs (£)</label>
+          <input id="step-extra-price" name="extraPrice" className="input" type="number" step="0.01" min="0" placeholder="0.00"
+            value={form.extraPrice} onChange={set} disabled={form.included === ''} />
+          <span className="field-hint">For every pick after the free ones</span>
         </div>
         <div className="field field-wide">
           <label htmlFor="step-description">Note for customers (optional)</label>
           <input id="step-description" name="description" className="input" placeholder="e.g. Pick up to 3 fillings" value={form.description} onChange={set} />
+        </div>
+        <div className="field field-wide">
+          <label className="check">
+            <input type="checkbox" checked={form.required} onChange={e => setForm(p => ({ ...p, required: e.target.checked }))} />
+            Required — customers must pick from this step
+          </label>
         </div>
       </div>
       <div className="form-actions">
@@ -333,9 +357,9 @@ function OptionForm({ stepId, existing, onCancel, onSaved }) {
           <input id={`option-name-${existing?.id ?? 'new'}`} name="name" className="input" placeholder="e.g. Ham" value={form.name} onChange={set} autoFocus />
         </div>
         <div className="field">
-          <label htmlFor={`option-extra-${existing?.id ?? 'new'}`}>Extra price (£)</label>
+          <label htmlFor={`option-extra-${existing?.id ?? 'new'}`}>Extra on top (£)</label>
           <input id={`option-extra-${existing?.id ?? 'new'}`} name="extra" className="input" type="number" step="0.01" min="0" placeholder="0.00" value={form.extra} onChange={set} />
-          <span className="field-hint">Leave blank if it costs nothing extra</span>
+          <span className="field-hint">Only for an option that costs more than the rest, on top of the step&apos;s price. Usually blank</span>
         </div>
         <div className="field">
           <label htmlFor={`option-description-${existing?.id ?? 'new'}`}>Description (optional)</label>

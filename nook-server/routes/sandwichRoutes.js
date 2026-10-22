@@ -12,7 +12,9 @@ A step looks like:
   "description": null,                // string or null - shown to customers
   "min_choices": 1,                   // integer, 0 = optional
   "max_choices": 1,                   // integer, or null for no limit
-  "position": 0,                      // integer, order the steps are shown in
+  "included_choices": null,           // integer - picks included in the base price, or null for all of them
+  "extra_choice_price": "0.00",       // string (numeric) - what each pick after the included ones costs
+  "position": 0,                     // integer, order the steps are shown in
   "options": [ ...options ]           // only on GET /manage
 }
 
@@ -68,7 +70,9 @@ ENDPOINTS:
    Success Response: { return_code, data: { date, blocked: ["13:00", ...] } }
 
 3. POST /api/sandwiches/manage/steps
-   Request Body: { "name": "Bread", "description": null, "min_choices": 1, "max_choices": 1 }
+   Request Body: { "name": "Meat", "description": null, "min_choices": 0, "max_choices": 2,
+                   "included_choices": 1, "extra_choice_price": 0.40 }
+     included_choices and extra_choice_price are optional (all included, no extra charge)
    Success Response: { return_code, data: step }
 
 4. PATCH /api/sandwiches/manage/steps/reorder

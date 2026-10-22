@@ -63,8 +63,27 @@ describe('createStep', () => {
     sandwichModel.createStep.mockResolvedValue({ id: 1 });
     const { req, res, getResult } = setup({ name: ' Salad ', min_choices: '', max_choices: '' });
     await sandwichController.createStep(req, res);
-    expect(sandwichModel.createStep).toHaveBeenCalledWith({ name: 'Salad', description: null, min_choices: 0, max_choices: null });
+    expect(sandwichModel.createStep).toHaveBeenCalledWith({
+      name: 'Salad', description: null, min_choices: 0, max_choices: null, included_choices: null, extra_choice_price: 0
+    });
     expect(getResult().return_code).toBe('SUCCESS');
+  });
+
+  test('saves how many picks are included and what each extra costs', async () => {
+    sandwichModel.createStep.mockResolvedValue({ id: 1 });
+    const { req, res } = setup({ name: 'Meat', min_choices: 0, max_choices: 2, included_choices: '1', extra_choice_price: '0.4' });
+    await sandwichController.createStep(req, res);
+    expect(sandwichModel.createStep).toHaveBeenCalledWith(expect.objectContaining({ included_choices: 1, extra_choice_price: 0.4 }));
+  });
+
+  test.each([
+    [{ included_choices: -1 }],
+    [{ included_choices: 1.5 }],
+    [{ extra_choice_price: -0.4 }],
+  ])('rejects bad pricing %o', async (pricing) => {
+    const { req, res, getResult } = setup({ name: 'Meat', ...pricing });
+    await sandwichController.createStep(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATA');
   });
 });
 
