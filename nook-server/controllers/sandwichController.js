@@ -98,7 +98,10 @@ const getSlots = async (req, res) => {
     res.json({
       return_code: 'SUCCESS',
       message: 'Got collection times',
-      data: { open_time: settings.open_time, close_time: settings.close_time, slot_minutes: settings.slot_minutes, slots }
+      data: {
+        open_time: settings.open_time, close_time: settings.close_time, slot_minutes: settings.slot_minutes,
+        max_sandwiches: settings.max_sandwiches, slots
+      }
     });
   } catch (error) {
     console.error('Get sandwich slots error:', error);
@@ -201,6 +204,10 @@ const updateSettings = async (req, res) => {
     if (noticeMinutes !== undefined && (!Number.isInteger(noticeMinutes) || noticeMinutes < 0 || noticeMinutes > 240)) {
       return res.json({ return_code: 'INVALID_DATA', message: 'notice_minutes must be 0 to 240' });
     }
+    const maxSandwiches = req.body.max_sandwiches === undefined ? undefined : Number(req.body.max_sandwiches);
+    if (maxSandwiches !== undefined && (!Number.isInteger(maxSandwiches) || maxSandwiches < 1 || maxSandwiches > 100)) {
+      return res.json({ return_code: 'INVALID_DATA', message: 'max_sandwiches must be 1 to 100' });
+    }
 
     const settings = await sandwichModel.updateSettings({
       base_price: basePrice,
@@ -208,7 +215,8 @@ const updateSettings = async (req, res) => {
       close_time,
       slot_minutes: slotMinutes,
       slot_capacity: capacity,
-      notice_minutes: noticeMinutes
+      notice_minutes: noticeMinutes,
+      max_sandwiches: maxSandwiches
     });
     res.json({ return_code: 'SUCCESS', message: 'Settings saved', data: settings });
   } catch (error) {

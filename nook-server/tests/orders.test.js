@@ -64,7 +64,7 @@ const SANDWICH_STEPS = [
 ];
 
 const SANDWICH_SETTINGS = {
-  base_price: '5.00', open_time: '11:00', close_time: '14:00', slot_minutes: 5, slot_capacity: 5, notice_minutes: 30
+  base_price: '5.00', open_time: '11:00', close_time: '14:00', slot_minutes: 5, slot_capacity: 5, notice_minutes: 30, max_sandwiches: 7
 };
 
 // A sandwich-only order - no business name, address or buffets
@@ -338,9 +338,28 @@ describe('createOrder with sandwiches', () => {
   });
 
   test('takes a big order in one slot - slots count orders, not sandwiches', async () => {
+    sandwichModel.getSettings.mockResolvedValue({ ...SANDWICH_SETTINGS, max_sandwiches: 30 });
     const { req, res, getResult } = setup(sandwichOrder({ sandwiches: [{ quantity: 20, optionIds: [10, 20] }] }));
     await orderController.createOrder(req, res);
     expect(getResult().return_code).toBe('SUCCESS');
+  });
+
+  test('takes an order with exactly the most sandwiches allowed', async () => {
+    const { req, res, getResult } = setup(sandwichOrder({ sandwiches: [
+      { quantity: 4, optionIds: [10, 20] }, { quantity: 3, optionIds: [10, 21] }
+    ] }));
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+  });
+
+  test('turns away an order with more sandwiches than allowed, counting every line', async () => {
+    const { req, res, getResult } = setup(sandwichOrder({ sandwiches: [
+      { quantity: 4, optionIds: [10, 20] }, { quantity: 4, optionIds: [10, 21] }
+    ] }));
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('TOO_MANY_SANDWICHES');
+    expect(getResult().message).toMatch(/up to 7/);
+    expect(orderModel.createOrder).not.toHaveBeenCalled();
   });
 
   test('rejects a time between slots when slots are longer', async () => {

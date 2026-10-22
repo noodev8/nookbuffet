@@ -91,6 +91,7 @@ export default function BasketPage() {
   const hasSandwiches = sandwiches.length > 0;
 
   const totalPeople = buffets.reduce((sum, { order }) => sum + (order.numPeople || 0), 0);
+  const sandwichCount = sandwiches.reduce((sum, { order }) => sum + (order.quantity || 0), 0);
   const grandTotal = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
 
   // Buffets need the usual notice. Sandwich-only orders can be collected today before the sandwich cutoff.
@@ -107,17 +108,24 @@ export default function BasketPage() {
     fetch(`${apiUrl}/api/sandwiches/slots?date=${dateValue}`)
       .then(res => res.json())
       .then(data => setSlotInfo(data.return_code === 'SUCCESS'
-        ? { date: dateValue, slots: data.data.slots }
+        ? { date: dateValue, slots: data.data.slots, maxSandwiches: data.data.max_sandwiches }
         : { date: dateValue, slots: [], error: data.message || 'Could not load collection times' }))
       .catch(() => setSlotInfo({ date: dateValue, slots: [], error: 'Could not load collection times. Please try again.' }));
   }, [hasSandwiches, dateValue]);
 
   const slots = slotInfo?.date === dateValue ? slotInfo.slots : null; // null while loading
   const openSlots = (slots || []).filter(slot => slot.available);
+  const tooManySandwiches = Boolean(slotInfo?.maxSandwiches) && sandwichCount > slotInfo.maxSandwiches;
   // Drop a picked time that isn't free on the chosen day (e.g. after changing the date)
   const timeValue = openSlots.some(slot => slot.time === fulfillmentTime) ? fulfillmentTime : '';
 
   const handleProceedToCheckout = () => {
+    // Only so many sandwiches can be ordered online in one order
+    if (tooManySandwiches) {
+      alert(`You can order up to ${slotInfo.maxSandwiches} sandwiches online. Please remove some, or call the shop for a bigger order.`);
+      return;
+    }
+
     // Validate minimum 5 people total across all buffets
     if (hasBuffets && totalPeople < 5) {
       alert(`Minimum buffet order is 5 people. Your current total is ${totalPeople} ${totalPeople === 1 ? 'person' : 'people'}.`);
@@ -314,6 +322,13 @@ export default function BasketPage() {
                   </div>
                 </div>
               ))}
+
+              {tooManySandwiches && (
+                <div style={{ padding: '10px', color: '#ff6b35' }}>
+                  You have {sandwichCount} sandwiches in your basket. We can take up to {slotInfo.maxSandwiches} in one online order -
+                  please remove some, or call the shop for a bigger order.
+                </div>
+              )}
             </div>
           </div>
 

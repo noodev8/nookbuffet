@@ -142,6 +142,15 @@ const createOrder = async (req, res) => {
       }
       sandwiches = checked.sandwiches;
       sandwichTotal = checked.total;
+
+      // Only so many sandwiches can be ordered online in one order
+      const sandwichCount = sandwiches.reduce((sum, s) => sum + s.quantity, 0);
+      if (sandwichCount > settings.max_sandwiches) {
+        return res.json({
+          return_code: 'TOO_MANY_SANDWICHES',
+          message: `You can order up to ${settings.max_sandwiches} sandwiches online. For a bigger order please call the shop.`
+        });
+      }
     }
 
     const totalPrice = Math.round((buffetTotal + sandwichTotal) * 100) / 100;

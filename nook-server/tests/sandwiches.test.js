@@ -240,6 +240,20 @@ describe('updateSettings collection hours and slots', () => {
     expect(getResult().return_code).toBe('INVALID_DATA');
   });
 
+  test('saves the most sandwiches in one order', async () => {
+    sandwichModel.updateSettings.mockResolvedValue({});
+    const { req, res, getResult } = setup({ ...base, max_sandwiches: '7' });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ max_sandwiches: 7 }));
+  });
+
+  test.each([0, 1.5, 101])('rejects a most-sandwiches of %s', async (max) => {
+    const { req, res, getResult } = setup({ ...base, max_sandwiches: max });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATA');
+  });
+
   test('rejects a slot capacity of 0', async () => {
     const { req, res, getResult } = setup({ ...base, slot_capacity: 0 });
     await sandwichController.updateSettings(req, res);

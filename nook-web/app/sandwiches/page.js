@@ -48,6 +48,8 @@ function SandwichBuilder() {
   const [notes, setNotes] = useState('');
   const [editIndex, setEditIndex] = useState(null);
   const [showMissing, setShowMissing] = useState(false);
+  // Sandwiches already in the basket, not counting the one being edited
+  const [inBasket, setInBasket] = useState(0);
 
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3013';
@@ -62,7 +64,9 @@ function SandwichBuilder() {
 
         // Editing a sandwich already in the basket - put its picks back, skipping anything no longer available
         const index = editParam === null ? NaN : parseInt(editParam);
-        const entry = readBasket()[index];
+        const basket = readBasket();
+        const entry = basket[index];
+        setInBasket(basket.reduce((sum, e, i) => sum + (isSandwich(e) && i !== index ? e.quantity : 0), 0));
         if (isSandwich(entry)) {
           const restored = {};
           for (const step of data.data.steps) {
@@ -121,11 +125,16 @@ function SandwichBuilder() {
     const pence = pickPence(step, options);
     return options.map((option, i) => ({ step, option, pence: pence[i] }));
   });
+  // Only so many sandwiches can be ordered online in one order, counting what's already in the basket
+  const maxSandwiches = menu.max_sandwiches || MAX_QUANTITY;
+  const room = Math.min(MAX_QUANTITY, maxSandwiches - inBasket);
+  const qty = Math.max(1, Math.min(quantity, room));
   const unitPence = toPence(menu.base_price) + pickedOptions.reduce((sum, p) => sum + p.pence, 0);
-  const totalPrice = (unitPence * quantity) / 100;
+  const totalPrice = (unitPence * qty) / 100;
   const missingSteps = steps.filter(step => (selected[step.id] || []).length < step.min_choices);
 
   const handleAddToBasket = () => {
+    if (room < 1) return;
     if (missingSteps.length > 0) {
       setShowMissing(true);
       document.getElementById(`step-${missingSteps[0].id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -134,7 +143,7 @@ function SandwichBuilder() {
 
     const entry = {
       type: 'sandwich',
-      quantity,
+      quantity: qty,
       optionIds: pickedOptions.map(p => p.option.id),
       picks: pickedOptions.map(p => ({
         stepName: p.step.name,
@@ -231,20 +240,28 @@ function SandwichBuilder() {
 
       {/* Sticky bar with the running price */}
       <div className="sandwich-bar">
-        <div className="sandwich-bar-inner">
-          <div className="sandwich-quantity" aria-label="Quantity">
-            <button type="button" onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1} aria-label="One less">−</button>
-            <span>{quantity}</span>
-            <button type="button" onClick={() => setQuantity(q => Math.min(MAX_QUANTITY, q + 1))} disabled={quantity >= MAX_QUANTITY} aria-label="One more">+</button>
+        {room < 1 ? (
+          <div className="sandwich-bar-inner sandwich-bar-limit">
+            You already have {maxSandwiches} sandwiches in your basket, the most for one online order.
+            For more, please call the shop.
           </div>
-          <div className="sandwich-bar-price">
-            <span className="sandwich-bar-total">{money(totalPrice)}</span>
-            {quantity > 1 && <span className="sandwich-bar-each">{money(unitPence / 100)} each</span>}
+        ) : (
+          <div className="sandwich-bar-inner">
+            <div className="sandwich-quantity" aria-label="Quantity">
+              <button type="button" onClick={() => setQuantity(Math.max(1, qty - 1))} disabled={qty <= 1} aria-label="One less">−</button>
+              <span>{qty}</span>
+              <button type="button" onClick={() => setQuantity(Math.min(room, qty + 1))} disabled={qty >= room} aria-label="One more">+</button>
+            </div>
+            <div className="sandwich-bar-price">
+              <span className="sandwich-bar-total">{money(totalPrice)}</span>
+              {qty > 1 && <span className="sandwich-bar-each">{money(unitPence / 100)} each</span>}
+              {qty >= room && <span className="sandwich-bar-each">Up to {maxSandwiches} per order</span>}
+            </div>
+            <button type="button" className="sandwich-add-button" onClick={handleAddToBasket}>
+              {editIndex !== null ? 'Update Basket' : 'Add to Basket'}
+            </button>
           </div>
-          <button type="button" className="sandwich-add-button" onClick={handleAddToBasket}>
-            {editIndex !== null ? 'Update Basket' : 'Add to Basket'}
-          </button>
-        </div>
+        )}
       </div>
     </>
   );

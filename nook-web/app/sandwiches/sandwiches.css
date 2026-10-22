@@ -239,6 +239,14 @@
   gap: 1.5rem;
 }
 
+/* Shown instead of the quantity and Add button when the basket already has the most sandwiches allowed */
+.sandwich-bar-limit {
+  display: block;
+  color: #ff6b35;
+  text-align: center;
+  line-height: 1.4;
+}
+
 .sandwich-quantity {
   display: flex;
   align-items: center;

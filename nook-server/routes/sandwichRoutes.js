@@ -34,11 +34,11 @@ ENDPOINTS:
    Purpose: The sandwich menu for the website - in-stock options only (public)
    Success Response: { return_code, data: { base_price: "5.00", sold_out: false, steps: [...] } }
    sold_out is true when a required step has nothing in stock (steps is then empty)
-   Also includes open_time, close_time, slot_minutes, slot_capacity and notice_minutes (see settings below)
+   Also includes open_time, close_time, slot_minutes, slot_capacity, notice_minutes and max_sandwiches (see settings below)
 
 0b. GET /api/sandwiches/slots?date=2026-10-05
    Purpose: The collection slots on a day, slot_minutes apart (public). Today only lists slots at least notice_minutes from now.
-   Success Response: { return_code, data: { open_time: "11:00", close_time: "14:00", slot_minutes: 5,
+   Success Response: { return_code, data: { open_time: "11:00", close_time: "14:00", slot_minutes: 5, max_sandwiches: 7,
      slots: [ { time: "11:00", available: true }, { time: "11:05", available: false }, ... ] } }
    available is false once a slot has slot_capacity orders in it, or staff have blocked it
    Return Codes: SUCCESS, INVALID_DATA, SERVER_ERROR
@@ -50,14 +50,15 @@ ENDPOINTS:
 
 2. PATCH /api/sandwiches/manage/settings
    Request Body: { "base_price": 5.00,
-                   "open_time": "11:00", "close_time": "14:00", "slot_minutes": 5, "slot_capacity": 5, "notice_minutes": 30 }
+                   "open_time": "11:00", "close_time": "14:00", "slot_minutes": 5, "slot_capacity": 5, "notice_minutes": 30, "max_sandwiches": 7 }
      base_price (number >= 0) is required. The rest are optional and left
      as they are when not sent:
        open_time, close_time - collection hours, on 5-minute marks, sent together, open before close
        slot_minutes  - how long each collection slot is (5 to 120, in steps of 5)
        slot_capacity - most orders with sandwiches per collection slot (1 or more)
        notice_minutes - customers must order at least this long before their collection time (0 to 240)
-   Success Response: { return_code, data: { base_price, open_time, close_time, slot_minutes, slot_capacity, notice_minutes } }
+       max_sandwiches - most sandwiches a customer can order online in one order (1 to 100)
+   Success Response: { return_code, data: { base_price, open_time, close_time, slot_minutes, slot_capacity, notice_minutes, max_sandwiches } }
 
 2b. GET /api/sandwiches/manage/slots?date=2026-10-24   (all staff)
    Purpose: Every collection slot on a day, for the Time slots page

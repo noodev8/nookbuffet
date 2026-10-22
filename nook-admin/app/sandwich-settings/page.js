@@ -25,6 +25,7 @@ const toForm = (settings) => ({
   minutes: String(settings.slot_minutes),
   capacity: String(settings.slot_capacity),
   notice: String(settings.notice_minutes),
+  maxSandwiches: String(settings.max_sandwiches),
 });
 
 /**
@@ -78,6 +79,10 @@ function SandwichSettings() {
       return setFormError('Collection hours must be on a 5-minute mark, e.g. 11:00 or 13:45');
     }
     if (!Number.isInteger(capacity) || capacity < 1) return setFormError('Orders per time slot must be 1 or more');
+    const maxSandwiches = Number(form.maxSandwiches);
+    if (!Number.isInteger(maxSandwiches) || maxSandwiches < 1 || maxSandwiches > 100) {
+      return setFormError('Most sandwiches in one order must be between 1 and 100');
+    }
     save(() => api('/api/sandwiches/manage/settings', {
       method: 'PATCH',
       body: {
@@ -86,7 +91,8 @@ function SandwichSettings() {
         close_time: form.close,
         slot_minutes: Number(form.minutes),
         slot_capacity: capacity,
-        notice_minutes: Number(form.notice)
+        notice_minutes: Number(form.notice),
+        max_sandwiches: maxSandwiches
       }
     }));
   };
@@ -150,6 +156,11 @@ function SandwichSettings() {
               {NOTICE_LENGTHS.map(m => <option key={m} value={m}>{noticeLabel(m)}</option>)}
             </select>
             <span className="field-hint">How long before their collection time customers must order, so there is time to make it</span>
+          </div>
+          <div className="field">
+            <label htmlFor="max-sandwiches">Most sandwiches in one order</label>
+            <input id="max-sandwiches" className="input" type="number" min="1" max="100" step="1" value={form.maxSandwiches} onChange={set('maxSandwiches')} />
+            <span className="field-hint">Customers wanting more than this are asked to call the shop</span>
           </div>
         </div>
       </div>

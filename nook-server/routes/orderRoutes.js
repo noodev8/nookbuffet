@@ -79,7 +79,7 @@ ENDPOINTS:
        "createdAt": "2024-01-15T10:30:00Z"
      }
    }
-   Return Codes: SUCCESS, VALIDATION_ERROR, INVALID_DATE, SANDWICHES_UNAVAILABLE, SLOT_FULL, SERVER_ERROR
+   Return Codes: SUCCESS, VALIDATION_ERROR, INVALID_DATE, SANDWICHES_UNAVAILABLE, SLOT_FULL, TOO_MANY_SANDWICHES, SERVER_ERROR
 
    Orders returned by GET also have "sandwiches": [{ id, quantity, unit_price, subtotal, notes,
    options: [{ sandwich_option_id, step_name, option_name, extra_price }] }]

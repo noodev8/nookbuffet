@@ -55,6 +55,7 @@ const SETTINGS = {
   slot_minutes:  { key: 'sandwich_slot_minutes',  default: '5',    description: 'How long each sandwich collection slot is, in minutes' },
   slot_capacity: { key: 'sandwich_slot_capacity', default: '5',    description: 'Most sandwich orders that can be collected in each slot' },
   notice_minutes: { key: 'sandwich_notice_minutes', default: '30',  description: 'Customers must order at least this many minutes before their collection time' },
+  max_sandwiches: { key: 'sandwich_max_per_order',  default: '7',   description: 'Most sandwiches a customer can order online in one order' },
 };
 
 const getSettings = async () => {
@@ -72,6 +73,7 @@ const getSettings = async () => {
     slot_minutes: parseInt(value('slot_minutes')),
     slot_capacity: parseInt(value('slot_capacity')),
     notice_minutes: parseInt(value('notice_minutes')),
+    max_sandwiches: parseInt(value('max_sandwiches')),
   };
 };
 
