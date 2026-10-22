@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAdmin } from './AdminShell';
+import PrintedOrder from './PrintedOrder';
 import {
-  dayKey, dayLabel, isPast, formatDate, money, peopleCount, sandwichCount,
-  groupByCategory, describeSandwich
+  dayKey, dayLabel, isPast, formatDate, money, peopleCount, sandwichCount, describeSandwich
 } from '../lib/format';
 
 export const hasBuffets = (order) => (order.buffets || []).length > 0;
@@ -89,9 +89,12 @@ export default function OrdersBoard({ kind }) {
     }
   }
 
+  // Only today's orders are printed, already sorted the same as the list
+  const todaysOrders = groups[dayKey(new Date())] || [];
+
   return (
     <>
-      <div className="page-head">
+      <div className="page-head no-print">
         <div>
           <h1 className="page-title">{config.title}</h1>
           <div className="summary-strip">
@@ -102,11 +105,11 @@ export default function OrdersBoard({ kind }) {
             )}
           </div>
         </div>
-        <div className="page-actions no-print">
+        <div className="page-actions">
           <button className="btn btn-primary btn-refresh" onClick={() => { setRefreshing(true); loadOrders(); }} disabled={refreshing}>
             {refreshing ? 'Refreshing...' : '↻ Refresh'}
           </button>
-          {orders.length > 0 && <button className="btn" onClick={() => window.print()}>Print all</button>}
+          {todaysOrders.length > 0 && <button className="btn" onClick={() => window.print()}>Print today&apos;s</button>}
           <Link href="/archive" className="btn">Archive</Link>
         </div>
       </div>
@@ -156,51 +159,10 @@ export default function OrdersBoard({ kind }) {
         ))}
       </div>
 
-      {/* Full details of every order, only shown when printing */}
+      {/* Today's orders, one per page. Only shown when printing */}
       <div className="print-only">
-        {orders.map(order => <PrintedOrder key={order.id} order={order} kind={kind} />)}
+        {todaysOrders.map(order => <PrintedOrder key={order.id} order={order} />)}
       </div>
     </>
-  );
-}
-
-function PrintedOrder({ order, kind }) {
-  const config = KINDS[kind];
-  return (
-    <div className="print-order">
-      <h2>{order.order_number} — {formatDate(order.fulfillment_date)}{order.fulfillment_time ? ` at ${order.fulfillment_time}` : ''}</h2>
-      <p>
-        {order.notes && <><strong>{order.notes}</strong> · </>}
-        {order.customer_email}{order.customer_phone && ` · ${order.customer_phone}`}
-      </p>
-      <p>{config.size(order)} · {money(order.total_price)}</p>
-      {config.other(order) && <p><strong>Also in this order:</strong> {config.other(order).replace(/^\+ /, '')}</p>}
-      {order.staff_notes && <p><strong>Staff notes:</strong> {order.staff_notes}</p>}
-
-      {kind === 'buffet' && (order.buffets || []).map((buffet, i) => (
-        <div key={i} style={{ marginTop: '0.4rem' }}>
-          <p><strong>{buffet.buffet_name}</strong> — {buffet.num_people} people</p>
-          {Object.entries(groupByCategory(buffet.items)).map(([cat, items]) => (
-            <p key={cat}>{cat}: {items.map(item => item.item_name).join(', ')}</p>
-          ))}
-          {(buffet.upgrades || []).filter(u => u.upgrade_name).map((upgrade, ui) => (
-            <p key={ui}>
-              + {upgrade.upgrade_name}
-              {upgrade.selectedItems?.length > 0 && `: ${upgrade.selectedItems.map(item => item.item_name).join(', ')}`}
-            </p>
-          ))}
-          {buffet.dietary_info && <p><strong>Dietary:</strong> {buffet.dietary_info}</p>}
-          {buffet.allergens && <p><strong>Allergens:</strong> {buffet.allergens}</p>}
-          {buffet.notes && <p><strong>Notes:</strong> {buffet.notes}</p>}
-        </div>
-      ))}
-
-      {kind === 'sandwich' && (order.sandwiches || []).map((sandwich, i) => (
-        <div key={i} style={{ marginTop: '0.4rem' }}>
-          <p><strong>{sandwich.quantity} × Sandwich</strong> — {describeSandwich(sandwich)}</p>
-          {sandwich.notes && <p><strong>Notes:</strong> {sandwich.notes}</p>}
-        </div>
-      ))}
-    </div>
   );
 }
