@@ -144,12 +144,6 @@
   letter-spacing: 1px;
 }
 
-.order-choice-text {
-  color: rgba(255, 255, 255, 0.85);
-  line-height: 1.5;
-  flex: 1;
-}
-
 .order-choice-button {
   font-family: 'Oswald', sans-serif;
   font-weight: 600;

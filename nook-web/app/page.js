@@ -22,10 +22,7 @@ const CONFIG = {
     },
     buffet: {
       title: 'Order a Buffet',
-      // Buffets are ordered by phone for now. Online ordering text:
-      // text: 'Sandwich buffets for 5 or more people, ready for next-day collection.',
-      // button: 'Choose a Buffet',
-      text: 'Sandwich buffets for 5 or more people. Give us a call to order one.',
+      // Buffets are ordered by phone for now. Online ordering button: 'Choose a Buffet'
       link: '/select-buffet',
       button: 'See Our Buffets',
     },
@@ -159,35 +156,23 @@ export default function Home() {
               {sandwichMenu?.sold_out && (
                 <div className="order-choice order-choice-sold-out">
                   <span className="order-choice-title">{CONFIG.choices.sandwich.title}</span>
-                  <span className="order-choice-text">
-                    Build your own for lunch from £{parseFloat(sandwichMenu.base_price).toFixed(2)}.
-                    We&apos;ve sold out for now - please check back soon.
-                  </span>
                   <span className="order-choice-button">Sold Out</span>
                 </div>
               )}
               {sandwichMenu && !sandwichMenu.sold_out && (
                 <Link href={CONFIG.choices.sandwich.link} className="order-choice order-choice-primary">
                   <span className="order-choice-title">{CONFIG.choices.sandwich.title}</span>
-                  <span className="order-choice-text">
-                    Build your own for lunch from £{parseFloat(sandwichMenu.base_price).toFixed(2)}.
-                    Collect today between {sandwichMenu.open_time} and {sandwichMenu.close_time}.
-                  </span>
                   <span className="order-choice-button">{CONFIG.choices.sandwich.button} →</span>
                 </Link>
               )}
               {buffetsSoldOut ? (
                 <div className="order-choice order-choice-sold-out">
                   <span className="order-choice-title">{CONFIG.choices.buffet.title}</span>
-                  <span className="order-choice-text">
-                    {CONFIG.choices.buffet.text} We&apos;ve sold out for now - please check back soon.
-                  </span>
                   <span className="order-choice-button">Sold Out</span>
                 </div>
               ) : (
                 <Link href={CONFIG.choices.buffet.link} className="order-choice">
                   <span className="order-choice-title">{CONFIG.choices.buffet.title}</span>
-                  <span className="order-choice-text">{CONFIG.choices.buffet.text}</span>
                   <span className="order-choice-button">{CONFIG.choices.buffet.button} →</span>
                 </Link>
               )}
