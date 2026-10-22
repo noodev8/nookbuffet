@@ -553,7 +553,6 @@ h1, h2, h3 { font-family: 'Oswald', sans-serif; font-weight: 600; }
 
 .item-row { display: flex; gap: 0.5rem; align-items: center; padding: 0.35rem 0; }
 .item-row .input { flex: 1; min-width: 0; }
-.item-row-add { margin-top: 0.4rem; }
 
 .price-sentence { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0.6rem 0 0.2rem 1.6rem; }
 .price-sentence .input { width: 5.5rem; }

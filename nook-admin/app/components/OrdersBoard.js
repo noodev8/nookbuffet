@@ -8,8 +8,8 @@ import {
   dayKey, dayLabel, isPast, formatDate, money, peopleCount, sandwichCount, describeSandwich
 } from '../lib/format';
 
-export const hasBuffets = (order) => (order.buffets || []).length > 0;
-export const hasSandwiches = (order) => (order.sandwiches || []).length > 0;
+const hasBuffets = (order) => (order.buffets || []).length > 0;
+const hasSandwiches = (order) => (order.sandwiches || []).length > 0;
 
 const plural = (count, word, many = `${word}s`) => `${count} ${count === 1 ? word : many}`;
 

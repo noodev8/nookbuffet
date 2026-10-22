@@ -258,12 +258,6 @@
   margin-bottom: 0.8rem;
 }
 
-.fulfillment-item.selected {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: #ffffff;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
-}
-
 /* ===== ACTION BUTTONS ===== */
 .checkout-actions {
   display: flex;

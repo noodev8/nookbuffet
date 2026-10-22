@@ -7,7 +7,7 @@ WHAT IT DOES
 
 Gives staff a place to see incoming orders, update statuses, manage the menu and set prices. Different roles see different things depending on their access level.
 
-Login uses 2-factor authentication — password first, then a 6-digit code sent to the staff member's email.
+Staff log in with just a username and password.
 
 
 TECH

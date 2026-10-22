@@ -5,11 +5,15 @@ The customer-facing website for Nook Buffet. This is what customers use to brows
 
 WHAT IT DOES
 
-Lets customers pick a buffet, choose their food, add upgrades, and check out. They can also build their own sandwich (bread, fillings, sauce...) on its own or alongside buffets. Sandwich-only orders can be collected the same day if placed before the sandwich cutoff (11:00 by default, set in the admin portal); the sandwich options only appear when staff have switched sandwiches on. They can create an account to view their order history and reorder.
+Lets customers build their own sandwich (bread, fillings, sauce...), pick a collection slot and check out. Sandwiches can be collected the same day; the opening hours, slot length and notice needed are set in the admin portal.
+
+Buffets are ordered by phone for now. The buffet page shows each buffet's menu with a banner asking customers to call. The online buffet ordering code (pick a buffet, choose food, add upgrades) is commented out, marked "Online buffet ordering", so it is easy to put back.
+
+Customer accounts are hidden for now - the links to them are commented out in components/Navigation.js, marked "Customer accounts". The account pages still exist but nothing links to them, and every order goes through as a guest.
 
 No payment is taken online. Customers pay on collection. Every order goes through as unpaid.
 
-Staff can also log in here using their admin credentials to place phone orders or walk-ins.
+Staff can also log in here at /login using their admin credentials to place phone orders or walk-ins (type the address in - nothing links to it while accounts are hidden).
 
 
 TECH
@@ -39,16 +43,16 @@ PAGES
 
   /                 - Home page
   /menu             - Full menu display
-  /select-buffet    - Pick a buffet type
-  /order            - Build your buffet — choose items per category
-  /upgrade          - Add upgrade packages to your order
+  /select-buffet    - Buffet menus, with a banner to call and order (online buffet ordering is paused)
+  /order            - Build your buffet — choose items per category (not linked while buffets are phone only)
+  /upgrade          - Add upgrade packages to your order (not linked while buffets are phone only)
   /sandwiches       - Build your own sandwich and add it to the basket
   /basket           - Review everything and pick a collection date (and a collection slot, for sandwiches)
   /checkout         - Confirm details and place the order (unpaid)
   /checkout/success - Order confirmed page
-  /account          - Order history, reorder, and profile
-  /login            - Customer login (also used by staff)
-  /register         - Create a customer account
+  /account          - Order history, reorder, and profile (accounts are hidden for now)
+  /login            - Customer login (accounts are hidden for now)
+  /register         - Create a customer account (accounts are hidden for now)
   /about            - About page
   /contact          - Contact form
 
