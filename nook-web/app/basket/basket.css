@@ -223,6 +223,36 @@
   color: #ccc;
 }
 
+/* Quantity stepper on a sandwich line */
+.basket-quantity {
+  display: flex;
+  align-items: center;
+  border: 1px solid #444;
+  border-radius: 6px;
+}
+
+.basket-quantity button {
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.basket-quantity button:disabled {
+  color: #555;
+  cursor: not-allowed;
+}
+
+.basket-quantity span {
+  min-width: 1.75rem;
+  text-align: center;
+  font-weight: 600;
+  color: white;
+}
+
 .detail-value {
   color: white;
   font-weight: 500;

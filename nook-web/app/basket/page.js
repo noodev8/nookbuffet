@@ -5,6 +5,9 @@ import { useState, useEffect } from 'react';
 import { readBasket, saveBasket, isSandwich, money, describeSandwich } from '../lib/basket';
 import './basket.css';
 
+// Most of one sandwich in a single basket line, same as the sandwich page
+const MAX_QUANTITY = 50;
+
 // "YYYY-MM-DD" for a date in local time
 const toDateKey = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -92,6 +95,8 @@ export default function BasketPage() {
 
   const totalPeople = buffets.reduce((sum, { order }) => sum + (order.numPeople || 0), 0);
   const sandwichCount = sandwiches.reduce((sum, { order }) => sum + (order.quantity || 0), 0);
+  // Each sandwich counts as an item (3 of one sandwich is 3 items), each buffet as one
+  const itemCount = buffets.length + sandwichCount;
   const grandTotal = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
 
   // Buffets need the usual notice. Sandwich-only orders can be collected today before the sandwich cutoff.
@@ -200,6 +205,17 @@ export default function BasketPage() {
     }
   };
 
+  // Change how many of a sandwich without opening the full edit
+  const handleChangeQuantity = (index, change) => {
+    const updatedOrders = orders.map((order, i) => {
+      if (i !== index) return order;
+      const quantity = order.quantity + change;
+      return { ...order, quantity, totalPrice: (Math.round(order.unitPrice * 100) * quantity) / 100 };
+    });
+    saveBasket(updatedOrders);
+    setOrders(updatedOrders);
+  };
+
   // Edit an existing order - saves it to localStorage and navigates to order page
   const handleEditOrder = (index) => {
     const orderToEdit = orders[index];
@@ -250,7 +266,7 @@ export default function BasketPage() {
 
           {/* Orders Summary Section */}
           <div className="basket-section">
-            <h2 className="basket-section-title">Your Order ({orders.length} item{orders.length !== 1 ? 's' : ''})</h2>
+            <h2 className="basket-section-title">Your Order ({itemCount} item{itemCount !== 1 ? 's' : ''})</h2>
             <div className="orders-list">
               {buffets.map(({ order, index }) => (
                 <div key={index} className="order-card">
@@ -299,12 +315,24 @@ export default function BasketPage() {
               {sandwiches.map(({ order, index }) => (
                 <div key={index} className="order-card">
                   <div className="order-header">
-                    <h3 className="order-number">{order.quantity} × Sandwich</h3>
+                    <h3 className="order-number">Sandwich</h3>
                     {editRemoveButtons(index)}
                   </div>
                   <div className="order-details">
                     <div className="detail-item">
                       <span className="detail-value">{describeSandwich(order.picks)}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Quantity:</span>
+                      <div className="basket-quantity" aria-label="Quantity">
+                        <button type="button" onClick={() => handleChangeQuantity(index, -1)}
+                          disabled={order.quantity <= 1} aria-label="One less">−</button>
+                        <span>{order.quantity}</span>
+                        {/* No more once the basket has the most sandwiches allowed in one online order */}
+                        <button type="button" onClick={() => handleChangeQuantity(index, 1)}
+                          disabled={order.quantity >= MAX_QUANTITY || (Boolean(slotInfo?.maxSandwiches) && sandwichCount >= slotInfo.maxSandwiches)}
+                          aria-label="One more">+</button>
+                      </div>
                     </div>
                     {order.notes && (
                       <div className="detail-item">
