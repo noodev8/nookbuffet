@@ -1,28 +1,33 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
-import { usePathname } from 'next/navigation';
+// Customer accounts are hidden for now. To show them again, put back the code marked
+// "Customer accounts" in this file (the login, register and account pages still exist)
+// import { useState, useSyncExternalStore } from 'react'; // Customer accounts
+// import { usePathname } from 'next/navigation'; // Customer accounts
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import './Navigation.css';
 
-// Other tabs logging in or out fire a storage event
-const subscribeToStorage = (callback) => {
-  window.addEventListener('storage', callback);
-  return () => window.removeEventListener('storage', callback);
-};
+// Customer accounts
+// // Other tabs logging in or out fire a storage event
+// const subscribeToStorage = (callback) => {
+//   window.addEventListener('storage', callback);
+//   return () => window.removeEventListener('storage', callback);
+// };
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // Subscribing to the pathname re-renders us on every route change, and each render
-  // re-reads localStorage, so the icon always points to the right place after login/logout
-  usePathname();
-  const isLoggedIn = useSyncExternalStore(
-    subscribeToStorage,
-    () => localStorage.getItem('customer') !== null,
-    () => false
-  );
-  const accountHref = isLoggedIn ? '/account' : '/login';
+  // Customer accounts
+  // // Subscribing to the pathname re-renders us on every route change, and each render
+  // // re-reads localStorage, so the icon always points to the right place after login/logout
+  // usePathname();
+  // const isLoggedIn = useSyncExternalStore(
+  //   subscribeToStorage,
+  //   () => localStorage.getItem('customer') !== null,
+  //   () => false
+  // );
+  // const accountHref = isLoggedIn ? '/account' : '/login';
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -53,12 +58,14 @@ export default function Navigation() {
           <Link href="/menu">Menu</Link>
           <Link href="/about">About</Link>
           <Link href="/contact">Contact</Link>
+          {/* Customer accounts
           <Link href={accountHref} className="nav-account-link" aria-label="My Account">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="8" r="4"/>
               <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
             </svg>
           </Link>
+          */}
         </div>
 
         <button
@@ -87,9 +94,11 @@ export default function Navigation() {
           <Link href="/contact" onClick={closeMenu}>
             Contact
           </Link>
+          {/* Customer accounts
           <Link href={accountHref} onClick={closeMenu}>
             My Account
           </Link>
+          */}
         </div>
       </div>
     </nav>
