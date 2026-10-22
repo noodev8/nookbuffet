@@ -95,7 +95,7 @@ const getSlots = async (req, res) => {
 
 // ===== SLOTS ON A DAY (staff) =====
 // Every collection slot on a day with how many orders it has and whether it is blocked,
-// for the Block times page. Today's slots that have passed are marked so they can't be changed.
+// for the Time slots page. Today's slots that have passed are marked so they can't be changed.
 const getDaySlots = async (req, res) => {
   try {
     const date = req.query.date;

@@ -57,7 +57,7 @@ ENDPOINTS:
    Success Response: { return_code, data: { base_price, open_time, close_time, slot_minutes, slot_capacity, notice_minutes } }
 
 2b. GET /api/sandwiches/manage/slots?date=2026-10-24   (all staff)
-   Purpose: Every collection slot on a day, for the Block times page
+   Purpose: Every collection slot on a day, for the Time slots page
    Success Response: { return_code, data: { slot_capacity: 5,
      slots: [ { time: "13:00", orders: 2, blocked: false, passed: false }, ... ] } }
 
