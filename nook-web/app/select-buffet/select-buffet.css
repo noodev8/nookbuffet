@@ -35,7 +35,58 @@
   font-weight: 400;
 }
 
-/* ===== BETA WARNING BANNER ===== */
+/* ===== CALL TO ORDER BANNER ===== */
+.call-to-order-banner {
+  background: rgba(76, 175, 80, 0.12);
+  border: 2px solid #4CAF50;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.call-to-order-banner strong {
+  display: block;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.call-to-order-banner p {
+  margin: 0 0 1rem;
+  color: #ddd;
+  line-height: 1.5;
+}
+
+.call-to-order-banner p a {
+  color: white;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.call-to-order-button {
+  display: inline-block;
+  padding: 0.9rem 1.8rem;
+  background: white;
+  color: #000;
+  border: 2px solid white;
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.call-to-order-button:hover {
+  background: transparent;
+  color: white;
+}
+
+/* Beta warning banner (commented out while buffets are ordered by phone)
+===== BETA WARNING BANNER =====
 .beta-warning-banner {
   background: #d32f2f;
   border: 3px solid #b71c1c;
@@ -62,6 +113,7 @@
   color: white;
   line-height: 1.5;
 }
+*/
 
 /* ===== LOADING & ERROR STATES ===== */
 .loading-state,
@@ -116,12 +168,14 @@
   flex-direction: column;
 }
 
+/* Online buffet ordering: card lifts on hover so it looks clickable (commented out while buffets are ordered by phone)
 .buffet-version-card:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: #666;
   transform: translateY(-5px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
+*/
 
 .buffet-version-header {
   margin-bottom: 1.5rem;
@@ -159,11 +213,49 @@
   color: #ccc;
   line-height: 1.6;
   margin-bottom: 1.5rem;
-  flex-grow: 1;
+  /* flex-grow: 1; Online buffet ordering: pushes the select button to the bottom of the card */
   font-size: 1rem;
 }
 
-/* ===== SELECT BUTTON ===== */
+/* ===== BUFFET MENU ===== */
+.buffet-menu-section {
+  margin-bottom: 1.25rem;
+}
+
+.buffet-menu-section-title {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #4CAF50;
+  margin-bottom: 0.5rem;
+}
+
+.buffet-menu-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.buffet-menu-items li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #333;
+  color: #ddd;
+}
+
+.buffet-menu-items li:last-child {
+  border-bottom: none;
+}
+
+.buffet-menu-dietary {
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* Online buffet ordering: select button and sold out cards (commented out while buffets are ordered by phone)
+===== SELECT BUTTON =====
 .select-buffet-button {
   width: 100%;
   padding: 1rem;
@@ -190,7 +282,7 @@
   transform: translateY(0);
 }
 
-/* Buffet sold out: faded and can't be selected */
+Buffet sold out: faded and can't be selected
 .buffet-version-sold-out,
 .buffet-version-sold-out:hover {
   opacity: 0.6;
@@ -214,6 +306,7 @@
   box-shadow: none;
   cursor: not-allowed;
 }
+*/
 
 /* ===== SANDWICH OFFER ===== */
 .sandwich-offer {
@@ -286,6 +379,10 @@
   .select-buffet-subtitle {
     font-size: 1rem;
     margin-bottom: 1.5rem;
+  }
+
+  .call-to-order-banner {
+    padding: 1.25rem;
   }
 
   .sandwich-offer {

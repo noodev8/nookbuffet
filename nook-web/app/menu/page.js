@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { imageSrc, isUploaded } from '../lib/images';
-import Link from 'next/link';
+// import Link from 'next/link'; // Put back with the online order button below
 import { useState, useEffect } from 'react';
 import './menu.css';
 
@@ -138,10 +138,17 @@ export default function MenuPage() {
 
           <div className="menu-cta">
             <h3>Ready to Order?</h3>
+            {/* Buffets are ordered by phone for now. To take them online again, put this back
+                (and the Link import above) in place of the call button
             <p>Contact us to discuss your requirements and place your order.</p>
             <Link href="/order" className="cta-button">
               Place Your Order
             </Link>
+            */}
+            <p>Give us a call on 07551 428162 to discuss your requirements and place your order.</p>
+            <a href="tel:+447551428162" className="cta-button">
+              Call to Order
+            </a>
           </div>
         </div>
       </div>

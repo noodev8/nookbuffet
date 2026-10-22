@@ -22,9 +22,12 @@ const CONFIG = {
     },
     buffet: {
       title: 'Order a Buffet',
-      text: 'Sandwich buffets for 5 or more people, ready for next-day collection.',
+      // Buffets are ordered by phone for now. Online ordering text:
+      // text: 'Sandwich buffets for 5 or more people, ready for next-day collection.',
+      // button: 'Choose a Buffet',
+      text: 'Sandwich buffets for 5 or more people. Give us a call to order one.',
       link: '/select-buffet',
-      button: 'Choose a Buffet',
+      button: 'See Our Buffets',
     },
   },
   infoCards: [

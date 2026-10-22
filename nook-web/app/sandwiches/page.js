@@ -113,7 +113,8 @@ function SandwichBuilder() {
     return (
       <div className="sandwich-state">
         <p>{menu.sold_out ? 'Sorry, we have sold out of sandwiches for now.' : 'Sorry, sandwiches are not available to order online right now.'}</p>
-        <Link href="/select-buffet" className="sandwich-secondary-button">Order a Buffet Instead</Link>
+        {/* Buffets are ordered by phone for now. Online ordering label: Order a Buffet Instead */}
+        <Link href="/select-buffet" className="sandwich-secondary-button">See Our Buffets</Link>
       </div>
     );
   }
