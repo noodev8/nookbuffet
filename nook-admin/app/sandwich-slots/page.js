@@ -7,17 +7,18 @@ import { dayKey, dayLabel } from '../lib/format';
 export default function SandwichSlotsPage() {
   return (
     <AdminShell>
-      <BlockTimes />
+      <TimeSlots />
     </AdminShell>
   );
 }
 
 /**
- * Staff tap a collection time to block it on the chosen day, e.g. to stop sandwich orders
+ * Every collection time on the chosen day, coloured by how booked it is.
+ * Staff tap a time to block it, e.g. to stop sandwich orders
  * between 13:00 and 13:30. A blocked time is full for customers, like it had filled up with
  * orders. Orders already booked in it stay as they are.
  */
-function BlockTimes() {
+function TimeSlots() {
   const { api } = useAdmin();
   const today = dayKey(new Date());
   const [date, setDate] = useState(today);
@@ -65,10 +66,10 @@ function BlockTimes() {
     <>
       <div className="page-head">
         <div>
-          <h1 className="page-title">Block times</h1>
+          <h1 className="page-title">Time slots</h1>
           <p className="page-sub">
-            Tap a collection time to block it so customers can&apos;t pick it on that day. Tap it again to open it back up.
-            Orders already booked stay as they are.
+            How booked each collection time is on a day. Tap a time to block it so customers can&apos;t pick it,
+            and tap it again to open it back up. Orders already booked stay as they are.
           </p>
         </div>
       </div>
@@ -94,12 +95,13 @@ function BlockTimes() {
         {!error && slots && slots.length > 0 && (
           <div className="slot-grid">
             {slots.map(slot => {
-              const full = slot.orders >= day.capacity;
+              // Red when blocked, green when full of orders, amber with some, white when empty
+              const state = slot.blocked ? ' blocked' : slot.orders >= day.capacity ? ' full' : slot.orders > 0 ? ' booked' : '';
               return (
                 <button
                   key={slot.time}
                   type="button"
-                  className={`slot-btn${slot.blocked ? ' blocked' : full ? ' full' : ''}`}
+                  className={`slot-btn${state}`}
                   disabled={slot.passed || busyTime === slot.time}
                   onClick={() => toggle(slot)}
                   aria-pressed={slot.blocked}

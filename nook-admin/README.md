@@ -46,7 +46,7 @@ Orders and Menu pages (plus Prep for buffets).
 
   Sandwiches
   /               - Sandwich Orders - open sandwich orders by collection time, with what to make listed in each row
-  /sandwich-slots - Block times - tap a collection time to block it on a day, like it filled up with orders
+  /sandwich-slots - Time slots - how booked each collection time is on a day; tap a time to block it, like it filled up with orders
   /sandwich-menu  - Sandwich Menu - steps (bread, fillings...) and their options, in stock or not (admins only)
   /sandwich-settings - Sandwich Settings - base price, collection hours, time slot length, orders per slot, minimum notice (admins only)
 
