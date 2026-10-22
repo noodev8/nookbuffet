@@ -182,6 +182,20 @@ describe('updateSettings collection hours and slots', () => {
     expect(getResult().return_code).toBe('INVALID_DATA');
   });
 
+  test('saves the slot length', async () => {
+    sandwichModel.updateSettings.mockResolvedValue({});
+    const { req, res, getResult } = setup({ ...base, slot_minutes: '15' });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('SUCCESS');
+    expect(sandwichModel.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ slot_minutes: 15 }));
+  });
+
+  test.each([0, 7, 125])('rejects a slot length of %s minutes', async (minutes) => {
+    const { req, res, getResult } = setup({ ...base, slot_minutes: minutes });
+    await sandwichController.updateSettings(req, res);
+    expect(getResult().return_code).toBe('INVALID_DATA');
+  });
+
   test('rejects a slot capacity of 0', async () => {
     const { req, res, getResult } = setup({ ...base, slot_capacity: 0 });
     await sandwichController.updateSettings(req, res);

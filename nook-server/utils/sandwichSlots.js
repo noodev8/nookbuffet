@@ -2,13 +2,14 @@
 =======================================================================================================================================
 SANDWICH SLOTS - Collection times for sandwich orders
 =======================================================================================================================================
-Sandwiches are collected in 5-minute slots between the opening and closing times staff set in the admin
-portal (e.g. 11:00, 11:05 ... 13:55 when open 11:00 - 14:00). Each slot holds up to slot_capacity sandwiches,
-which is how many the kitchen can make in 5 minutes.
+Sandwiches are collected in slots between the opening and closing times staff set in the admin portal. Staff
+also set how long each slot is (slot_minutes) and how many orders each slot takes (slot_capacity), e.g. 15-minute
+slots when open 11:00 - 14:00 gives 11:00, 11:15 ... 13:45.
 =======================================================================================================================================
 */
 
-const SLOT_MINUTES = 5;
+// Collection hours and slot lengths are always on 5-minute marks
+const TIME_STEP = 5;
 
 const toMinutes = (time) => {
   const [h, m] = String(time).split(':').map(Number);
@@ -19,22 +20,22 @@ const fromMinutes = (minutes) =>
   `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
 
 // Every slot from open_time up to (not including) close_time
-const slotTimes = (openTime, closeTime) => {
+const slotTimes = (openTime, closeTime, slotMinutes) => {
   const times = [];
-  for (let t = toMinutes(openTime); t < toMinutes(closeTime); t += SLOT_MINUTES) times.push(fromMinutes(t));
+  for (let t = toMinutes(openTime); t < toMinutes(closeTime); t += slotMinutes) times.push(fromMinutes(t));
   return times;
 };
 
 /**
  * The slots a customer can pick for one day.
- * @param {object} settings - sandwich settings (open_time, close_time, slot_capacity)
- * @param {object} counts - { "12:30": 3, ... } sandwiches already booked per slot that day
+ * @param {object} settings - sandwich settings (open_time, close_time, slot_minutes, slot_capacity)
+ * @param {object} counts - { "12:30": 3, ... } orders already booked per slot that day
  * @param {string|null} afterTime - "HH:MM" - only slots after this (now, when the day is today)
- * @returns {array} [{ time: "12:30", remaining: 7 }, ...] - remaining is how many more sandwiches fit
+ * @returns {array} [{ time: "12:30", available: true }, ...]
  */
 const buildSlots = (settings, counts, afterTime = null) =>
-  slotTimes(settings.open_time, settings.close_time)
+  slotTimes(settings.open_time, settings.close_time, settings.slot_minutes)
     .filter(time => !afterTime || time > afterTime)
-    .map(time => ({ time, remaining: Math.max(0, settings.slot_capacity - (counts[time] || 0)) }));
+    .map(time => ({ time, available: (counts[time] || 0) < settings.slot_capacity }));
 
-module.exports = { SLOT_MINUTES, slotTimes, buildSlots, toMinutes };
+module.exports = { TIME_STEP, slotTimes, buildSlots, toMinutes };

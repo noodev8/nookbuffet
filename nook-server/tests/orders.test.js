@@ -64,7 +64,7 @@ const SANDWICH_STEPS = [
 ];
 
 const SANDWICH_SETTINGS = {
-  base_price: '5.00', cutoff_time: '11:00', open_time: '11:00', close_time: '14:00', slot_capacity: 5
+  base_price: '5.00', cutoff_time: '11:00', open_time: '11:00', close_time: '14:00', slot_minutes: 5, slot_capacity: 5
 };
 
 // A sandwich-only order - no business name, address or buffets
@@ -314,19 +314,17 @@ describe('createOrder with sandwiches', () => {
     expect(orderModel.createOrder.mock.calls[0][0].slotCapacity).toBe(5);
   });
 
-  test('turns away an order with more sandwiches than one slot holds', async () => {
-    const { req, res, getResult } = setup(sandwichOrder({ sandwiches: [
-      { quantity: 3, optionIds: [10, 20] }, { quantity: 3, optionIds: [10, 20] }
-    ] }));
-    await orderController.createOrder(req, res);
-    expect(getResult().return_code).toBe('TOO_MANY_SANDWICHES');
-    expect(orderModel.createOrder).not.toHaveBeenCalled();
-  });
-
-  test('accepts an order that exactly fills a slot', async () => {
-    const { req, res, getResult } = setup(sandwichOrder({ sandwiches: [{ quantity: 5, optionIds: [10, 20] }] }));
+  test('takes a big order in one slot - slots count orders, not sandwiches', async () => {
+    const { req, res, getResult } = setup(sandwichOrder({ sandwiches: [{ quantity: 20, optionIds: [10, 20] }] }));
     await orderController.createOrder(req, res);
     expect(getResult().return_code).toBe('SUCCESS');
+  });
+
+  test('rejects a time between slots when slots are longer', async () => {
+    sandwichModel.getSettings.mockResolvedValue({ ...SANDWICH_SETTINGS, slot_minutes: 15 });
+    const { req, res, getResult } = setup(sandwichOrder({ fulfillmentTime: '11:05' }));
+    await orderController.createOrder(req, res);
+    expect(getResult().return_code).toBe('VALIDATION_ERROR');
   });
 
   test('rejects a time outside collection hours', async () => {

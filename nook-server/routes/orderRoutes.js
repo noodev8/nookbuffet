@@ -61,7 +61,7 @@ ENDPOINTS:
    }
    An order needs at least one buffet or one sandwich. buffets and sandwiches may each be left out.
    - address is only required when there are buffets
-   - with sandwiches, fulfillmentTime ("HH:MM") is required and must be one of the 5-minute slots
+   - with sandwiches, fulfillmentTime ("HH:MM") is required and must be one of the collection slots
      within sandwich collection hours that still has room (see GET /api/sandwiches/slots)
    - everything is priced on the server: buffets (and their upgrades) from the current buffet and
      upgrade prices, sandwiches from the current menu. Any prices or totals sent are ignored.

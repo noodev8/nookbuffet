@@ -39,7 +39,7 @@ export default function BasketPage() {
   // Collection date and time state. Time is only asked for when there are sandwiches.
   const [fulfillmentDate, setFulfillmentDate] = useState('');
   const [fulfillmentTime, setFulfillmentTime] = useState('');
-  // 5-minute collection slots for the chosen day: { date, capacity, slots: [{ time, remaining }], error }
+  // Collection slots for the chosen day: { date, slots: [{ time, available }], error }
   const [slotInfo, setSlotInfo] = useState(null);
 
   // Get basket data from localStorage
@@ -91,7 +91,6 @@ export default function BasketPage() {
   const hasSandwiches = sandwiches.length > 0;
 
   const totalPeople = buffets.reduce((sum, { order }) => sum + (order.numPeople || 0), 0);
-  const sandwichCount = sandwiches.reduce((sum, { order }) => sum + (order.quantity || 0), 0);
   const grandTotal = orders.reduce((sum, order) => sum + (order.totalPrice || 0), 0);
 
   // Buffets need the usual notice. Sandwich-only orders can be collected today before the sandwich cutoff.
@@ -108,16 +107,13 @@ export default function BasketPage() {
     fetch(`${apiUrl}/api/sandwiches/slots?date=${dateValue}`)
       .then(res => res.json())
       .then(data => setSlotInfo(data.return_code === 'SUCCESS'
-        ? { date: dateValue, capacity: data.data.slot_capacity, slots: data.data.slots }
+        ? { date: dateValue, slots: data.data.slots }
         : { date: dateValue, slots: [], error: data.message || 'Could not load collection times' }))
       .catch(() => setSlotInfo({ date: dateValue, slots: [], error: 'Could not load collection times. Please try again.' }));
   }, [hasSandwiches, dateValue]);
 
   const slots = slotInfo?.date === dateValue ? slotInfo.slots : null; // null while loading
-  // Each slot holds so many sandwiches, so only times with room for all of this order are open
-  const hasRoom = (slot) => slot.remaining >= sandwichCount;
-  const tooBigForASlot = Boolean(slots) && sandwichCount > slotInfo.capacity;
-  const openSlots = (slots || []).filter(hasRoom);
+  const openSlots = (slots || []).filter(slot => slot.available);
   // Drop a picked time that isn't free on the chosen day (e.g. after changing the date)
   const timeValue = openSlots.some(slot => slot.time === fulfillmentTime) ? fulfillmentTime : '';
 
@@ -466,10 +462,6 @@ export default function BasketPage() {
                       <div style={{ padding: '10px', color: '#666' }}>Loading collection times...</div>
                     ) : slotInfo.error ? (
                       <div style={{ padding: '10px', color: '#ff6b35' }}>{slotInfo.error}</div>
-                    ) : tooBigForASlot ? (
-                      <div style={{ padding: '10px', color: '#ff6b35' }}>
-                        We can make up to {slotInfo.capacity} sandwiches for one collection time. For a bigger order please call the shop.
-                      </div>
                     ) : openSlots.length === 0 ? (
                       <div style={{ padding: '10px', color: '#ff6b35' }}>
                         {isToday ? 'No collection times left today' : 'No collection times left on this day'} - please choose another date.
@@ -484,8 +476,8 @@ export default function BasketPage() {
                         >
                           <option value="">Choose a time</option>
                           {slots.map(slot => (
-                            <option key={slot.time} value={slot.time} disabled={!hasRoom(slot)}>
-                              {slot.time}{hasRoom(slot) ? '' : slot.remaining === 0 ? ' (full)' : ' (not enough room)'}
+                            <option key={slot.time} value={slot.time} disabled={!slot.available}>
+                              {slot.time}{slot.available ? '' : ' (full)'}
                             </option>
                           ))}
                         </select>

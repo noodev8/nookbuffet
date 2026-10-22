@@ -32,11 +32,11 @@ ENDPOINTS:
    Purpose: The sandwich menu for the website - in-stock options only (public)
    Success Response: { return_code, data: { base_price: "5.00", cutoff_time: "11:00", sold_out: false, steps: [...] } }
    sold_out is true when a required step has nothing in stock (steps is then empty)
-   Also includes open_time, close_time and slot_capacity (see settings below)
+   Also includes open_time, close_time, slot_minutes and slot_capacity (see settings below)
 
 0b. GET /api/sandwiches/slots?date=2026-10-05
-   Purpose: The 5-minute collection slots on a day (public). Today only lists slots still to come.
-   Success Response: { return_code, data: { open_time: "11:00", close_time: "14:00",
+   Purpose: The collection slots on a day, slot_minutes apart (public). Today only lists slots still to come.
+   Success Response: { return_code, data: { open_time: "11:00", close_time: "14:00", slot_minutes: 5,
      slots: [ { time: "11:00", available: true }, { time: "11:05", available: false }, ... ] } }
    available is false once a slot has slot_capacity orders in it
    Return Codes: SUCCESS, INVALID_DATA, SERVER_ERROR
@@ -47,13 +47,14 @@ ENDPOINTS:
 
 2. PATCH /api/sandwiches/manage/settings
    Request Body: { "base_price": 5.00, "cutoff_time": "11:00",
-                   "open_time": "11:00", "close_time": "14:00", "slot_capacity": 5 }
+                   "open_time": "11:00", "close_time": "14:00", "slot_minutes": 5, "slot_capacity": 5 }
      base_price (number >= 0) is required. The rest are optional and left
      as they are when not sent:
        cutoff_time   - sandwich-only orders placed before it can be collected the same day
        open_time, close_time - collection hours, on 5-minute marks, sent together, open before close
-       slot_capacity - most orders with sandwiches per 5-minute collection slot (1 or more)
-   Success Response: { return_code, data: { base_price, cutoff_time, open_time, close_time, slot_capacity } }
+       slot_minutes  - how long each collection slot is (5 to 120, in steps of 5)
+       slot_capacity - most orders with sandwiches per collection slot (1 or more)
+   Success Response: { return_code, data: { base_price, cutoff_time, open_time, close_time, slot_minutes, slot_capacity } }
 
 3. POST /api/sandwiches/manage/steps
    Request Body: { "name": "Bread", "description": null, "min_choices": 1, "max_choices": 1 }

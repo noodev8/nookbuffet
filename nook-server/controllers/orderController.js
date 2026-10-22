@@ -116,12 +116,12 @@ const createOrder = async (req, res) => {
         });
       }
 
-      // Must be one of the 5-minute slots within collection hours. Whether it is full is
-      // checked when the order is saved, so two customers can't take the last place at once.
-      if (!slotTimes(settings.open_time, settings.close_time).includes(orderData.fulfillmentTime)) {
+      // Must be one of the collection slots. Whether it is full is checked when the
+      // order is saved, so two customers can't take the last place at once.
+      if (!slotTimes(settings.open_time, settings.close_time, settings.slot_minutes).includes(orderData.fulfillmentTime)) {
         return res.json({
           return_code: 'VALIDATION_ERROR',
-          message: `Sandwiches can be collected between ${settings.open_time} and ${settings.close_time}, every 5 minutes`
+          message: `Sandwiches can be collected between ${settings.open_time} and ${settings.close_time}, every ${settings.slot_minutes} minutes`
         });
       }
       orderData.slotCapacity = settings.slot_capacity;
@@ -132,15 +132,6 @@ const createOrder = async (req, res) => {
       }
       sandwiches = checked.sandwiches;
       sandwichTotal = checked.total;
-
-      // A slot is how many sandwiches the kitchen can make in 5 minutes, so a bigger order can't fit in any
-      const sandwichCount = sandwiches.reduce((sum, s) => sum + s.quantity, 0);
-      if (sandwichCount > settings.slot_capacity) {
-        return res.json({
-          return_code: 'TOO_MANY_SANDWICHES',
-          message: `We can make up to ${settings.slot_capacity} sandwiches for one collection time. For a bigger order please call the shop.`
-        });
-      }
     }
 
     const totalPrice = Math.round((buffetTotal + sandwichTotal) * 100) / 100;
@@ -201,7 +192,7 @@ const createOrder = async (req, res) => {
       if (error.code !== 'SLOT_FULL') throw error;
       return res.json({
         return_code: 'SLOT_FULL',
-        message: `Sorry, ${orderData.fulfillmentTime} no longer has room for your sandwiches. Please choose another collection time.`
+        message: `Sorry, ${orderData.fulfillmentTime} has just filled up. Please choose another collection time.`
       });
     }
 

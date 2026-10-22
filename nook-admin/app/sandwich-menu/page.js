@@ -125,6 +125,9 @@ function Sandwiches() {
 }
 
 // ===== PRICE, CUTOFF, COLLECTION HOURS AND SLOTS =====
+// Lengths staff can choose for a collection time slot, in minutes
+const SLOT_LENGTHS = [5, 10, 15, 20, 30, 45, 60];
+
 function SettingsCard({ settings, setSettings, showToast }) {
   const { api } = useAdmin();
   const [editing, setEditing] = useState(false);
@@ -133,7 +136,7 @@ function SettingsCard({ settings, setSettings, showToast }) {
     setEditing(false);
     showToast('Settings saved');
   });
-  const [form, setForm] = useState({ price: '', cutoff: '', open: '', close: '', capacity: '' });
+  const [form, setForm] = useState({ price: '', cutoff: '', open: '', close: '', minutes: '', capacity: '' });
 
   const startEditing = () => {
     setForm({
@@ -141,6 +144,7 @@ function SettingsCard({ settings, setSettings, showToast }) {
       cutoff: settings.cutoff_time,
       open: settings.open_time,
       close: settings.close_time,
+      minutes: String(settings.slot_minutes),
       capacity: String(settings.slot_capacity)
     });
     setFormError('');
@@ -159,7 +163,7 @@ function SettingsCard({ settings, setSettings, showToast }) {
       return setFormError('Collection hours must be on a 5-minute mark, e.g. 11:00 or 13:45');
     }
     const capacity = Number(form.capacity);
-    if (!Number.isInteger(capacity) || capacity < 1) return setFormError('Sandwiches per 5 minutes must be 1 or more');
+    if (!Number.isInteger(capacity) || capacity < 1) return setFormError('Orders per time slot must be 1 or more');
     save(() => api('/api/sandwiches/manage/settings', {
       method: 'PATCH',
       body: {
@@ -167,6 +171,7 @@ function SettingsCard({ settings, setSettings, showToast }) {
         cutoff_time: form.cutoff,
         open_time: form.open,
         close_time: form.close,
+        slot_minutes: Number(form.minutes),
         slot_capacity: capacity
       }
     }));
@@ -200,13 +205,21 @@ function SettingsCard({ settings, setSettings, showToast }) {
             <label htmlFor="close-time">Collection until</label>
             <input id="close-time" className="input" type="time" step="300" value={form.close}
               onChange={e => setForm(p => ({ ...p, close: e.target.value }))} />
-            <span className="field-hint">Last collection is 5 minutes before this</span>
+            <span className="field-hint">The last time slot starts before this</span>
           </div>
           <div className="field">
-            <label htmlFor="slot-capacity">Sandwiches per 5 minutes</label>
+            <label htmlFor="slot-minutes">Time slot length</label>
+            <select id="slot-minutes" className="input" value={form.minutes}
+              onChange={e => setForm(p => ({ ...p, minutes: e.target.value }))}>
+              {SLOT_LENGTHS.map(m => <option key={m} value={m}>{m} minutes</option>)}
+            </select>
+            <span className="field-hint">Customers pick a collection time every this many minutes</span>
+          </div>
+          <div className="field">
+            <label htmlFor="slot-capacity">Orders per time slot</label>
             <input id="slot-capacity" className="input" type="number" min="1" step="1" value={form.capacity}
               onChange={e => setForm(p => ({ ...p, capacity: e.target.value }))} />
-            <span className="field-hint">How many sandwiches you can make in 5 minutes. Customers pick a time with room for their whole order</span>
+            <span className="field-hint">Once a time slot has this many orders, customers have to pick another time</span>
           </div>
         </div>
         <div className="form-actions">
@@ -224,7 +237,7 @@ function SettingsCard({ settings, setSettings, showToast }) {
           <p className="price-line"><strong>{money(settings.base_price)}</strong> per sandwich, plus extras</p>
           <p className="card-sub">Order before {settings.cutoff_time} to collect the same day</p>
           <p className="card-sub">
-            Collection {settings.open_time}–{settings.close_time} · up to {settings.slot_capacity} sandwich{settings.slot_capacity !== 1 ? 'es' : ''} every 5 minutes
+            Collection {settings.open_time}–{settings.close_time} · up to {settings.slot_capacity} order{settings.slot_capacity !== 1 ? 's' : ''} every {settings.slot_minutes} minutes
           </p>
         </div>
         <button className="btn" onClick={startEditing}>Edit settings</button>

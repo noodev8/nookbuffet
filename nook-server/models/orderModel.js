@@ -69,16 +69,15 @@ const createOrder = async (orderData) => {
     // last place in a sandwich collection slot. The lock is released at COMMIT/ROLLBACK.
     await client.query(`SELECT pg_advisory_xact_lock(hashtext('new-order'))`);
 
-    // Sandwich collection slots only hold so many sandwiches - check this order still fits
-    const sandwichCount = (orderData.sandwiches || []).reduce((sum, s) => sum + s.quantity, 0);
-    if (sandwichCount > 0 && orderData.slotCapacity) {
+    // Sandwich collection slots only take so many orders - check this one isn't full
+    if ((orderData.sandwiches || []).length > 0 && orderData.slotCapacity) {
       const booked = await client.query(
-        `SELECT COALESCE(SUM(os.quantity), 0)::int AS sandwiches
-         FROM orders o JOIN order_sandwiches os ON os.order_id = o.id
-         WHERE o.fulfillment_date = $1 AND o.fulfillment_time = $2 AND o.status <> 'cancelled'`,
+        `SELECT COUNT(*)::int AS orders FROM orders o
+         WHERE o.fulfillment_date = $1 AND o.fulfillment_time = $2 AND o.status <> 'cancelled'
+           AND EXISTS (SELECT 1 FROM order_sandwiches os WHERE os.order_id = o.id)`,
         [orderData.fulfillmentDate, orderData.fulfillmentTime]
       );
-      if (booked.rows[0].sandwiches + sandwichCount > orderData.slotCapacity) {
+      if (booked.rows[0].orders >= orderData.slotCapacity) {
         const error = new Error('That collection slot is full');
         error.code = 'SLOT_FULL';
         throw error;
