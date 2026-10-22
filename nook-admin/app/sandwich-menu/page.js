@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import AdminShell, { useAdmin } from '../components/AdminShell';
 import { money } from '../lib/format';
 import useSave from '../lib/useSave';
@@ -14,33 +13,37 @@ export default function SandwichesPage() {
   );
 }
 
-// "Required — choose 1", "Optional", "Required" ...
-const ruleLabel = ({ min_choices: min, max_choices: max }) => {
-  const label = min > 0 ? 'Required' : 'Optional';
-  return max === 1 ? `${label} — choose 1` : label;
-};
+// Staff see "sections" (Bread, Meat...) and "items" (Ham, Chicken...).
+// In the API these are steps and options.
 
-// "All included", "1 included, then +£0.40 each", "+£0.40 each"
-const pricingLabel = ({ included_choices: included, extra_choice_price: price }) => {
-  if (included === null || included === undefined || !(parseFloat(price) > 0)) return 'All included';
-  return included === 0 ? `+${money(price)} each` : `${included} included, then +${money(price)} each`;
-};
+const hasCharge = (section) =>
+  section.included_choices !== null && section.included_choices !== undefined && parseFloat(section.extra_choice_price) > 0;
 
-// An option's own extra, on top of the step's pricing - most have none
-const extraLabel = (price) => (parseFloat(price) > 0 ? `+${money(price)} on top` : null);
+// "Customers must choose 1 · Free" / "Optional · First 1 free, then £0.40 each"
+const describeSection = (section) => {
+  const choose = section.min_choices > 0
+    ? (section.max_choices === 1 ? 'Customers must choose 1' : 'Customers must choose at least 1')
+    : (section.max_choices === 1 ? 'Optional · choose 1' : 'Optional');
+  let price = 'Free';
+  if (hasCharge(section)) {
+    price = section.included_choices === 0
+      ? `${money(section.extra_choice_price)} each`
+      : `First ${section.included_choices} free, then ${money(section.extra_choice_price)} each`;
+  }
+  return `${choose} · ${price}`;
+};
 
 /**
- * The build-your-own sandwich menu. Customers go through the steps in order
- * (bread, fillings, sauce, toasted...), picking options within each step's limits.
- * A sandwich costs the base price plus the extras on whatever they pick.
+ * The build-your-own sandwich menu. Day to day, staff tap an item to mark it sold out
+ * or back in stock. "Change" on a section opens everything else about it.
  */
 function Sandwiches() {
   const { api } = useAdmin();
-  const [basePrice, setBasePrice] = useState(null);
-  const [steps, setSteps] = useState([]);
+  const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [addingStep, setAddingStep] = useState(false);
+  const [changing, setChanging] = useState(null); // id of the section being changed
+  const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState('');
 
   useEffect(() => {
@@ -50,8 +53,7 @@ function Sandwiches() {
           setError(data.message || 'Failed to load the sandwich menu');
           return;
         }
-        setBasePrice(data.data.settings.base_price);
-        setSteps(data.data.steps);
+        setSections(data.data.steps);
       })
       .catch(() => setError('Could not reach the server. Please try again.'))
       .finally(() => setLoading(false));
@@ -65,16 +67,16 @@ function Sandwiches() {
   if (loading) return <div className="notice">Loading sandwich menu...</div>;
   if (error) return <div className="notice notice-error">{error}</div>;
 
-  const updateStep = (id, change) => setSteps(prev => prev.map(s => (s.id === id ? change(s) : s)));
+  const updateSection = (id, change) => setSections(prev => prev.map(s => (s.id === id ? change(s) : s)));
 
-  // Swap a step with its neighbour and save the new order
+  // Swap a section with its neighbour and save the new order
   const move = async (index, direction) => {
     const target = index + direction;
-    if (target < 0 || target >= steps.length) return;
-    const reordered = [...steps];
+    if (target < 0 || target >= sections.length) return;
+    const reordered = [...sections];
     [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
     const withPositions = reordered.map((s, position) => ({ ...s, position }));
-    setSteps(withPositions);
+    setSections(withPositions);
     const data = await api('/api/sandwiches/manage/steps/reorder', {
       method: 'PATCH',
       body: withPositions.map(s => ({ id: s.id, position: s.position })),
@@ -88,48 +90,49 @@ function Sandwiches() {
         <div>
           <h1 className="page-title">Sandwich Menu</h1>
           <p className="page-sub">
-            The build-your-own sandwich menu. Customers build a sandwich by going through these steps in order. Each option can add to the base price.
+            <strong>Tap an item to mark it sold out.</strong> Tap it again when it&apos;s back in stock.
+            To add, rename or remove items, press <strong>Change</strong> on that section.
           </p>
         </div>
       </div>
 
-      {/* Price and collection rules live on their own Settings page */}
-      <div className="card">
-        <div className="card-head" style={{ marginBottom: 0 }}>
-          <p className="price-line"><strong>{money(basePrice)}</strong> per sandwich, plus extras</p>
-          <Link href="/sandwich-settings" className="btn">Price and collection settings</Link>
-        </div>
-      </div>
+      {sections.length === 0 && !adding && <div className="notice">The menu is empty — add the first section below, e.g. Bread.</div>}
 
-      {steps.length === 0 && !addingStep && <div className="notice">No steps yet — add the first one below, e.g. Bread.</div>}
-
-      {steps.map((step, index) => (
-        <StepCard
-          key={step.id}
-          step={step}
-          number={index + 1}
-          isFirst={index === 0}
-          isLast={index === steps.length - 1}
-          onMove={(direction) => move(index, direction)}
-          update={(change) => updateStep(step.id, change)}
-          onDeleted={() => setSteps(prev => prev.filter(s => s.id !== step.id))}
-          showToast={showToast}
-        />
+      {sections.map((section, index) => (
+        changing === section.id ? (
+          <ChangeSection
+            key={section.id}
+            section={section}
+            isFirst={index === 0}
+            isLast={index === sections.length - 1}
+            onMove={(direction) => move(index, direction)}
+            update={(change) => updateSection(section.id, change)}
+            onDeleted={() => { setSections(prev => prev.filter(s => s.id !== section.id)); setChanging(null); }}
+            onDone={() => setChanging(null)}
+            showToast={showToast}
+          />
+        ) : (
+          <SectionCard
+            key={section.id}
+            section={section}
+            update={(change) => updateSection(section.id, change)}
+            onChange={() => setChanging(section.id)}
+          />
+        )
       ))}
 
-      {addingStep ? (
-        <div className="card">
-          <StepForm
-            onCancel={() => setAddingStep(false)}
-            onSaved={(created) => {
-              setSteps(prev => [...prev, { ...created, options: [] }]);
-              setAddingStep(false);
-              showToast(`${created.name} added`);
-            }}
-          />
-        </div>
+      {adding ? (
+        <AddSection
+          onCancel={() => setAdding(false)}
+          onAdded={(created) => {
+            setSections(prev => [...prev, { ...created, options: [] }]);
+            setAdding(false);
+            setChanging(created.id); // straight into adding its items
+            showToast(`${created.name} added — now add its items`);
+          }}
+        />
       ) : (
-        <button className="btn" onClick={() => setAddingStep(true)}>+ Add step</button>
+        <button className="btn" onClick={() => setAdding(true)}>+ Add a new section</button>
       )}
 
       {toast && <div className="toast">{toast}</div>}
@@ -137,238 +140,284 @@ function Sandwiches() {
   );
 }
 
-// ===== ONE STEP with its options =====
-function StepCard({ step, number, isFirst, isLast, onMove, update, onDeleted, showToast }) {
+// ===== A SECTION, AS STAFF SEE IT DAY TO DAY =====
+// Each item is a big button that switches between in stock and sold out
+function SectionCard({ section, update, onChange }) {
   const { api } = useAdmin();
-  const [editing, setEditing] = useState(false);
-  const [editingOption, setEditingOption] = useState(null); // an option id, or 'new'
+  const [busy, setBusy] = useState(null);
 
-  const outOfStock = step.options.filter(o => !o.is_active).length;
+  const toggleStock = async (item) => {
+    setBusy(item.id);
+    try {
+      const data = await api(`/api/sandwiches/manage/options/${item.id}/stock`, { method: 'PATCH', body: { is_active: !item.is_active } });
+      if (data.return_code === 'SUCCESS') update(s => ({ ...s, options: s.options.map(o => (o.id === item.id ? data.data : o)) }));
+      else alert(data.message || 'Could not change that item');
+    } catch {
+      alert('Could not reach the server. Please try again.');
+    } finally {
+      setBusy(null);
+    }
+  };
 
-  const deleteStep = async () => {
-    if (!confirm(`Delete the "${step.name}" step and its ${step.options.length} options?`)) return;
-    const data = await api(`/api/sandwiches/manage/steps/${step.id}`, { method: 'DELETE' });
+  const soldOut = section.options.filter(o => !o.is_active).length;
+
+  return (
+    <div className="card">
+      <div className="section-head">
+        <div>
+          <h2 className="card-title">{section.name}</h2>
+          <p className="card-sub">{describeSection(section)}</p>
+        </div>
+        {soldOut > 0 && <span className="badge badge-unpaid">{soldOut} sold out</span>}
+        <button className="btn" onClick={onChange}>Change</button>
+      </div>
+
+      {section.options.length === 0 ? (
+        <p className="card-sub">No items yet — press Change to add some.</p>
+      ) : (
+        <div className="item-grid">
+          {section.options.map(item => (
+            <button
+              key={item.id}
+              type="button"
+              className={`item-tile${item.is_active ? '' : ' sold-out'}`}
+              onClick={() => toggleStock(item)}
+              disabled={busy === item.id}
+              aria-pressed={!item.is_active}
+            >
+              <span className="item-tile-name">{item.name}</span>
+              <span className="item-tile-state">{item.is_active ? 'In stock' : 'Sold out'}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===== CHANGING A SECTION =====
+// The section's details and price at the top, saved with one button. Items below are
+// added, renamed and removed straight away.
+function ChangeSection({ section, isFirst, isLast, onMove, update, onDeleted, onDone, showToast }) {
+  const { api } = useAdmin();
+  const { saving, formError, setFormError, save } = useSave((saved) => {
+    update(s => ({ ...s, ...saved }));
+    showToast(`${saved.name} saved`);
+  });
+  const toForm = (s) => ({
+    name: s.name,
+    required: s.min_choices > 0,
+    charge: hasCharge(s),
+    free: hasCharge(s) ? String(s.included_choices) : '0',
+    price: hasCharge(s) ? parseFloat(s.extra_choice_price).toFixed(2) : '0.40',
+    note: s.description || '',
+  });
+  const [form, setForm] = useState(() => toForm(section));
+  const saved = toForm(section);
+  const changed = Object.keys(form).some(key => form[key] !== saved[key]);
+  const set = (field) => (e) => setForm(p => ({ ...p, [field]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (!form.name.trim()) return setFormError('Give the section a name, e.g. Meat');
+    const free = Number(form.free);
+    const price = parseFloat(form.price);
+    if (form.charge) {
+      if (form.free === '' || !Number.isInteger(free) || free < 0) return setFormError('Enter how many are free — 0 if every one costs extra');
+      if (isNaN(price) || price <= 0) return setFormError('Enter what each extra costs, e.g. 0.40');
+    }
+    save(() => api(`/api/sandwiches/manage/steps/${section.id}`, {
+      method: 'PATCH',
+      body: {
+        name: form.name.trim(),
+        description: form.note.trim() || null,
+        min_choices: form.required ? 1 : 0,
+        max_choices: section.max_choices, // Bread and Toasted? stay choose 1
+        included_choices: form.charge ? free : null,
+        extra_choice_price: form.charge ? price : 0,
+      }
+    }));
+  };
+
+  const deleteSection = async () => {
+    if (!confirm(`Delete the whole "${section.name}" section and its ${section.options.length} items?\n\nCustomers won't see it any more.`)) return;
+    const data = await api(`/api/sandwiches/manage/steps/${section.id}`, { method: 'DELETE' });
     if (data.return_code === 'SUCCESS') {
       onDeleted();
-      showToast(`${step.name} deleted`);
+      showToast(`${section.name} deleted`);
     } else {
-      alert(data.message || 'Could not delete this step');
-    }
-  };
-
-  const toggleStock = async (option) => {
-    const data = await api(`/api/sandwiches/manage/options/${option.id}/stock`, { method: 'PATCH', body: { is_active: !option.is_active } });
-    if (data.return_code === 'SUCCESS') {
-      update(s => ({ ...s, options: s.options.map(o => (o.id === option.id ? data.data : o)) }));
-    } else {
-      alert(data.message || 'Could not change stock');
-    }
-  };
-
-  const deleteOption = async (option) => {
-    if (!confirm(`Delete "${option.name}"?\n\nIf it has just run out, use "Out of stock" instead.`)) return;
-    const data = await api(`/api/sandwiches/manage/options/${option.id}`, { method: 'DELETE' });
-    if (data.return_code === 'SUCCESS') {
-      update(s => ({ ...s, options: s.options.filter(o => o.id !== option.id) }));
-      showToast(`${option.name} deleted`);
-    } else {
-      alert(data.message || 'Could not delete this option');
+      alert(data.message || 'Could not delete this section');
     }
   };
 
   return (
-    <div className="card menu-cat">
-      {editing ? (
-        <div style={{ padding: '0 1.1rem' }}>
-          <StepForm
-            existing={step}
-            onCancel={() => setEditing(false)}
-            onSaved={(saved) => { update(s => ({ ...s, ...saved })); setEditing(false); showToast(`${saved.name} saved`); }}
-          />
-        </div>
-      ) : (
-        <div className="menu-cat-head">
-          <div className="grow">
-            <h3>{number}. {step.name}</h3>
-            <span className="badge">{ruleLabel(step)}</span>{' '}
-            <span className="badge">{pricingLabel(step)}</span>
-            {outOfStock > 0 && <span className="badge badge-unpaid">{outOfStock} out of stock</span>}
+    <div className="card section-changing">
+      <div className="section-head">
+        <h2 className="card-title">Changing {section.name}</h2>
+        <button className="btn btn-primary" onClick={onDone}>Done</button>
+      </div>
+
+      <form onSubmit={submit}>
+        {formError && <div className="form-error">{formError}</div>}
+        <div className="form-grid">
+          <div className="field">
+            <label htmlFor={`section-name-${section.id}`}>Section name</label>
+            <input id={`section-name-${section.id}`} className="input" value={form.name} onChange={set('name')} />
           </div>
-          <button className="btn-link" onClick={() => onMove(-1)} disabled={isFirst} title="Move up" aria-label="Move up">↑</button>
-          <button className="btn-link" onClick={() => onMove(1)} disabled={isLast} title="Move down" aria-label="Move down">↓</button>
-          <button className="btn-link" onClick={() => setEditing(true)}>Edit</button>
-          <button className="btn-link danger" onClick={deleteStep}>Delete</button>
-        </div>
-      )}
-
-      <div className="menu-cat-body">
-        {step.description && !editing && <p className="card-sub" style={{ padding: '0.5rem 0 0' }}>{step.description}</p>}
-        {step.options.length === 0 && <p className="card-sub" style={{ padding: '0.5rem 0' }}>No options yet.</p>}
-
-        {step.options.map(option => (
-          editingOption === option.id ? (
-            <OptionForm
-              key={option.id}
-              stepId={step.id}
-              existing={option}
-              onCancel={() => setEditingOption(null)}
-              onSaved={(saved) => {
-                update(s => ({ ...s, options: s.options.map(o => (o.id === saved.id ? saved : o)) }));
-                setEditingOption(null);
-                showToast(`${saved.name} saved`);
-              }}
-            />
-          ) : (
-            <div key={option.id} className={`menu-item${option.is_active ? '' : ' out'}`}>
-              <div className="grow">
-                <div className="menu-item-name">{option.name}</div>
-                <div className="menu-item-info">
-                  {[extraLabel(option.extra_price), option.description].filter(Boolean).join(' · ')}
-                </div>
+          <div className="field">
+            <label htmlFor={`section-note-${section.id}`}>Note for customers (optional)</label>
+            <input id={`section-note-${section.id}`} className="input" placeholder="e.g. Ask us about gluten free" value={form.note} onChange={set('note')} />
+          </div>
+          <div className="field field-wide">
+            <label className="check">
+              <input type="checkbox" checked={form.required} onChange={set('required')} />
+              Customers must choose from this section
+            </label>
+          </div>
+          <div className="field field-wide">
+            <label className="check">
+              <input type="checkbox" checked={form.charge} onChange={set('charge')} />
+              Charge extra for this section
+            </label>
+            {form.charge && (
+              <div className="price-sentence">
+                The first
+                <input className="input" type="number" min="0" step="1" value={form.free} onChange={set('free')} aria-label="How many are free" />
+                are free, then each one costs £
+                <input className="input" type="number" min="0" step="0.01" value={form.price} onChange={set('price')} aria-label="Price of each extra" />
               </div>
-              <button className={`stock-toggle ${option.is_active ? 'in' : 'out'}`} onClick={() => toggleStock(option)} title="Click to change">
-                {option.is_active ? 'In stock' : 'Out of stock'}
-              </button>
-              <button className="btn-link" onClick={() => setEditingOption(option.id)}>Edit</button>
-              <button className="btn-link danger" onClick={() => deleteOption(option)}>Delete</button>
-            </div>
-          )
-        ))}
+            )}
+            <span className="field-hint">
+              {form.charge ? 'Put 0 free if every one costs extra, like cheese' : 'Everything in this section is included in the sandwich price'}
+            </span>
+          </div>
+        </div>
+        <div className="form-actions">
+          <button className="btn btn-primary" type="submit" disabled={saving || !changed}>{saving ? 'Saving...' : 'Save changes'}</button>
+          {changed && <button className="btn" type="button" onClick={() => { setForm(saved); setFormError(''); }}>Undo</button>}
+        </div>
+      </form>
 
-        {editingOption === 'new' ? (
-          <OptionForm
-            stepId={step.id}
-            onCancel={() => setEditingOption(null)}
-            onSaved={(created) => {
-              update(s => ({ ...s, options: [...s.options, created] }));
-              setEditingOption(null);
-              showToast(`${created.name} added`);
-            }}
-          />
-        ) : (
-          <button className="btn btn-sm" style={{ marginTop: '0.5rem' }} onClick={() => setEditingOption('new')}>+ Add option</button>
-        )}
+      <h3 className="section-subtitle">Items</h3>
+      {section.options.map(item => (
+        <ItemRow key={item.id} item={item} update={update} showToast={showToast} />
+      ))}
+      <AddItem sectionId={section.id} update={update} showToast={showToast} />
+
+      <div className="section-footer">
+        <span className="card-sub">Where it shows on the menu:</span>
+        <button className="btn btn-sm" onClick={() => onMove(-1)} disabled={isFirst}>↑ Move up</button>
+        <button className="btn btn-sm" onClick={() => onMove(1)} disabled={isLast}>↓ Move down</button>
+        <span className="spacer" />
+        <button className="btn btn-sm btn-danger" onClick={deleteSection}>Delete section</button>
       </div>
     </div>
   );
 }
 
-// ===== FORMS =====
-function StepForm({ existing, onCancel, onSaved }) {
+// One item while changing a section: its name can be changed, or it can be removed
+function ItemRow({ item, update, showToast }) {
   const { api } = useAdmin();
-  const { saving, formError, setFormError, save } = useSave(onSaved);
-  const [form, setForm] = useState({
-    name: existing?.name || '',
-    description: existing?.description || '',
-    required: existing ? existing.min_choices > 0 : false,
-    included: existing?.included_choices != null ? String(existing.included_choices) : '',
-    extraPrice: existing && parseFloat(existing.extra_choice_price) > 0 ? parseFloat(existing.extra_choice_price).toFixed(2) : '',
-  });
-  const set = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+  const [name, setName] = useState(item.name);
+  const [busy, setBusy] = useState(false);
+  const renamed = name.trim() && name.trim() !== item.name;
 
-  const submit = (e) => {
+  const rename = async (e) => {
     e.preventDefault();
-    // Required means at least 1 pick. The most a customer can pick isn't edited here any more:
-    // existing steps keep theirs (Bread and Toasted? are choose 1), new steps have no limit.
-    const min = form.required ? 1 : 0;
-    const max = existing ? existing.max_choices : null;
-    const included = form.included === '' ? null : Number(form.included);
-    const extraPrice = form.extraPrice === '' ? 0 : parseFloat(form.extraPrice);
-    if (!form.name.trim()) return setFormError('Give the step a name, e.g. Bread');
-    if (included !== null && (!Number.isInteger(included) || included < 0)) {
-      return setFormError('"Included in the base price" should be 0 or more, or blank for all of them');
+    if (!renamed) return;
+    setBusy(true);
+    try {
+      // Send the rest back as it is
+      const data = await api(`/api/sandwiches/manage/options/${item.id}`, {
+        method: 'PATCH',
+        body: { name: name.trim(), description: item.description, extra_price: item.extra_price },
+      });
+      if (data.return_code === 'SUCCESS') {
+        update(s => ({ ...s, options: s.options.map(o => (o.id === item.id ? data.data : o)) }));
+        showToast(`Renamed to ${data.data.name}`);
+      } else {
+        alert(data.message || 'Could not rename this item');
+      }
+    } catch {
+      alert('Could not reach the server. Please try again.');
+    } finally {
+      setBusy(false);
     }
-    if (isNaN(extraPrice) || extraPrice < 0) return setFormError('Enter what each extra costs, e.g. 0.40, or leave it blank');
-    if (included !== null && extraPrice === 0) return setFormError('Enter what each extra costs, or leave "Included in the base price" blank');
-    const body = {
-      name: form.name.trim(), description: form.description.trim() || null, min_choices: min, max_choices: max,
-      included_choices: included, extra_choice_price: included === null ? 0 : extraPrice
-    };
-    save(() => (existing
-      ? api(`/api/sandwiches/manage/steps/${existing.id}`, { method: 'PATCH', body })
-      : api('/api/sandwiches/manage/steps', { method: 'POST', body })));
+  };
+
+  const remove = async () => {
+    if (!confirm(`Remove "${item.name}" from the menu?\n\nIf it has just run out, press Done and tap it to mark it sold out instead.`)) return;
+    const data = await api(`/api/sandwiches/manage/options/${item.id}`, { method: 'DELETE' });
+    if (data.return_code === 'SUCCESS') {
+      update(s => ({ ...s, options: s.options.filter(o => o.id !== item.id) }));
+      showToast(`${item.name} removed`);
+    } else {
+      alert(data.message || 'Could not remove this item');
+    }
   };
 
   return (
-    <form className="inline-form" onSubmit={submit}>
-      {formError && <div className="form-error">{formError}</div>}
-      <div className="form-grid">
-        <div className="field">
-          <label htmlFor="step-name">Step name</label>
-          <input id="step-name" name="name" className="input" placeholder="e.g. Bread" value={form.name} onChange={set} autoFocus />
-        </div>
-        <div className="field">
-          <label htmlFor="step-included">Included in the base price</label>
-          <input id="step-included" name="included" className="input" type="number" min="0" placeholder="All of them" value={form.included} onChange={set} />
-          <span className="field-hint">How many picks are free. 0 means every pick costs extra. Leave blank if they&apos;re all free</span>
-        </div>
-        <div className="field">
-          <label htmlFor="step-extra-price">Each extra costs (£)</label>
-          <input id="step-extra-price" name="extraPrice" className="input" type="number" step="0.01" min="0" placeholder="0.00"
-            value={form.extraPrice} onChange={set} disabled={form.included === ''} />
-          <span className="field-hint">For every pick after the free ones</span>
-        </div>
-        <div className="field field-wide">
-          <label htmlFor="step-description">Note for customers (optional)</label>
-          <input id="step-description" name="description" className="input" placeholder="e.g. Pick up to 3 fillings" value={form.description} onChange={set} />
-        </div>
-        <div className="field field-wide">
-          <label className="check">
-            <input type="checkbox" checked={form.required} onChange={e => setForm(p => ({ ...p, required: e.target.checked }))} />
-            Required — customers must pick from this step
-          </label>
-        </div>
-      </div>
-      <div className="form-actions">
-        <button className="btn btn-primary btn-sm" type="submit" disabled={saving}>{saving ? 'Saving...' : existing ? 'Save' : 'Add step'}</button>
-        <button className="btn btn-sm" type="button" onClick={onCancel} disabled={saving}>Cancel</button>
-      </div>
+    <form className="item-row" onSubmit={rename}>
+      <input className="input" value={name} onChange={e => setName(e.target.value)} aria-label={`Name of ${item.name}`} />
+      {renamed && <button className="btn btn-primary btn-sm" type="submit" disabled={busy}>Save name</button>}
+      <button className="btn btn-sm btn-danger" type="button" onClick={remove} disabled={busy}>Remove</button>
     </form>
   );
 }
 
-function OptionForm({ stepId, existing, onCancel, onSaved }) {
+function AddItem({ sectionId, update, showToast }) {
   const { api } = useAdmin();
-  const { saving, formError, setFormError, save } = useSave(onSaved);
-  const [form, setForm] = useState({
-    name: existing?.name || '',
-    description: existing?.description || '',
-    extra: existing && parseFloat(existing.extra_price) > 0 ? parseFloat(existing.extra_price).toFixed(2) : '',
-  });
-  const set = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e) => {
+  const add = async (e) => {
     e.preventDefault();
-    const extra = form.extra === '' ? 0 : parseFloat(form.extra);
-    if (!form.name.trim()) return setFormError('Give the option a name');
-    if (isNaN(extra) || extra < 0) return setFormError('Enter the extra price, e.g. 0.50, or leave it blank');
-    const body = { name: form.name.trim(), description: form.description.trim() || null, extra_price: extra };
-    save(() => (existing
-      ? api(`/api/sandwiches/manage/options/${existing.id}`, { method: 'PATCH', body })
-      : api(`/api/sandwiches/manage/steps/${stepId}/options`, { method: 'POST', body })));
+    if (!name.trim()) return;
+    setBusy(true);
+    try {
+      const data = await api(`/api/sandwiches/manage/steps/${sectionId}/options`, { method: 'POST', body: { name: name.trim() } });
+      if (data.return_code === 'SUCCESS') {
+        update(s => ({ ...s, options: [...s.options, data.data] }));
+        setName('');
+        showToast(`${data.data.name} added`);
+      } else {
+        alert(data.message || 'Could not add this item');
+      }
+    } catch {
+      alert('Could not reach the server. Please try again.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <form className="inline-form" onSubmit={submit}>
+    <form className="item-row item-row-add" onSubmit={add}>
+      <input className="input" placeholder="New item, e.g. Pastrami" value={name} onChange={e => setName(e.target.value)} />
+      <button className="btn btn-primary btn-sm" type="submit" disabled={busy || !name.trim()}>+ Add</button>
+    </form>
+  );
+}
+
+// A new section only needs a name to start with - the rest is set while changing it
+function AddSection({ onCancel, onAdded }) {
+  const { api } = useAdmin();
+  const [name, setName] = useState('');
+  const { saving, formError, setFormError, save } = useSave(onAdded);
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (!name.trim()) return setFormError('Give the section a name, e.g. Pickles');
+    save(() => api('/api/sandwiches/manage/steps', { method: 'POST', body: { name: name.trim(), min_choices: 0 } }));
+  };
+
+  return (
+    <form className="card" onSubmit={submit}>
+      <h2 className="card-title" style={{ marginBottom: '0.75rem' }}>New section</h2>
       {formError && <div className="form-error">{formError}</div>}
-      <div className="form-grid">
-        <div className="field">
-          <label htmlFor={`option-name-${existing?.id ?? 'new'}`}>Option name</label>
-          <input id={`option-name-${existing?.id ?? 'new'}`} name="name" className="input" placeholder="e.g. Ham" value={form.name} onChange={set} autoFocus />
-        </div>
-        <div className="field">
-          <label htmlFor={`option-extra-${existing?.id ?? 'new'}`}>Extra on top (£)</label>
-          <input id={`option-extra-${existing?.id ?? 'new'}`} name="extra" className="input" type="number" step="0.01" min="0" placeholder="0.00" value={form.extra} onChange={set} />
-          <span className="field-hint">Only for an option that costs more than the rest, on top of the step&apos;s price. Usually blank</span>
-        </div>
-        <div className="field">
-          <label htmlFor={`option-description-${existing?.id ?? 'new'}`}>Description (optional)</label>
-          <input id={`option-description-${existing?.id ?? 'new'}`} name="description" className="input" placeholder="e.g. Contains nuts" value={form.description} onChange={set} />
-        </div>
-      </div>
-      <div className="form-actions">
-        <button className="btn btn-primary btn-sm" type="submit" disabled={saving}>{saving ? 'Saving...' : existing ? 'Save' : 'Add option'}</button>
-        <button className="btn btn-sm" type="button" onClick={onCancel} disabled={saving}>Cancel</button>
+      <div className="item-row">
+        <input className="input" placeholder="e.g. Pickles" value={name} onChange={e => setName(e.target.value)} autoFocus />
+        <button className="btn btn-primary" type="submit" disabled={saving}>{saving ? 'Adding...' : 'Add section'}</button>
+        <button className="btn" type="button" onClick={onCancel} disabled={saving}>Cancel</button>
       </div>
     </form>
   );
