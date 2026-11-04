@@ -1,7 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'basket.dart';
-import 'screens/about_screen.dart';
+// About page (hidden): import 'screens/about_screen.dart';
 import 'screens/basket_screen.dart';
 import 'screens/contact_screen.dart';
 import 'screens/home_screen.dart';
@@ -29,7 +29,8 @@ class NookApp extends StatelessWidget {
 }
 
 // Which bottom tab is showing. Other screens set it, e.g. to jump to the basket after adding a sandwich.
-enum AppTab { home, menu, basket, about, contact }
+// About page (hidden): put `about` back between basket and contact to show it again
+enum AppTab { home, menu, basket, contact }
 
 final currentTab = ValueNotifier(AppTab.home);
 
@@ -48,7 +49,12 @@ class AppShell extends StatelessWidget {
       builder: (context, tab, _) => Scaffold(
         body: IndexedStack(
           index: tab.index,
-          children: const [HomeScreen(), MenuScreen(), BasketScreen(), AboutScreen(), ContactScreen()],
+          children: const [
+            HomeScreen(),
+            MenuScreen(),
+            BasketScreen(),
+            /* About page (hidden): AboutScreen(), */ ContactScreen(),
+          ],
         ),
         bottomNavigationBar: ListenableBuilder(
           listenable: basket,
@@ -56,9 +62,16 @@ class AppShell extends StatelessWidget {
             selectedIndex: tab.index,
             onDestinationSelected: (i) => currentTab.value = AppTab.values[i],
             destinations: [
-              const NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
               const NavigationDestination(
-                  icon: Icon(Icons.restaurant_menu_outlined), selectedIcon: Icon(Icons.restaurant_menu), label: 'Menu'),
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              const NavigationDestination(
+                icon: Icon(Icons.restaurant_menu_outlined),
+                selectedIcon: Icon(Icons.restaurant_menu),
+                label: 'Menu',
+              ),
               NavigationDestination(
                 icon: Badge(
                   isLabelVisible: !basket.isEmpty,
@@ -72,8 +85,13 @@ class AppShell extends StatelessWidget {
                 ),
                 label: 'Basket',
               ),
-              const NavigationDestination(icon: Icon(Icons.info_outline), selectedIcon: Icon(Icons.info), label: 'About'),
-              const NavigationDestination(icon: Icon(Icons.mail_outline), selectedIcon: Icon(Icons.mail), label: 'Contact'),
+              // About page (hidden):
+              // const NavigationDestination(icon: Icon(Icons.info_outline), selectedIcon: Icon(Icons.info), label: 'About'),
+              const NavigationDestination(
+                icon: Icon(Icons.mail_outline),
+                selectedIcon: Icon(Icons.mail),
+                label: 'Contact',
+              ),
             ],
           ),
         ),
